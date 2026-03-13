@@ -479,14 +479,7 @@ export default function LogPage() {
       totalScore: total,
     });
 
-    // Auto-advance to next incomplete game
-    for (let i = 0; i < gameCount; i++) {
-      if (!newGames[i]) {
-        setCurrentGameIndex(i);
-        loadEditorState(i);
-        return;
-      }
-    }
+    // Stay on current game so user can review/edit
   }
 
   function completeQuickGame() {
@@ -515,14 +508,7 @@ export default function LogPage() {
       totalScore: score,
     });
 
-    // Auto-advance to next incomplete game
-    for (let i = 0; i < gameCount; i++) {
-      if (!newGames[i]) {
-        setCurrentGameIndex(i);
-        loadEditorState(i);
-        return;
-      }
-    }
+    // Stay on current game so user can review/edit
   }
 
   async function saveSession() {
@@ -896,6 +882,36 @@ export default function LogPage() {
               Delete
             </button>
           </div>
+
+          {/* Next Game / Save Session button */}
+          {(() => {
+            const nextIncomplete = Array.from(
+              { length: gameCount },
+              (_, i) => i,
+            ).find((i) => i !== currentGameIndex && !games[i]);
+            if (nextIncomplete !== undefined) {
+              return (
+                <button
+                  onClick={() => switchToGame(nextIncomplete)}
+                  className="w-full rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+                >
+                  Next Game (G{nextIncomplete + 1})
+                </button>
+              );
+            }
+            if (allGamesComplete) {
+              return (
+                <button
+                  onClick={saveSession}
+                  disabled={saving}
+                  className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save Session"}
+                </button>
+              );
+            }
+            return null;
+          })()}
         </div>
       ) : (
         <>

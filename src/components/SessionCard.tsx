@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
-import { Star, Check, ChevronDown, Pencil, Trash2 } from "lucide-react";
+import { Star, Check, ChevronDown, Trash2 } from "lucide-react";
 
 interface FrameInfo {
   frame_number: number;
@@ -156,34 +155,54 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
 
   return (
     <div className="overflow-hidden rounded border border-border/50">
-      {/* Pin diagrams row */}
+      {/* Roll notation row */}
       <div className="flex">
         {Array.from({ length: 10 }, (_, i) => {
           const frame = sorted.find((f) => f.frame_number === i + 1);
+          const isTenth = i === 9;
 
           return (
             <div
               key={i}
-              className="flex flex-1 items-center justify-center border-r border-border/30 last:border-r-0"
+              className={`flex flex-1 items-center justify-center gap-[1px] border-r border-border/30 py-[2px] last:border-r-0 ${isTenth ? "min-w-0" : ""}`}
             >
               {frame ? (
-                frame.pins_remaining && frame.pins_remaining.length > 0 ? (
-                  <MicroPinDiagram
-                    pinsRemaining={frame.pins_remaining}
-                    isStrike={frame.is_strike}
-                    isSpare={frame.is_spare}
-                  />
+                isTenth ? (
+                  <>
+                    <span
+                      className={`text-[8px] font-bold ${frame.roll_1 === 10 ? "text-green" : "text-text-secondary"}`}
+                    >
+                      {formatFrameRoll(frame, 1)}
+                    </span>
+                    <span
+                      className={`text-[8px] font-bold ${formatFrameRoll(frame, 2) === "X" ? "text-green" : formatFrameRoll(frame, 2) === "/" ? "text-gold" : "text-text-secondary"}`}
+                    >
+                      {formatFrameRoll(frame, 2)}
+                    </span>
+                    {frame.roll_3 !== null && (
+                      <span
+                        className={`text-[8px] font-bold ${formatFrameRoll(frame, 3) === "X" ? "text-green" : formatFrameRoll(frame, 3) === "/" ? "text-gold" : "text-text-secondary"}`}
+                      >
+                        {formatFrameRoll(frame, 3)}
+                      </span>
+                    )}
+                  </>
+                ) : frame.is_strike ? (
+                  <span className="text-[8px] font-bold text-green">X</span>
                 ) : (
-                  <MicroPinDiagram
-                    pinsRemaining={null}
-                    isStrike={frame.is_strike}
-                    isSpare={false}
-                  />
+                  <>
+                    <span className="text-[8px] text-text-secondary">
+                      {formatFrameRoll(frame, 1)}
+                    </span>
+                    <span
+                      className={`text-[8px] font-bold ${frame.is_spare ? "text-gold" : "text-text-secondary"}`}
+                    >
+                      {formatFrameRoll(frame, 2)}
+                    </span>
+                  </>
                 )
               ) : (
-                <span className="py-[2px] text-[8px] text-text-muted/30">
-                  &mdash;
-                </span>
+                <span className="text-[8px] text-text-muted/30">&mdash;</span>
               )}
             </div>
           );
@@ -321,10 +340,9 @@ export default function SessionCard({
           const isClean = game.is_clean;
 
           return (
-            <Link
+            <div
               key={game.id}
-              href={`/game/${game.id}`}
-              className={`w-14 rounded-md bg-black/30 py-[5px] text-center transition-all duration-150 active:scale-95 ${isHigh ? "border border-gold/35" : isClean ? "border border-green/35" : "border border-transparent"}`}
+              className={`w-14 rounded-md bg-black/30 py-[5px] text-center ${isHigh ? "border border-gold/35" : isClean ? "border border-green/35" : "border border-transparent"}`}
             >
               <div className="flex items-center justify-center gap-1">
                 <span
@@ -343,7 +361,7 @@ export default function SessionCard({
                   />
                 )}
               </div>
-            </Link>
+            </div>
           );
         })}
       </div>
@@ -358,11 +376,7 @@ export default function SessionCard({
               const hasFrames = game.frames && game.frames.length > 0;
 
               return (
-                <Link
-                  key={game.id}
-                  href={`/game/${game.id}`}
-                  className="rounded-md bg-black/20 px-3 py-2 transition-all duration-150 active:scale-[0.98] active:bg-black/30"
-                >
+                <div key={game.id} className="rounded-md bg-black/20 px-3 py-2">
                   <div className="mb-1.5 flex items-center justify-between">
                     <span className="text-xs font-semibold">
                       Game {game.game_number}
@@ -381,23 +395,16 @@ export default function SessionCard({
                     </div>
                   </div>
                   {hasFrames && <MiniScorecard frames={game.frames!} />}
-                </Link>
+                </div>
               );
             })}
           </div>
           {isOwn && (
-            <div className="mt-2 flex gap-2">
-              <Link
-                href={`/game/${games[0]?.id}`}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-surface-light py-2 text-[11px] font-semibold text-text-secondary active:bg-surface-light/80"
-              >
-                <Pencil size={12} />
-                View / Edit
-              </Link>
+            <div className="mt-2">
               <button
                 onClick={handleDeleteSession}
                 disabled={deleting}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red/10 py-2 text-[11px] font-semibold text-red active:bg-red/20 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-red/10 py-2 text-[11px] font-semibold text-red active:bg-red/20 disabled:opacity-50"
               >
                 <Trash2 size={12} />
                 {deleting ? "Deleting..." : "Delete Session"}

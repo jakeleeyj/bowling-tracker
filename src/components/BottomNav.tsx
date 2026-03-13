@@ -9,7 +9,7 @@ const navItems = [
   { href: "/log", label: "Log", icon: PlusCircle },
   { href: "/stats", label: "Stats", icon: BarChart3 },
   { href: "/leaderboard", label: "Board", icon: Trophy },
-  { href: "/profile", label: "Profile", icon: User },
+  { href: "/profile", label: "Me", icon: User },
 ];
 
 export default function BottomNav() {

@@ -2,11 +2,12 @@ export const dynamic = "force-dynamic";
 
 import { createClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { GameWithSession, FrameRow } from "@/lib/queries";
 import DeleteSessionButton from "@/components/DeleteSessionButton";
 import FramePinDetail from "@/components/FramePinDetail";
+import EditGameScore from "@/components/EditGameScore";
+import BackButton from "@/components/BackButton";
 
 export default async function GameDetailPage({
   params,
@@ -16,11 +17,26 @@ export default async function GameDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data: game } = (await supabase
     .from("games")
-    .select("*, sessions(session_date, venue, event_label)")
+    .select("*, sessions(session_date, venue, event_label, user_id)")
     .eq("id", id)
-    .single()) as { data: GameWithSession | null };
+    .single()) as {
+    data:
+      | (GameWithSession & {
+          sessions: {
+            user_id: string;
+            session_date: string;
+            venue: string | null;
+            event_label: string | null;
+          };
+        })
+      | null;
+  };
 
   if (!game) notFound();
 
@@ -31,14 +47,13 @@ export default async function GameDetailPage({
     .order("frame_number", { ascending: true })) as { data: FrameRow[] | null };
 
   const session = game.sessions;
+  const isOwn = user?.id === session.user_id;
 
   return (
     <div>
       <div className="mb-4 flex items-center gap-3">
-        <Link href="/history" className="text-text-muted">
-          <ArrowLeft size={20} />
-        </Link>
-        <div>
+        <BackButton />
+        <div className="flex-1">
           <h1 className="text-base font-bold">
             Game {game.game_number} &mdash; {game.total_score}
           </h1>
@@ -48,9 +63,16 @@ export default async function GameDetailPage({
               month: "short",
               day: "numeric",
             })}
-            {session.venue && ` • ${session.venue}`}
+            {session.venue && ` \u2022 ${session.venue}`}
           </p>
         </div>
+        {isOwn && (
+          <EditGameScore
+            gameId={game.id}
+            sessionId={game.session_id}
+            currentScore={game.total_score}
+          />
+        )}
       </div>
 
       {/* Stats */}
@@ -177,9 +199,11 @@ export default async function GameDetailPage({
       )}
 
       {/* Delete */}
-      <div className="mt-6">
-        <DeleteSessionButton sessionId={game.session_id} />
-      </div>
+      {isOwn && (
+        <div className="mt-6">
+          <DeleteSessionButton sessionId={game.session_id} />
+        </div>
+      )}
     </div>
   );
 }
