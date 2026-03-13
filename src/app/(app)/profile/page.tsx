@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
-import { LogOut, Award } from "lucide-react";
+import { LogOut, Award, Smartphone } from "lucide-react";
 import Link from "next/link";
 
 export default function ProfilePage() {
@@ -13,6 +13,7 @@ export default function ProfilePage() {
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showInstall, setShowInstall] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -99,6 +100,66 @@ export default function ProfilePage() {
           <Award size={20} className="text-gold" />
           <span className="text-sm font-semibold">View Achievements</span>
         </Link>
+
+        <button
+          onClick={() => setShowInstall(!showInstall)}
+          className="glass flex items-center gap-3 p-4 text-left"
+        >
+          <Smartphone size={20} className="text-blue" />
+          <span className="text-sm font-semibold">Install as App</span>
+        </button>
+
+        {showInstall && (
+          <div className="glass p-4 text-sm text-text-secondary">
+            <p className="mb-3 font-semibold text-text-primary">
+              Add to your home screen:
+            </p>
+            <div className="mb-3">
+              <p className="mb-1 font-medium">iPhone / iPad (Safari)</p>
+              <ol className="ml-4 list-decimal space-y-1 text-xs text-text-muted">
+                <li>
+                  Tap the{" "}
+                  <span className="font-medium text-text-secondary">Share</span>{" "}
+                  button (square with arrow)
+                </li>
+                <li>
+                  Scroll down and tap{" "}
+                  <span className="font-medium text-text-secondary">
+                    Add to Home Screen
+                  </span>
+                </li>
+                <li>
+                  Tap{" "}
+                  <span className="font-medium text-text-secondary">Add</span>
+                </li>
+              </ol>
+            </div>
+            <div>
+              <p className="mb-1 font-medium">Android (Chrome)</p>
+              <ol className="ml-4 list-decimal space-y-1 text-xs text-text-muted">
+                <li>
+                  Tap the{" "}
+                  <span className="font-medium text-text-secondary">
+                    three dots
+                  </span>{" "}
+                  menu
+                </li>
+                <li>
+                  Tap{" "}
+                  <span className="font-medium text-text-secondary">
+                    Add to Home screen
+                  </span>
+                </li>
+                <li>
+                  Tap{" "}
+                  <span className="font-medium text-text-secondary">
+                    Install
+                  </span>
+                </li>
+              </ol>
+            </div>
+          </div>
+        )}
 
         <button
           onClick={handleLogout}

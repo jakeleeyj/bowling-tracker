@@ -11,6 +11,7 @@ export default function SignupPage() {
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -19,7 +20,7 @@ export default function SignupPage() {
     setError("");
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -33,8 +34,55 @@ export default function SignupPage() {
       return;
     }
 
+    if (data.user && !data.session) {
+      setConfirmEmail(true);
+      setLoading(false);
+      return;
+    }
+
     router.push("/dashboard");
     router.refresh();
+  }
+
+  if (confirmEmail) {
+    return (
+      <div className="glow-blue glow-purple flex min-h-dvh items-center justify-center overflow-hidden px-4">
+        <div className="glass-strong relative z-10 w-full max-w-sm p-8 text-center">
+          <div className="mb-4 text-4xl">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="mx-auto text-blue"
+            >
+              <rect width="20" height="16" x="2" y="4" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
+          </div>
+          <h1 className="mb-2 text-2xl font-extrabold">Check your email</h1>
+          <p className="mb-4 text-sm text-text-muted">
+            We sent a confirmation link to{" "}
+            <span className="font-medium text-text-primary">{email}</span>.
+            Click it to activate your account.
+          </p>
+          <p className="text-xs text-text-muted">
+            Didn&apos;t get it? Check your spam folder.
+          </p>
+          <Link
+            href="/login"
+            className="mt-6 inline-block text-sm font-medium text-blue"
+          >
+            Go to sign in
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
