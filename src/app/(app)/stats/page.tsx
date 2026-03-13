@@ -62,11 +62,6 @@ export default async function StatsPage() {
 
   // Strike and spare stats from detailed games
   const detailedGames = games?.filter((g) => g.entry_type === "detailed") ?? [];
-  const totalStrikes = detailedGames.reduce(
-    (sum, g) => sum + g.strike_count,
-    0,
-  );
-  const totalSpares = detailedGames.reduce((sum, g) => sum + g.spare_count, 0);
   const cleanGames = detailedGames.filter((g) => g.is_clean).length;
 
   // Spare conversion rate
@@ -121,6 +116,80 @@ export default async function StatsPage() {
       currentStreak = 0;
     }
   }
+
+  // Spare breakdown by type (single pin, multi pin, splits)
+  const SPLIT_PATTERNS = [
+    [7, 10],
+    [4, 6],
+    [7, 9],
+    [8, 10],
+    [4, 7, 10],
+    [6, 7, 10],
+    [4, 6, 7, 10],
+    [4, 6, 7, 9, 10],
+    [3, 10],
+    [2, 7],
+    [5, 7],
+    [5, 10],
+    [2, 10],
+    [3, 7],
+    [4, 7, 9, 10],
+    [7, 6, 10],
+    [4, 7, 8],
+    [6, 9, 10],
+  ];
+
+  function isSplit(pins: number[]): boolean {
+    if (pins.length < 2 || pins.includes(1)) return false;
+    return SPLIT_PATTERNS.some(
+      (pattern) =>
+        pattern.length === pins.length &&
+        pattern.every((p) => pins.includes(p)),
+    );
+  }
+
+  const spareOpportunities =
+    allFrames?.filter(
+      (f) =>
+        !f.is_strike &&
+        f.pins_remaining &&
+        Array.isArray(f.pins_remaining) &&
+        (f.pins_remaining as number[]).length > 0,
+    ) ?? [];
+
+  let singlePinAttempts = 0,
+    singlePinConverted = 0;
+  let multiPinAttempts = 0,
+    multiPinConverted = 0;
+  let splitAttempts = 0,
+    splitConverted = 0;
+
+  for (const f of spareOpportunities) {
+    const pins = f.pins_remaining as number[];
+    const converted = f.spare_converted;
+
+    if (pins.length === 1) {
+      singlePinAttempts++;
+      if (converted) singlePinConverted++;
+    } else if (isSplit(pins)) {
+      splitAttempts++;
+      if (converted) splitConverted++;
+    } else {
+      multiPinAttempts++;
+      if (converted) multiPinConverted++;
+    }
+  }
+
+  const singlePinRate =
+    singlePinAttempts > 0
+      ? Math.round((singlePinConverted / singlePinAttempts) * 100)
+      : 0;
+  const multiPinRate =
+    multiPinAttempts > 0
+      ? Math.round((multiPinConverted / multiPinAttempts) * 100)
+      : 0;
+  const splitRate =
+    splitAttempts > 0 ? Math.round((splitConverted / splitAttempts) * 100) : 0;
 
   // Score chart - last 20 games
   const recentScores = scores.slice(-20);
@@ -207,6 +276,76 @@ export default async function StatsPage() {
           </div>
         </div>
       </div>
+
+      {/* Spare Breakdown */}
+      {spareOpportunities.length > 0 && (
+        <div className="glass mb-4 p-4">
+          <h3 className="mb-3 text-xs font-bold text-text-secondary">
+            Spare Breakdown
+          </h3>
+          <div className="flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">Single Pin</p>
+                <p className="text-[10px] text-text-muted">
+                  {singlePinConverted}/{singlePinAttempts} converted
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="text-lg font-extrabold text-green">
+                  {singlePinRate}%
+                </span>
+              </div>
+            </div>
+            <div className="h-1.5 rounded-full bg-surface-light">
+              <div
+                className="h-full rounded-full bg-green"
+                style={{ width: `${singlePinRate}%` }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">Multi Pin</p>
+                <p className="text-[10px] text-text-muted">
+                  {multiPinConverted}/{multiPinAttempts} converted
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="text-lg font-extrabold text-gold">
+                  {multiPinRate}%
+                </span>
+              </div>
+            </div>
+            <div className="h-1.5 rounded-full bg-surface-light">
+              <div
+                className="h-full rounded-full bg-gold"
+                style={{ width: `${multiPinRate}%` }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">Splits</p>
+                <p className="text-[10px] text-text-muted">
+                  {splitConverted}/{splitAttempts} converted
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="text-lg font-extrabold text-red">
+                  {splitRate}%
+                </span>
+              </div>
+            </div>
+            <div className="h-1.5 rounded-full bg-surface-light">
+              <div
+                className="h-full rounded-full bg-red"
+                style={{ width: `${splitRate}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Spare Streak */}
       <div className="glass mb-4 p-4">

@@ -45,7 +45,7 @@ export default function LogPage() {
   const [frames, setFrames] = useState<FrameData[]>([]);
   const [currentFrame, setCurrentFrame] = useState(1);
   const [currentRoll, setCurrentRoll] = useState<1 | 2 | 3>(1);
-  const [standingPins, setStandingPins] = useState<number[]>(getAllPins());
+  const [standingPins, setStandingPins] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
 
   function startSession() {
@@ -59,7 +59,7 @@ export default function LogPage() {
     setFrames([]);
     setCurrentFrame(1);
     setCurrentRoll(1);
-    setStandingPins(getAllPins());
+    setStandingPins([]);
     setQuickScore("");
     setEntryMode("detailed");
   }
@@ -86,16 +86,15 @@ export default function LogPage() {
   }
 
   function handleSpare() {
-    const remaining = standingPins.length;
-    const pinsKnocked = remaining;
-
     if (currentFrame <= 9) {
       const existingFrame = frames.find((f) => f.frameNumber === currentFrame);
       if (!existingFrame) return;
 
+      const remaining =
+        existingFrame.pinsRemaining?.length ?? 10 - existingFrame.roll1;
       const updatedFrame: FrameData = {
         ...existingFrame,
-        roll2: pinsKnocked,
+        roll2: remaining,
         isSpare: true,
         spareConverted: true,
       };
@@ -105,7 +104,13 @@ export default function LogPage() {
       setFrames(newFrames);
       advanceFrame(newFrames);
     } else {
-      handle10thFrameRoll(pinsKnocked);
+      // 10th frame spare: knock all available pins
+      const existing = frames.find((f) => f.frameNumber === 10);
+      if (!existing) return;
+      const available = existing.isStrike
+        ? 10
+        : (existing.pinsRemaining?.length ?? 10 - existing.roll1);
+      handle10thFrameRoll(available);
     }
   }
 
@@ -124,19 +129,9 @@ export default function LogPage() {
   }
 
   function confirmPinSelection() {
-    const pinsKnocked =
-      currentRoll === 1
-        ? 10 - standingPins.length
-        : frames.find((f) => f.frameNumber === currentFrame)
-          ? standingPins.length === 0
-            ? (frames.find((f) => f.frameNumber === currentFrame)?.pinsRemaining
-                ?.length ?? 0)
-            : (frames.find((f) => f.frameNumber === currentFrame)?.pinsRemaining
-                ?.length ?? 0) - standingPins.length
-          : 0;
-
     if (currentFrame <= 9) {
       if (currentRoll === 1) {
+        // Standing pins = what user marked as still up
         const knocked = 10 - standingPins.length;
         if (knocked === 10) {
           handleStrike();
@@ -154,6 +149,7 @@ export default function LogPage() {
         };
         setFrames([...frames, frame]);
         setCurrentRoll(2);
+        setStandingPins([]);
       } else {
         const existingFrame = frames.find(
           (f) => f.frameNumber === currentFrame,
@@ -180,22 +176,19 @@ export default function LogPage() {
     } else {
       // 10th frame pin confirmation
       const existingFrame = frames.find((f) => f.frameNumber === 10);
+      const avail = getAvailablePins();
+
       if (currentRoll === 1) {
         const knocked = 10 - standingPins.length;
         handle10thFrameRoll(knocked);
       } else if (currentRoll === 2) {
         if (existingFrame) {
-          const previousRemaining =
-            existingFrame.pinsRemaining?.length ?? 10 - existingFrame.roll1;
-          const knocked = previousRemaining - standingPins.length;
+          const knocked = avail.length - standingPins.length;
           handle10thFrameRoll(knocked);
         }
       } else {
         if (existingFrame) {
-          const knocked =
-            (existingFrame.roll2 === 10
-              ? 10
-              : 10 - (existingFrame.roll2 ?? 0)) - standingPins.length;
+          const knocked = avail.length - standingPins.length;
           handle10thFrameRoll(knocked);
         }
       }
@@ -214,15 +207,12 @@ export default function LogPage() {
         roll3: null,
         isStrike: pins === 10,
         isSpare: false,
-        pinsRemaining:
-          pins === 10 ? null : getAllPins().filter((_, i) => i >= pins),
+        pinsRemaining: pins === 10 ? null : [...standingPins],
         spareConverted: false,
       };
       setFrames([...frames, frame]);
       setCurrentRoll(2);
-      setStandingPins(
-        pins === 10 ? getAllPins() : getAllPins().slice(0, 10 - pins),
-      );
+      setStandingPins([]);
     } else if (existing.roll2 === null) {
       // Roll 2 of 10th frame
       const isSpare = !existing.isStrike && existing.roll1 + pins === 10;
@@ -240,12 +230,7 @@ export default function LogPage() {
         // Gets a 3rd roll
         setFrames(newFrames);
         setCurrentRoll(3);
-        // Reset pins if roll 2 was a strike or spare, keep remaining otherwise
-        if (pins === 10 || isSpare) {
-          setStandingPins(getAllPins());
-        } else {
-          setStandingPins(getAllPins().slice(0, 10 - pins));
-        }
+        setStandingPins([]);
       } else {
         // Game over
         setFrames(newFrames);
@@ -272,7 +257,7 @@ export default function LogPage() {
     }
     setCurrentFrame(currentFrame + 1);
     setCurrentRoll(1);
-    setStandingPins(getAllPins());
+    setStandingPins([]);
   }
 
   function completeCurrentGame(completedFrames: FrameData[]) {
@@ -401,7 +386,28 @@ export default function LogPage() {
   const scores = calculateFrameScores(frames);
   const currentScore = scores[scores.length - 1] ?? 0;
   const maxPossible = calculateMaxPossible(frames);
-  const isFreshRack = standingPins.length === 10;
+
+  function getAvailablePins(): number[] {
+    if (currentFrame <= 9) {
+      if (currentRoll === 1) return getAllPins();
+      const f = frames.find((fr) => fr.frameNumber === currentFrame);
+      return f?.pinsRemaining ?? getAllPins();
+    }
+    // 10th frame
+    const f10 = frames.find((fr) => fr.frameNumber === 10);
+    if (!f10) return getAllPins(); // roll 1
+    if (f10.roll2 === null) {
+      // roll 2
+      if (f10.isStrike) return getAllPins(); // fresh rack after strike
+      return f10.pinsRemaining ?? getAllPins();
+    }
+    // roll 3
+    if (f10.roll2 === 10 || f10.isSpare) return getAllPins(); // fresh rack
+    return getAllPins(); // fallback for remaining pins
+  }
+
+  const availablePins = getAvailablePins();
+  const isFreshRack = availablePins.length === 10;
   // SETUP STEP
   if (step === "setup") {
     return (
@@ -635,20 +641,16 @@ export default function LogPage() {
           {/* Frame label */}
           <p className="text-xs text-text-secondary">
             Frame {currentFrame} &mdash; Roll {currentRoll}
-            {currentRoll >= 2 &&
-              currentFrame <= 9 &&
-              ` | ${standingPins.length} pins remaining`}
+            {availablePins.length < 10 &&
+              ` | ${availablePins.length} pins in play`}
           </p>
 
           {/* Pin diagram */}
           <PinDiagram
             standingPins={standingPins}
+            availablePins={availablePins}
             onPinToggle={handlePinToggle}
-            label={
-              isFreshRack
-                ? "Tap pins you knocked down"
-                : "Tap remaining pins you knocked"
-            }
+            label="Tap pins left standing"
           />
 
           {/* Action buttons */}

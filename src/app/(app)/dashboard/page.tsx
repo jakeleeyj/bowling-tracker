@@ -1,34 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import { createClient } from "@/lib/supabase-server";
-import { Star, Check } from "lucide-react";
 import Link from "next/link";
-import type {
-  ProfileRow,
-  GameRow,
-  SessionWithGamesAndProfile,
-} from "@/lib/queries";
+import type { ProfileRow, SessionWithGamesAndProfile } from "@/lib/queries";
+import SessionCard from "@/components/SessionCard";
 
-// Pin icon as inline SVG
-function PinIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="11"
-      height="11"
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    >
-      <circle cx="8" cy="4" r="3" />
-      <line x1="8" y1="7" x2="8" y2="15" />
-    </svg>
-  );
-}
-
-// Avatar colors based on user name hash
 const AVATAR_GRADIENTS = [
   "from-blue to-indigo-500",
   "from-purple to-fuchsia-500",
@@ -45,13 +21,6 @@ function getAvatarGradient(name: string): string {
   }
   return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
 }
-
-const EVENT_COLORS: Record<string, string> = {
-  League: "bg-blue/12 text-blue",
-  Practice: "bg-purple/12 text-purple",
-  Tournament: "bg-gold/12 text-gold",
-  Casual: "bg-green/12 text-green",
-};
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -178,10 +147,6 @@ export default async function DashboardPage() {
                     sessionGames.length,
                 )
               : 0;
-          const highGame = Math.max(
-            ...sessionGames.map((g) => g.total_score),
-            0,
-          );
 
           const sessionDate = new Date(session.session_date);
           const today = new Date();
@@ -198,82 +163,19 @@ export default async function DashboardPage() {
             dateLabel = "Yesterday";
 
           return (
-            <div key={session.id} className="glass p-3">
-              {/* Session header */}
-              <div className="mb-1 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className={`flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br ${getAvatarGradient(realName)} text-[11px] font-bold`}
-                  >
-                    {realName.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-semibold">{name}</p>
-                    <p className="text-[10px] text-text-muted">
-                      {dateLabel} &bull; avg {avg}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-lg font-extrabold">
-                  {session.total_pins}
-                </div>
-              </div>
-
-              {/* Venue + Event */}
-              {(session.venue || session.event_label) && (
-                <div className="mb-2 ml-[38px] flex items-center gap-1.5">
-                  {session.venue && (
-                    <span className="flex items-center gap-1 text-[10px] text-text-secondary">
-                      <PinIcon />
-                      {session.venue}
-                    </span>
-                  )}
-                  {session.event_label && (
-                    <span
-                      className={`rounded px-1.5 py-0.5 text-[9px] font-semibold ${EVENT_COLORS[session.event_label] ?? "bg-surface-light text-text-muted"}`}
-                    >
-                      {session.event_label}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Game score boxes */}
-              <div className="flex gap-1">
-                {sessionGames.map((game) => {
-                  const isHigh = game.total_score === highGame;
-                  const isClean = game.is_clean;
-
-                  return (
-                    <div
-                      key={game.game_number}
-                      className={`flex-1 rounded-md bg-black/30 py-[5px] text-center ${isHigh ? "border border-gold/35" : isClean ? "border border-green/35" : "border border-transparent"}`}
-                    >
-                      <div className="relative inline-block">
-                        {isHigh && (
-                          <Star
-                            size={8}
-                            className="absolute -right-2.5 -top-1 fill-gold text-gold"
-                          />
-                        )}
-                        {isClean && !isHigh && (
-                          <Check
-                            size={8}
-                            className="absolute -right-2.5 -top-1 text-green"
-                            strokeWidth={3}
-                          />
-                        )}
-                        <span
-                          className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : ""}`}
-                        >
-                          {game.total_score}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <SessionCard
+              key={session.id}
+              sessionId={session.id}
+              name={name}
+              realName={realName}
+              dateLabel={dateLabel}
+              avg={avg}
+              totalPins={session.total_pins}
+              venue={session.venue}
+              eventLabel={session.event_label}
+              games={sessionGames}
+              avatarGradient={getAvatarGradient(realName)}
+            />
           );
         })}
       </div>
