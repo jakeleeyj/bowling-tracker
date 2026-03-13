@@ -18,9 +18,10 @@ import FramePinDetail from "@/components/FramePinDetail";
 import { ArrowLeft, Check, Undo2, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
+import { calculateMMR, getRank, formatMMR, type RankTier } from "@/lib/ranking";
 
 type EntryMode = "quick" | "detailed";
-type Step = "setup" | "game";
+type Step = "setup" | "game" | "results";
 
 interface GameData {
   entryType: EntryMode;
@@ -48,6 +49,173 @@ interface GameEditorState {
 function upsertFrame(frames: FrameData[], frame: FrameData): FrameData[] {
   const without = frames.filter((f) => f.frameNumber !== frame.frameNumber);
   return [...without, frame].sort((a, b) => a.frameNumber - b.frameNumber);
+}
+
+function AnimatedCounter({
+  from,
+  to,
+  duration = 1200,
+}: {
+  from: number;
+  to: number;
+  duration?: number;
+}) {
+  const [value, setValue] = useState(from);
+  useEffect(() => {
+    const start = performance.now();
+    function tick(now: number) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(from + (to - from) * eased));
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }, [from, to, duration]);
+  return <>{value}</>;
+}
+
+function RankEmblem({
+  rank,
+  size = 80,
+  className = "",
+}: {
+  rank: RankTier;
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <div className={`flex items-center justify-center ${className}`}>
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <path
+          d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z"
+          fill="currentColor"
+          fillOpacity={0.15}
+          stroke="currentColor"
+          strokeWidth={1.5}
+          strokeLinejoin="round"
+          className={rank.color}
+        />
+        <path
+          d="M12 7l3 5-3 5-3-5z"
+          fill="currentColor"
+          fillOpacity={0.4}
+          stroke="currentColor"
+          strokeWidth={0.75}
+          className={rank.color}
+        />
+      </svg>
+    </div>
+  );
+}
+
+function ResultsScreen({
+  data,
+}: {
+  data: {
+    oldMmr: number;
+    newMmr: number;
+    oldRank: RankTier;
+    newRank: RankTier;
+    sessionAvg: number;
+    sessionHigh: number;
+    totalPins: number;
+    gameScores: number[];
+    rankedUp: boolean;
+  };
+}) {
+  const router = useRouter();
+  const [showRankUp, setShowRankUp] = useState(false);
+  const mmrDiff = data.newMmr - data.oldMmr;
+  const displayRank =
+    data.rankedUp && !showRankUp ? data.oldRank : data.newRank;
+
+  useEffect(() => {
+    if (data.rankedUp) {
+      const timer = setTimeout(() => setShowRankUp(true), 1400);
+      return () => clearTimeout(timer);
+    }
+  }, [data.rankedUp]);
+
+  return (
+    <div className="flex min-h-[70vh] flex-col items-center justify-center text-center">
+      {/* Rank emblem — scales in */}
+      <div className="animate-results-emblem mb-4">
+        <RankEmblem rank={displayRank} size={96} />
+      </div>
+
+      {/* Rank name */}
+      <div className="animate-results-fade mb-1">
+        <span className={`text-2xl font-extrabold ${displayRank.color}`}>
+          {displayRank.name}
+          {displayRank.division ? ` ${displayRank.division}` : ""}
+        </span>
+      </div>
+
+      {/* Rank up flash */}
+      {data.rankedUp && showRankUp && (
+        <div className="animate-results-flash mb-3">
+          <span className="text-sm font-bold text-gold">
+            {data.newRank.name !== data.oldRank.name
+              ? "RANK UP!"
+              : "DIVISION UP!"}
+          </span>
+        </div>
+      )}
+
+      {/* MMR counter */}
+      <div className="animate-results-fade mb-6">
+        <div className="text-4xl font-extrabold tabular-nums text-text-primary">
+          <AnimatedCounter from={data.oldMmr} to={data.newMmr} />
+          <span className="text-lg text-text-muted"> MMR</span>
+        </div>
+        <div
+          className={`mt-1 text-sm font-semibold ${mmrDiff > 0 ? "text-green" : mmrDiff < 0 ? "text-red" : "text-text-muted"}`}
+        >
+          {mmrDiff > 0 ? "+" : ""}
+          {mmrDiff} MMR
+        </div>
+      </div>
+
+      {/* Session stats */}
+      <div className="mb-6 flex w-full max-w-[300px] gap-2">
+        <div className="glass flex-1 p-3 text-center">
+          <div className="text-[10px] uppercase text-text-muted">Avg</div>
+          <div className="text-lg font-extrabold">{data.sessionAvg}</div>
+        </div>
+        <div className="glass flex-1 p-3 text-center">
+          <div className="text-[10px] uppercase text-text-muted">High</div>
+          <div className="text-lg font-extrabold">{data.sessionHigh}</div>
+        </div>
+        <div className="glass flex-1 p-3 text-center">
+          <div className="text-[10px] uppercase text-text-muted">Total</div>
+          <div className="text-lg font-extrabold">{data.totalPins}</div>
+        </div>
+      </div>
+
+      {/* Game scores */}
+      <div className="mb-8 flex justify-center gap-2">
+        {data.gameScores.map((score, i) => (
+          <div key={i} className="glass w-14 p-2 text-center">
+            <div className="text-[9px] text-text-muted">G{i + 1}</div>
+            <div className="text-sm font-bold text-text-primary">{score}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Continue button */}
+      <button
+        onClick={() => {
+          router.push("/dashboard");
+          router.refresh();
+        }}
+        className="w-full max-w-[300px] rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 active:scale-[0.97]"
+      >
+        Continue
+      </button>
+    </div>
+  );
 }
 
 export default function LogPageWrapper() {
@@ -95,6 +263,19 @@ function LogPage() {
   const [editLoading, setEditLoading] = useState(false);
   const [editOriginalScore, setEditOriginalScore] = useState(0);
   const [editOriginalFrames, setEditOriginalFrames] = useState<FrameData[]>([]);
+
+  // Results screen state
+  const [resultsData, setResultsData] = useState<{
+    oldMmr: number;
+    newMmr: number;
+    oldRank: RankTier;
+    newRank: RankTier;
+    sessionAvg: number;
+    sessionHigh: number;
+    totalPins: number;
+    gameScores: number[];
+    rankedUp: boolean;
+  } | null>(null);
 
   const [history, setHistory] = useState<
     Array<{
@@ -633,6 +814,19 @@ function LogPage() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Snapshot MMR before save
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingGames } = await (supabase as any)
+      .from("games")
+      .select("total_score")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    const oldScores =
+      existingGames?.map((g: { total_score: number }) => g.total_score) ?? [];
+    const oldMmr = calculateMMR(oldScores);
+    const oldRank = getRank(oldMmr);
+
     const totalPins = games.reduce((sum, g) => sum + g.totalScore, 0);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -702,11 +896,35 @@ function LogPage() {
       }
     }
 
+    // Calculate new MMR after save
+    const newScores = [...games.map((g) => g.totalScore), ...oldScores];
+    const newMmr = calculateMMR(newScores);
+    const newRank = getRank(newMmr);
+
+    const gameScores = games.map((g) => g.totalScore);
+    const sessionAvg = Math.round(
+      gameScores.reduce((s, v) => s + v, 0) / gameScores.length,
+    );
+    const sessionHigh = Math.max(...gameScores);
+
+    const rankedUp =
+      newRank.name !== oldRank.name ||
+      (newRank.division ?? "") !== (oldRank.division ?? "");
+
     setSaving(false);
     setHasUnsaved(false);
-    toast("Session saved");
-    router.push("/dashboard");
-    router.refresh();
+    setResultsData({
+      oldMmr,
+      newMmr,
+      oldRank,
+      newRank,
+      sessionAvg,
+      sessionHigh,
+      totalPins,
+      gameScores,
+      rankedUp,
+    });
+    setStep("results");
   }
 
   async function updateExistingGame() {
@@ -853,6 +1071,11 @@ function LogPage() {
         <div className="text-sm text-text-muted">Loading game...</div>
       </div>
     );
+  }
+
+  // RESULTS SCREEN
+  if (step === "results" && resultsData) {
+    return <ResultsScreen data={resultsData} />;
   }
 
   // SETUP STEP

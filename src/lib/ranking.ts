@@ -1,8 +1,8 @@
 // MMR Ranking System
-// Base score: 200. MMR = weighted average of (score - 200).
+// Base score: 180. MMR = weighted average of (score - 180).
 // Recent games weighted more heavily using exponential decay (0.93^index).
 
-const BASE_SCORE = 200;
+const BASE_SCORE = 180;
 const DECAY_FACTOR = 0.93;
 
 export interface RankTier {
@@ -14,18 +14,21 @@ export interface RankTier {
   icon: string; // emoji-free, we'll use SVG in the component
 }
 
+// Tier ranges (MMR values, base 180):
+// Iron: <140 avg, Bronze: 140-160, Silver: 160-190, Gold: 190-215
+// Platinum: 215-235, Diamond: 235-255, Master: 255-270, Grandmaster: 270+
 const TIERS = [
   {
     name: "Iron",
     min: -Infinity,
-    max: -60,
+    max: -40,
     color: "text-gray-400",
     bgColor: "bg-gray-400/10",
     borderColor: "border-gray-400/30",
   },
   {
     name: "Bronze",
-    min: -60,
+    min: -40,
     max: -20,
     color: "text-amber-700",
     bgColor: "bg-amber-700/10",

@@ -125,6 +125,58 @@ body {
   animation: scale-in 0.2s ease-out;
 }
 
+/* Results screen animations */
+@keyframes results-emblem {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes results-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes results-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-results-emblem {
+  animation: results-emblem 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-results-fade {
+  animation: results-fade 0.5s ease-out 0.6s both;
+}
+
+.animate-results-flash {
+  animation: results-flash 0.4s ease-out both;
+}
+
 .glow-purple::after {
   content: "";
   position: absolute;
