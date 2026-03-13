@@ -522,43 +522,55 @@ export default function StatsPage() {
                     attempts: singlePinAttempts,
                     converted: singlePinConverted,
                     rate: singlePinRate,
-                    color: "green",
+                    textColor: "text-green",
+                    barColor: "bg-green",
                   },
                   {
                     label: "Multi Pin",
                     attempts: multiPinAttempts,
                     converted: multiPinConverted,
                     rate: multiPinRate,
-                    color: "gold",
+                    textColor: "text-gold",
+                    barColor: "bg-gold",
                   },
                   {
                     label: "Splits",
                     attempts: splitAttempts,
                     converted: splitConverted,
                     rate: splitRate,
-                    color: "red",
+                    textColor: "text-red",
+                    barColor: "bg-red",
                   },
-                ].map(({ label, attempts, converted, rate, color }) => (
-                  <div key={label}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold">{label}</p>
-                        <p className="text-[10px] text-text-muted">
-                          {converted}/{attempts} converted
-                        </p>
+                ].map(
+                  ({
+                    label,
+                    attempts,
+                    converted,
+                    rate,
+                    textColor,
+                    barColor,
+                  }) => (
+                    <div key={label}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold">{label}</p>
+                          <p className="text-[10px] text-text-muted">
+                            {converted}/{attempts} converted
+                          </p>
+                        </div>
+                        <span className={`text-lg font-extrabold ${textColor}`}>
+                          {rate}%
+                        </span>
                       </div>
-                      <span className={`text-lg font-extrabold text-${color}`}>
-                        {rate}%
-                      </span>
+                      <div className="mt-1 h-1.5 rounded-full bg-surface-light">
+                        <div
+                          className={`h-full rounded-full ${barColor}`}
+                          style={{ width: `${rate}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="mt-1 h-1.5 rounded-full bg-surface-light">
-                      <div
-                        className={`h-full rounded-full bg-${color}`}
-                        style={{ width: `${rate}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
             </div>
           )}

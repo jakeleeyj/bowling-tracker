@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
-import Link from "next/link";
-import { Star, Check, ChevronDown, Pencil, Trash2 } from "lucide-react";
+import { Star, Check, ChevronDown, Pencil, Trash2, X } from "lucide-react";
+import { useToast } from "@/components/Toast";
 
 interface FrameInfo {
   frame_number: number;
@@ -280,7 +280,11 @@ export default function SessionCard({
 }: SessionCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editingGameId, setEditingGameId] = useState<string | null>(null);
+  const [editScore, setEditScore] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
   const highGame = Math.max(...games.map((g) => g.total_score), 0);
 
   async function handleDeleteSession() {
@@ -307,6 +311,43 @@ export default function SessionCard({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).from("sessions").delete().eq("id", sessionId);
 
+    toast("Session deleted");
+    router.refresh();
+  }
+
+  async function handleSaveEdit(gameId: string) {
+    const newScore = parseInt(editScore, 10);
+    if (isNaN(newScore) || newScore < 0 || newScore > 300) return;
+    setSavingEdit(true);
+    const supabase = createClient();
+
+    const game = games.find((g) => g.id === gameId);
+    const diff = newScore - (game?.total_score ?? 0);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("games")
+      .update({ total_score: newScore })
+      .eq("id", gameId);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: session } = await (supabase as any)
+      .from("sessions")
+      .select("total_pins")
+      .eq("id", sessionId)
+      .single();
+
+    if (session) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from("sessions")
+        .update({ total_pins: session.total_pins + diff })
+        .eq("id", sessionId);
+    }
+
+    setSavingEdit(false);
+    setEditingGameId(null);
+    toast("Score updated");
     router.refresh();
   }
 
@@ -400,6 +441,8 @@ export default function SessionCard({
               const isClean = game.is_clean;
               const hasFrames = game.frames && game.frames.length > 0;
 
+              const isEditing = editingGameId === game.id;
+
               return (
                 <div key={game.id} className="rounded-md bg-black/20 px-3 py-2">
                   <div className="mb-1.5 flex items-center justify-between">
@@ -407,16 +450,56 @@ export default function SessionCard({
                       Game {game.game_number}
                     </span>
                     <div className="flex items-center gap-2">
-                      {isClean && (
-                        <span className="text-[9px] font-semibold text-green">
-                          CLEAN
-                        </span>
+                      {isEditing ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min={0}
+                            max={300}
+                            value={editScore}
+                            onChange={(e) => setEditScore(e.target.value)}
+                            className="w-14 rounded border border-border bg-surface-light px-1.5 py-0.5 text-center text-sm font-bold text-text-primary outline-none focus:border-blue"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleSaveEdit(game.id)}
+                            disabled={savingEdit}
+                            className="flex h-6 w-6 items-center justify-center rounded bg-green/15 text-green active:scale-90"
+                          >
+                            <Check size={12} strokeWidth={3} />
+                          </button>
+                          <button
+                            onClick={() => setEditingGameId(null)}
+                            className="flex h-6 w-6 items-center justify-center rounded bg-red/15 text-red active:scale-90"
+                          >
+                            <X size={12} strokeWidth={3} />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          {isClean && (
+                            <span className="text-[9px] font-semibold text-green">
+                              CLEAN
+                            </span>
+                          )}
+                          <span
+                            className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : ""}`}
+                          >
+                            {game.total_score}
+                          </span>
+                          {isOwn && (
+                            <button
+                              onClick={() => {
+                                setEditingGameId(game.id);
+                                setEditScore(game.total_score.toString());
+                              }}
+                              className="text-text-muted active:scale-90"
+                            >
+                              <Pencil size={10} />
+                            </button>
+                          )}
+                        </>
                       )}
-                      <span
-                        className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : ""}`}
-                      >
-                        {game.total_score}
-                      </span>
                     </div>
                   </div>
                   {hasFrames && <MiniScorecard frames={game.frames!} />}
@@ -425,18 +508,11 @@ export default function SessionCard({
             })}
           </div>
           {isOwn && (
-            <div className="mt-2 flex gap-2">
-              <Link
-                href={`/log?edit=${sessionId}`}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-surface-light py-2 text-[11px] font-semibold text-text-secondary active:bg-surface-light/80"
-              >
-                <Pencil size={12} />
-                Edit
-              </Link>
+            <div className="mt-2">
               <button
                 onClick={handleDeleteSession}
                 disabled={deleting}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red/10 py-2 text-[11px] font-semibold text-red active:bg-red/20 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-red/10 py-2 text-[11px] font-semibold text-red active:bg-red/20 disabled:opacity-50"
               >
                 <Trash2 size={12} />
                 {deleting ? "Deleting..." : "Delete Session"}

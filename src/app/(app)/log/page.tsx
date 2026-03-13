@@ -16,6 +16,7 @@ import PinDiagram from "@/components/PinDiagram";
 import FrameScorecard from "@/components/FrameScorecard";
 import FramePinDetail from "@/components/FramePinDetail";
 import { ArrowLeft, Check, Undo2, Pencil, Trash2 } from "lucide-react";
+import { useToast } from "@/components/Toast";
 
 type EntryMode = "quick" | "detailed";
 type Step = "setup" | "game";
@@ -51,6 +52,7 @@ function upsertFrame(frames: FrameData[], frame: FrameData): FrameData[] {
 export default function LogPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { toast } = useToast();
 
   const [step, setStep] = useState<Step>("setup");
   const [venue, setVenue] = useState("");
@@ -589,6 +591,7 @@ export default function LogPage() {
     }
 
     setSaving(false);
+    toast("Session saved");
     router.push("/dashboard");
     router.refresh();
   }

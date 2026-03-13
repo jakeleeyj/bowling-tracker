@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { Pencil, X, Check } from "lucide-react";
+import { useToast } from "@/components/Toast";
 
 export default function EditGameScore({
   gameId,
@@ -18,6 +19,7 @@ export default function EditGameScore({
   const [score, setScore] = useState(currentScore.toString());
   const [saving, setSaving] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   async function handleSave() {
     const newScore = parseInt(score, 10);
@@ -51,6 +53,7 @@ export default function EditGameScore({
 
     setSaving(false);
     setEditing(false);
+    toast("Score updated");
     router.refresh();
   }
 

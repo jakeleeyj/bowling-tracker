@@ -19,6 +19,7 @@ import {
   Award,
 } from "lucide-react";
 import type { SessionWithGames } from "@/lib/queries";
+import { useToast } from "@/components/Toast";
 
 interface HistorySession {
   id: string;
@@ -123,6 +124,7 @@ const ACHIEVEMENTS: AchievementDef[] = [
 export default function ProfilePage() {
   const supabase = createClient();
   const router = useRouter();
+  const { toast } = useToast();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
@@ -248,6 +250,7 @@ export default function ProfilePage() {
 
     setSaving(false);
     setSaved(true);
+    toast("Settings saved");
     setTimeout(() => setSaved(false), 2000);
   }
 
