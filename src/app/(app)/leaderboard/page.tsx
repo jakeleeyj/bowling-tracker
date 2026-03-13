@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { createClient } from "@/lib/supabase-server";
 import { Trophy } from "lucide-react";
 import type { ProfileRow, GameRow } from "@/lib/queries";
