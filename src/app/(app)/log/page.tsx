@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import {
   type FrameData,
@@ -49,8 +49,23 @@ function upsertFrame(frames: FrameData[], frame: FrameData): FrameData[] {
   return [...without, frame].sort((a, b) => a.frameNumber - b.frameNumber);
 }
 
-export default function LogPage() {
+export default function LogPageWrapper() {
+  return (
+    <Suspense
+      fallback={
+        <div className="py-20 text-center text-sm text-text-muted">
+          Loading...
+        </div>
+      }
+    >
+      <LogPage />
+    </Suspense>
+  );
+}
+
+function LogPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
   const { toast } = useToast();
 
@@ -71,6 +86,12 @@ export default function LogPage() {
   const [saving, setSaving] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
 
+  // Edit mode state
+  const [editMode, setEditMode] = useState(false);
+  const [editGameId, setEditGameId] = useState<string | null>(null);
+  const [editSessionId, setEditSessionId] = useState<string | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+
   const [history, setHistory] = useState<
     Array<{
       frames: FrameData[];
@@ -81,6 +102,68 @@ export default function LogPage() {
   >([]);
 
   const editorStatesRef = useRef<Map<number, GameEditorState>>(new Map());
+  const editInitialized = useRef(false);
+
+  // Load game for editing when ?editGame= param is present
+  useEffect(() => {
+    const editGameParam = searchParams.get("editGame");
+    if (!editGameParam || editInitialized.current) return;
+    editInitialized.current = true;
+
+    setEditLoading(true);
+    async function loadGameForEdit() {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: game } = await (supabase as any)
+        .from("games")
+        .select("id, session_id, total_score, entry_type")
+        .eq("id", editGameParam)
+        .single();
+
+      if (!game) {
+        setEditLoading(false);
+        return;
+      }
+
+      setEditMode(true);
+      setEditGameId(game.id);
+      setEditSessionId(game.session_id);
+
+      if (game.entry_type === "detailed") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: dbFrames } = await (supabase as any)
+          .from("frames")
+          .select("*")
+          .eq("game_id", game.id)
+          .order("frame_number", { ascending: true });
+
+        if (dbFrames && dbFrames.length > 0) {
+          const loadedFrames: FrameData[] = dbFrames.map(
+            (f: Record<string, unknown>) => ({
+              frameNumber: f.frame_number as number,
+              roll1: f.roll_1 as number,
+              roll2: f.roll_2 as number | null,
+              roll3: f.roll_3 as number | null,
+              isStrike: f.is_strike as boolean,
+              isSpare: f.is_spare as boolean,
+              pinsRemaining: f.pins_remaining as number[] | null,
+              spareConverted: f.spare_converted as boolean,
+            }),
+          );
+          setFrames(loadedFrames);
+          setEntryMode("detailed");
+        }
+      } else {
+        setQuickScore(game.total_score.toString());
+        setEntryMode("quick");
+      }
+
+      setStep("game");
+      setGameCount(1);
+      setCurrentGameIndex(0);
+      setEditLoading(false);
+    }
+    loadGameForEdit();
+  }, [searchParams, supabase]);
 
   function saveHistory() {
     setHistory((prev) => [
@@ -207,6 +290,12 @@ export default function LogPage() {
 
   function switchToGame(gameIndex: number) {
     if (gameIndex === currentGameIndex) return;
+    const currentHasProgress = frames.length > 0 && !games[currentGameIndex];
+    if (
+      currentHasProgress &&
+      !confirm("Switch games? Your progress on this game will be saved.")
+    )
+      return;
     saveEditorState(currentGameIndex);
     setCurrentGameIndex(gameIndex);
     loadEditorState(gameIndex);
@@ -596,6 +685,95 @@ export default function LogPage() {
     router.refresh();
   }
 
+  async function updateExistingGame() {
+    if (!editGameId || !editSessionId) return;
+    setSaving(true);
+
+    const game = games[0];
+    if (!game) {
+      setSaving(false);
+      return;
+    }
+
+    const clean =
+      game.entryType === "detailed" ? isCleanGame(game.frames) : false;
+    const strikes =
+      game.entryType === "detailed" ? countStrikes(game.frames) : 0;
+    const spares = game.entryType === "detailed" ? countSpares(game.frames) : 0;
+
+    // Get old score for session total diff
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: oldGame } = await (supabase as any)
+      .from("games")
+      .select("total_score")
+      .eq("id", editGameId)
+      .single();
+
+    const oldScore = oldGame?.total_score ?? 0;
+    const diff = game.totalScore - oldScore;
+
+    // Update game record
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("games")
+      .update({
+        total_score: game.totalScore,
+        entry_type: game.entryType,
+        is_clean: clean,
+        strike_count: strikes,
+        spare_count: spares,
+      })
+      .eq("id", editGameId);
+
+    // Update session total_pins
+    if (diff !== 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: session } = await (supabase as any)
+        .from("sessions")
+        .select("total_pins")
+        .eq("id", editSessionId)
+        .single();
+
+      if (session) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+          .from("sessions")
+          .update({ total_pins: session.total_pins + diff })
+          .eq("id", editSessionId);
+      }
+    }
+
+    // Replace frames
+    if (game.entryType === "detailed" && game.frames.length > 0) {
+      // Delete old frames
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("frames").delete().eq("game_id", editGameId);
+
+      // Insert new frames
+      const frameScores = calculateFrameScores(game.frames);
+      const frameInserts = game.frames.map((f, fi) => ({
+        game_id: editGameId,
+        frame_number: f.frameNumber,
+        roll_1: f.roll1,
+        roll_2: f.roll2,
+        roll_3: f.roll3,
+        is_strike: f.isStrike,
+        is_spare: f.isSpare,
+        pins_remaining: f.pinsRemaining,
+        spare_converted: f.spareConverted,
+        frame_score: frameScores[fi] ?? 0,
+      }));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("frames").insert(frameInserts);
+    }
+
+    setSaving(false);
+    toast("Game updated");
+    router.back();
+    router.refresh();
+  }
+
   // Warn before leaving mid-game
   const hasProgress =
     step === "game" && (frames.length > 0 || games.length > 0);
@@ -637,11 +815,22 @@ export default function LogPage() {
   const showStrikeButton =
     isFreshRack && (currentRoll === 1 || currentFrame === 10);
 
+  // LOADING EDIT DATA
+  if (editLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="text-sm text-text-muted">Loading game...</div>
+      </div>
+    );
+  }
+
   // SETUP STEP
   if (step === "setup") {
     return (
       <div>
-        <h1 className="mb-6 text-xl font-extrabold">Log a Session</h1>
+        <h1 className="mb-6 text-xl font-extrabold text-text-primary">
+          Log a Session
+        </h1>
 
         <div className="flex flex-col gap-4">
           <div>
@@ -653,7 +842,7 @@ export default function LogPage() {
               placeholder="e.g. Orchid Bowl"
               value={venue}
               onChange={(e) => setVenue(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-light px-4 py-3 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+              className="w-full rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
             />
           </div>
 
@@ -726,7 +915,9 @@ export default function LogPage() {
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-base font-bold">Session Complete</h1>
+          <h1 className="text-base font-bold text-text-primary">
+            Session Complete
+          </h1>
           <div className="w-5" />
         </div>
         <p className="mb-4 text-sm text-text-muted">
@@ -738,11 +929,15 @@ export default function LogPage() {
         <div className="mb-4 flex gap-3">
           <div className="glass flex-1 p-4 text-center">
             <div className="text-xs text-text-muted">Total</div>
-            <div className="text-2xl font-extrabold">{totalPins}</div>
+            <div className="text-2xl font-extrabold text-text-primary">
+              {totalPins}
+            </div>
           </div>
           <div className="glass flex-1 p-4 text-center">
             <div className="text-xs text-text-muted">Average</div>
-            <div className="text-2xl font-extrabold">{avg}</div>
+            <div className="text-2xl font-extrabold text-text-primary">
+              {avg}
+            </div>
           </div>
         </div>
 
@@ -759,7 +954,7 @@ export default function LogPage() {
               >
                 <div className="text-[9px] text-text-muted">G{i + 1}</div>
                 <div
-                  className={`text-base font-bold ${isHigh ? "text-gold" : clean ? "text-green" : ""}`}
+                  className={`text-base font-bold ${isHigh ? "text-gold" : clean ? "text-green" : "text-text-primary"}`}
                 >
                   {g.totalScore}
                 </div>
@@ -786,6 +981,11 @@ export default function LogPage() {
       <div className="mb-3 flex items-center justify-between">
         <button
           onClick={() => {
+            if (editMode) {
+              if (!confirm("Discard changes?")) return;
+              router.back();
+              return;
+            }
             const hasAnyProgress = frames.length > 0 || games.some(Boolean);
             if (
               hasAnyProgress &&
@@ -798,8 +998,10 @@ export default function LogPage() {
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-base font-bold">
-          Game {currentGameIndex + 1} of {gameCount}
+        <h1 className="text-base font-bold text-text-primary">
+          {editMode
+            ? "Edit Game"
+            : `Game ${currentGameIndex + 1} of ${gameCount}`}
         </h1>
         <div className="w-5" />
       </div>
@@ -862,7 +1064,7 @@ export default function LogPage() {
 
           <div className="glass p-4 text-center">
             <div className="text-xs text-text-muted">Final Score</div>
-            <div className="text-3xl font-extrabold">
+            <div className="text-3xl font-extrabold text-text-primary">
               {games[currentGameIndex].totalScore}
             </div>
             {games[currentGameIndex].entryType === "detailed" && (
@@ -897,35 +1099,45 @@ export default function LogPage() {
             </button>
           </div>
 
-          {/* Next Game / Save Session button */}
-          {(() => {
-            const nextIncomplete = Array.from(
-              { length: gameCount },
-              (_, i) => i,
-            ).find((i) => i !== currentGameIndex && !games[i]);
-            if (nextIncomplete !== undefined) {
-              return (
-                <button
-                  onClick={() => switchToGame(nextIncomplete)}
-                  className="w-full rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
-                >
-                  Next Game (G{nextIncomplete + 1})
-                </button>
-              );
-            }
-            if (games.filter(Boolean).length === gameCount) {
-              return (
-                <button
-                  onClick={saveSession}
-                  disabled={saving}
-                  className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
-                >
-                  {saving ? "Saving..." : "Save Session"}
-                </button>
-              );
-            }
-            return null;
-          })()}
+          {/* Next Game / Save button */}
+          {editMode ? (
+            <button
+              onClick={updateExistingGame}
+              disabled={saving}
+              className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+          ) : (
+            (() => {
+              const nextIncomplete = Array.from(
+                { length: gameCount },
+                (_, i) => i,
+              ).find((i) => i !== currentGameIndex && !games[i]);
+              if (nextIncomplete !== undefined) {
+                return (
+                  <button
+                    onClick={() => switchToGame(nextIncomplete)}
+                    className="w-full rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+                  >
+                    Next Game (G{nextIncomplete + 1})
+                  </button>
+                );
+              }
+              if (games.filter(Boolean).length === gameCount) {
+                return (
+                  <button
+                    onClick={saveSession}
+                    disabled={saving}
+                    className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+                  >
+                    {saving ? "Saving..." : "Save Session"}
+                  </button>
+                );
+              }
+              return null;
+            })()
+          )}
         </div>
       ) : (
         <>
@@ -960,13 +1172,17 @@ export default function LogPage() {
                   Total Score
                 </label>
                 <input
-                  type="number"
-                  min="0"
-                  max="300"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={quickScore}
-                  onChange={(e) => setQuickScore(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/[^0-9]/g, "");
+                    if (v === "" || (parseInt(v) >= 0 && parseInt(v) <= 300))
+                      setQuickScore(v);
+                  }}
                   placeholder="0"
-                  className="w-full bg-transparent text-center text-5xl font-extrabold outline-none placeholder:text-surface-light"
+                  className="w-full bg-transparent text-center text-5xl font-extrabold text-text-primary outline-none placeholder:text-surface-light"
                 />
               </div>
               <button
@@ -996,7 +1212,9 @@ export default function LogPage() {
               <div className="flex gap-2">
                 <div className="glass flex-1 p-2 text-center">
                   <div className="text-[10px] text-text-muted">Score</div>
-                  <div className="text-xl font-extrabold">{currentScore}</div>
+                  <div className="text-xl font-extrabold text-text-primary">
+                    {currentScore}
+                  </div>
                 </div>
                 <div className="glass flex-1 p-2 text-center">
                   <div className="text-[10px] text-text-muted">

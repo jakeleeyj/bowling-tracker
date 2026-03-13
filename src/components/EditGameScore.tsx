@@ -72,12 +72,15 @@ export default function EditGameScore({
   return (
     <div className="flex items-center gap-1.5">
       <input
-        type="number"
-        min={0}
-        max={300}
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
         value={score}
-        onChange={(e) => setScore(e.target.value)}
-        className="w-16 rounded-lg border border-border bg-surface-light px-2 py-1.5 text-center text-sm font-bold text-text-primary outline-none focus:border-blue"
+        onChange={(e) => {
+          const v = e.target.value.replace(/[^0-9]/g, "");
+          if (v === "" || (parseInt(v) >= 0 && parseInt(v) <= 300)) setScore(v);
+        }}
+        className="w-16 rounded-lg border border-border bg-surface-light px-2 py-1.5 text-center text-base font-bold text-text-primary outline-none focus:border-blue"
         autoFocus
       />
       <button

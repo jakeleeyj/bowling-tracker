@@ -179,7 +179,7 @@ export default function FrameScorecard({
               return (
                 <td
                   key={i}
-                  className="border border-border text-[12px] font-bold"
+                  className="border border-border text-[12px] font-bold text-text-primary"
                 >
                   {canDisplay ? (
                     score
