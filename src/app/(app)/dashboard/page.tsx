@@ -2,7 +2,10 @@ export const dynamic = "force-dynamic";
 
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
-import type { ProfileRow, SessionWithGamesAndProfile } from "@/lib/queries";
+import type {
+  ProfileRow,
+  SessionWithGamesFramesAndProfile,
+} from "@/lib/queries";
 import SessionCard from "@/components/SessionCard";
 
 const AVATAR_GRADIENTS = [
@@ -60,9 +63,9 @@ export default async function DashboardPage() {
   // Get recent sessions with games and profiles
   const { data: sessions } = (await supabase
     .from("sessions")
-    .select("*, profiles(*), games(*)")
+    .select("*, profiles(*), games(*, frames(*))")
     .order("created_at", { ascending: false })
-    .limit(10)) as { data: SessionWithGamesAndProfile[] | null };
+    .limit(10)) as { data: SessionWithGamesFramesAndProfile[] | null };
 
   const displayName = profile?.display_name ?? "Bowler";
   const initial = displayName.charAt(0).toUpperCase();

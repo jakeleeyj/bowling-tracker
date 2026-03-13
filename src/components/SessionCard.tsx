@@ -4,6 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { Star, Check, ChevronDown } from "lucide-react";
 
+interface FrameInfo {
+  frame_number: number;
+  roll_1: number;
+  roll_2: number | null;
+  roll_3: number | null;
+  is_strike: boolean;
+  is_spare: boolean;
+  frame_score: number;
+}
+
 interface SessionGame {
   id: string;
   game_number: number;
@@ -12,6 +22,7 @@ interface SessionGame {
   entry_type: string;
   strike_count: number;
   spare_count: number;
+  frames?: FrameInfo[];
 }
 
 interface SessionCardProps {
@@ -49,6 +60,133 @@ function PinIcon({ className }: { className?: string }) {
       <circle cx="8" cy="4" r="3" />
       <line x1="8" y1="7" x2="8" y2="15" />
     </svg>
+  );
+}
+
+function formatFrameRoll(frame: FrameInfo, rollNum: 1 | 2 | 3): string {
+  if (frame.frame_number < 10) {
+    if (rollNum === 1) {
+      if (frame.is_strike) return "X";
+      return frame.roll_1 === 0 ? "-" : frame.roll_1.toString();
+    }
+    if (rollNum === 2) {
+      if (frame.roll_2 === null) return "";
+      if (frame.is_spare) return "/";
+      return frame.roll_2 === 0 ? "-" : frame.roll_2.toString();
+    }
+    return "";
+  }
+  // 10th frame
+  if (rollNum === 1) {
+    return frame.roll_1 === 10
+      ? "X"
+      : frame.roll_1 === 0
+        ? "-"
+        : frame.roll_1.toString();
+  }
+  if (rollNum === 2) {
+    if (frame.roll_2 === null) return "";
+    if (frame.roll_1 === 10 && frame.roll_2 === 10) return "X";
+    if (frame.roll_1 !== 10 && frame.roll_1 + frame.roll_2 === 10) return "/";
+    return frame.roll_2 === 0 ? "-" : frame.roll_2.toString();
+  }
+  if (rollNum === 3) {
+    if (frame.roll_3 === null) return "";
+    if (frame.roll_3 === 10) return "X";
+    if (
+      frame.roll_2 !== null &&
+      frame.roll_2 !== 10 &&
+      frame.roll_2 + frame.roll_3 === 10
+    )
+      return "/";
+    return frame.roll_3 === 0 ? "-" : frame.roll_3.toString();
+  }
+  return "";
+}
+
+function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
+  const sorted = [...frames].sort((a, b) => a.frame_number - b.frame_number);
+
+  return (
+    <div className="overflow-hidden rounded border border-border/50">
+      <div className="flex">
+        {Array.from({ length: 10 }, (_, i) => {
+          const frame = sorted.find((f) => f.frame_number === i + 1);
+          if (!frame) {
+            return (
+              <div
+                key={i}
+                className="flex-1 border-r border-border/30 px-0 py-[2px] text-center text-[9px] text-text-muted last:border-r-0"
+              >
+                &mdash;
+              </div>
+            );
+          }
+
+          const r1 = formatFrameRoll(frame, 1);
+          const r2 = formatFrameRoll(frame, 2);
+          const r3 = i === 9 ? formatFrameRoll(frame, 3) : "";
+
+          return (
+            <div
+              key={i}
+              className="flex-1 border-r border-border/30 px-0 py-[2px] text-center text-[9px] last:border-r-0"
+            >
+              {i < 9 ? (
+                frame.is_strike ? (
+                  <span className="font-bold text-green">X</span>
+                ) : (
+                  <span>
+                    <span className="text-text-secondary">{r1}</span>
+                    <span
+                      className={
+                        frame.is_spare
+                          ? "font-bold text-gold"
+                          : "text-text-secondary"
+                      }
+                    >
+                      {r2}
+                    </span>
+                  </span>
+                )
+              ) : (
+                <span className="text-[8px]">
+                  <span
+                    className={
+                      r1 === "X"
+                        ? "font-bold text-green"
+                        : "text-text-secondary"
+                    }
+                  >
+                    {r1}
+                  </span>
+                  <span
+                    className={
+                      r2 === "X"
+                        ? "font-bold text-green"
+                        : frame.is_spare
+                          ? "font-bold text-gold"
+                          : "text-text-secondary"
+                    }
+                  >
+                    {r2}
+                  </span>
+                  <span
+                    className={
+                      r3 === "X"
+                        ? "font-bold text-green"
+                        : "text-text-secondary"
+                    }
+                  >
+                    {r3}
+                  </span>
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -151,48 +289,52 @@ export default function SessionCard({
         })}
       </div>
 
-      {/* Expanded: per-game details */}
+      {/* Expanded: per-game frame breakdown */}
       {expanded && (
         <div className="border-t border-border/50 px-3 py-2">
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             {games.map((game) => {
               const isHigh = game.total_score === highGame;
               const isClean = game.is_clean;
+              const hasFrames = game.frames && game.frames.length > 0;
 
               return (
                 <Link
                   key={game.id}
                   href={`/game/${game.id}`}
-                  className="flex items-center justify-between rounded-md bg-black/20 px-3 py-2 transition-colors hover:bg-black/30"
+                  className="rounded-md bg-black/20 px-3 py-2 transition-colors hover:bg-black/30"
                 >
-                  <div>
-                    <span className="text-xs font-semibold">
-                      Game {game.game_number}
-                    </span>
-                    {game.entry_type === "detailed" && (
-                      <span className="ml-2 text-[10px] text-text-muted">
-                        {game.strike_count}X {game.spare_count}/
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-semibold">
+                        Game {game.game_number}
                       </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {isClean && (
-                      <span className="text-[9px] font-semibold text-green">
-                        CLEAN
+                      {game.entry_type === "detailed" && (
+                        <span className="ml-2 text-[10px] text-text-muted">
+                          {game.strike_count}X {game.spare_count}/
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isClean && (
+                        <span className="text-[9px] font-semibold text-green">
+                          CLEAN
+                        </span>
+                      )}
+                      <span
+                        className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : ""}`}
+                      >
+                        {game.total_score}
                       </span>
-                    )}
-                    <span
-                      className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : ""}`}
-                    >
-                      {game.total_score}
-                    </span>
+                    </div>
                   </div>
+                  {hasFrames && <MiniScorecard frames={game.frames!} />}
                 </Link>
               );
             })}
           </div>
           <p className="mt-1.5 text-center text-[9px] text-text-muted">
-            Tap a game to see full frame breakdown
+            Tap a game to see full breakdown
           </p>
         </div>
       )}

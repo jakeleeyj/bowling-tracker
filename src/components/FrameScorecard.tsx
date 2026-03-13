@@ -18,37 +18,37 @@ function formatRoll(
   if (frameNum < 10) {
     if (rollNum === 1) {
       if (frame.isStrike) return "X";
-      return frame.roll1.toString();
+      return frame.roll1 === 0 ? "-" : frame.roll1.toString();
     }
     if (rollNum === 2) {
       if (frame.roll2 === null) return "";
       if (frame.isSpare) return "/";
-      return frame.roll2.toString();
+      return frame.roll2 === 0 ? "-" : frame.roll2.toString();
     }
     return "";
   }
 
   // 10th frame
   if (rollNum === 1) {
-    return frame.roll1 === 10 ? "X" : frame.roll1.toString();
+    if (frame.roll1 === 10) return "X";
+    return frame.roll1 === 0 ? "-" : frame.roll1.toString();
   }
   if (rollNum === 2) {
     if (frame.roll2 === null) return "";
     if (frame.roll1 === 10 && frame.roll2 === 10) return "X";
     if (frame.roll1 !== 10 && frame.roll1 + frame.roll2 === 10) return "/";
-    return frame.roll2.toString();
+    return frame.roll2 === 0 ? "-" : frame.roll2.toString();
   }
   if (rollNum === 3) {
     if (frame.roll3 === null) return "";
     if (frame.roll3 === 10) return "X";
-    // Check for spare in 3rd roll
     if (
       frame.roll2 !== null &&
       frame.roll2 !== 10 &&
       frame.roll2 + frame.roll3 === 10
     )
       return "/";
-    return frame.roll3.toString();
+    return frame.roll3 === 0 ? "-" : frame.roll3.toString();
   }
   return "";
 }
@@ -83,13 +83,13 @@ export default function FrameScorecard({
             {Array.from({ length: 10 }, (_, i) => {
               const frame = frames.find((f) => f.frameNumber === i + 1);
               const isCurrentFrame = i + 1 === currentFrame;
-              const isCompleted = !!frame && !isCurrentFrame;
+              const isTappable = !isCurrentFrame && !!onFrameTap;
 
               return (
                 <td
                   key={i}
-                  onClick={() => isCompleted && onFrameTap?.(i + 1)}
-                  className={`border border-border text-[11px] ${isCurrentFrame ? "bg-blue/10" : ""} ${isCompleted && onFrameTap ? "cursor-pointer active:bg-blue/5" : ""}`}
+                  onClick={() => isTappable && onFrameTap?.(i + 1)}
+                  className={`border border-border text-[11px] ${isCurrentFrame ? "bg-blue/10" : ""} ${isTappable ? "cursor-pointer active:bg-blue/5" : ""}`}
                 >
                   {frame ? (
                     <div
@@ -162,9 +162,12 @@ export default function FrameScorecard({
           {/* Running totals */}
           <tr className="h-[26px]">
             {Array.from({ length: 10 }, (_, i) => {
-              const score = scores[i];
+              const frameIdx = frames.findIndex((f) => f.frameNumber === i + 1);
+              const score = frameIdx >= 0 ? scores[frameIdx] : undefined;
               const canDisplay =
-                score !== undefined && isScoreResolved(frames, i);
+                score !== undefined &&
+                frameIdx >= 0 &&
+                isScoreResolved(frames, frameIdx);
 
               return (
                 <td
@@ -193,8 +196,9 @@ function isScoreResolved(frames: FrameData[], frameIndex: number): boolean {
   const frame = frames[frameIndex];
   if (!frame) return false;
 
-  if (frameIndex === 9) {
-    // 10th frame: resolved when all rolls are entered
+  const frameNum = frame.frameNumber;
+
+  if (frameNum === 10) {
     if (
       frame.roll1 === 10 ||
       (frame.roll2 !== null && frame.roll1 + frame.roll2 === 10)
@@ -205,12 +209,14 @@ function isScoreResolved(frames: FrameData[], frameIndex: number): boolean {
   }
 
   if (frame.isStrike) {
-    // Need next 2 rolls
+    // Need next 2 rolls from subsequent frames
     let rollsFound = 0;
-    for (let i = frameIndex + 1; i < frames.length && rollsFound < 2; i++) {
+    for (let n = frameNum + 1; n <= 10 && rollsFound < 2; n++) {
+      const next = frames.find((f) => f.frameNumber === n);
+      if (!next) return false;
       rollsFound++;
-      if (!frames[i].isStrike || i === 9) {
-        if (frames[i].roll2 !== null) rollsFound++;
+      if (!next.isStrike || n === 10) {
+        if (next.roll2 !== null) rollsFound++;
       }
     }
     return rollsFound >= 2;
@@ -218,9 +224,9 @@ function isScoreResolved(frames: FrameData[], frameIndex: number): boolean {
 
   if (frame.isSpare) {
     // Need next 1 roll
-    return frameIndex + 1 < frames.length;
+    const next = frames.find((f) => f.frameNumber === frameNum + 1);
+    return !!next;
   }
 
-  // Open frame: always resolved
   return true;
 }

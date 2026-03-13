@@ -25,30 +25,31 @@ interface GameData {
   frames: FrameData[];
 }
 
+function upsertFrame(frames: FrameData[], frame: FrameData): FrameData[] {
+  const without = frames.filter((f) => f.frameNumber !== frame.frameNumber);
+  return [...without, frame].sort((a, b) => a.frameNumber - b.frameNumber);
+}
+
 export default function LogPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // Session setup
   const [step, setStep] = useState<Step>("setup");
   const [venue, setVenue] = useState("");
   const [eventLabel, setEventLabel] = useState("");
   const [gameCount, setGameCount] = useState(3);
 
-  // Game state
   const [currentGameIndex, setCurrentGameIndex] = useState(0);
   const [games, setGames] = useState<GameData[]>([]);
   const [entryMode, setEntryMode] = useState<EntryMode>("detailed");
   const [quickScore, setQuickScore] = useState("");
 
-  // Detailed entry state
   const [frames, setFrames] = useState<FrameData[]>([]);
   const [currentFrame, setCurrentFrame] = useState(1);
   const [currentRoll, setCurrentRoll] = useState<1 | 2 | 3>(1);
-  const [standingPins, setStandingPins] = useState<number[]>([]);
+  const [standingPins, setStandingPins] = useState<number[]>(getAllPins());
   const [saving, setSaving] = useState(false);
 
-  // Undo history
   const [history, setHistory] = useState<
     Array<{
       frames: FrameData[];
@@ -81,12 +82,19 @@ export default function LogPage() {
   }
 
   function handleFrameTap(frameNumber: number) {
-    // Jump back to this frame, discard it and all after
     saveHistory();
-    setFrames(frames.filter((f) => f.frameNumber < frameNumber));
+    let newFrames = [...frames];
+    // Remove partial current frame (roll 1 entered but not roll 2, and not a strike)
+    const currentData = newFrames.find((f) => f.frameNumber === currentFrame);
+    if (currentData && !currentData.isStrike && currentData.roll2 === null) {
+      newFrames = newFrames.filter((f) => f.frameNumber !== currentFrame);
+    }
+    // Remove tapped frame (will be re-entered)
+    newFrames = newFrames.filter((f) => f.frameNumber !== frameNumber);
+    setFrames(newFrames);
     setCurrentFrame(frameNumber);
     setCurrentRoll(1);
-    setStandingPins([]);
+    setStandingPins(getAllPins());
   }
 
   function startSession() {
@@ -100,13 +108,13 @@ export default function LogPage() {
     setFrames([]);
     setCurrentFrame(1);
     setCurrentRoll(1);
-    setStandingPins([]);
+    setStandingPins(getAllPins());
     setQuickScore("");
     setEntryMode("detailed");
+    setHistory([]);
   }
 
   function handleStrike() {
-    saveHistory();
     if (currentFrame <= 9) {
       const frame: FrameData = {
         frameNumber: currentFrame,
@@ -118,17 +126,15 @@ export default function LogPage() {
         pinsRemaining: null,
         spareConverted: false,
       };
-      const newFrames = [...frames, frame];
+      const newFrames = upsertFrame(frames, frame);
       setFrames(newFrames);
       advanceFrame(newFrames);
     } else {
-      // 10th frame strike handling
       handle10thFrameRoll(10);
     }
   }
 
   function handleSpare() {
-    saveHistory();
     if (currentFrame <= 9) {
       const existingFrame = frames.find((f) => f.frameNumber === currentFrame);
       if (!existingFrame) return;
@@ -147,7 +153,6 @@ export default function LogPage() {
       setFrames(newFrames);
       advanceFrame(newFrames);
     } else {
-      // 10th frame spare: knock all available pins
       const existing = frames.find((f) => f.frameNumber === 10);
       if (!existing) return;
       const available = existing.isStrike
@@ -158,24 +163,15 @@ export default function LogPage() {
   }
 
   function handlePinToggle(pin: number) {
-    if (currentRoll === 1) {
-      // Toggle pin standing/knocked
-      setStandingPins((prev) =>
-        prev.includes(pin) ? prev.filter((p) => p !== pin) : [...prev, pin],
-      );
-    } else {
-      // Roll 2+: toggle remaining pins
-      setStandingPins((prev) =>
-        prev.includes(pin) ? prev.filter((p) => p !== pin) : [...prev, pin],
-      );
-    }
+    setStandingPins((prev) =>
+      prev.includes(pin) ? prev.filter((p) => p !== pin) : [...prev, pin],
+    );
   }
 
   function confirmPinSelection() {
     saveHistory();
     if (currentFrame <= 9) {
       if (currentRoll === 1) {
-        // Standing pins = what user marked as still up
         const knocked = 10 - standingPins.length;
         if (knocked === 10) {
           handleStrike();
@@ -191,9 +187,9 @@ export default function LogPage() {
           pinsRemaining: [...standingPins],
           spareConverted: false,
         };
-        setFrames([...frames, frame]);
+        setFrames(upsertFrame(frames, frame));
         setCurrentRoll(2);
-        // Keep standing pins — they show which pins are still up for roll 2
+        // standingPins keeps correct value — pins still standing for roll 2
       } else {
         const existingFrame = frames.find(
           (f) => f.frameNumber === currentFrame,
@@ -218,7 +214,6 @@ export default function LogPage() {
         advanceFrame(newFrames);
       }
     } else {
-      // 10th frame pin confirmation
       const existingFrame = frames.find((f) => f.frameNumber === 10);
       const avail = getAvailablePins();
 
@@ -243,7 +238,6 @@ export default function LogPage() {
     const existing = frames.find((f) => f.frameNumber === 10);
 
     if (!existing) {
-      // Roll 1 of 10th frame
       const frame: FrameData = {
         frameNumber: 10,
         roll1: pins,
@@ -254,11 +248,12 @@ export default function LogPage() {
         pinsRemaining: pins === 10 ? null : [...standingPins],
         spareConverted: false,
       };
-      setFrames([...frames, frame]);
+      setFrames(upsertFrame(frames, frame));
       setCurrentRoll(2);
-      if (pins === 10) setStandingPins([]); // Fresh rack after strike only
+      if (pins === 10) {
+        setStandingPins(getAllPins());
+      }
     } else if (existing.roll2 === null) {
-      // Roll 2 of 10th frame
       const isSpare = !existing.isStrike && existing.roll1 + pins === 10;
       const updatedFrame: FrameData = {
         ...existing,
@@ -271,20 +266,16 @@ export default function LogPage() {
       );
 
       if (existing.isStrike || isSpare) {
-        // Gets a 3rd roll
         setFrames(newFrames);
         setCurrentRoll(3);
         if (pins === 10 || isSpare) {
-          setStandingPins([]); // Fresh rack
+          setStandingPins(getAllPins());
         }
-        // Otherwise keep standing pins for roll 3 spare attempt
       } else {
-        // Game over
         setFrames(newFrames);
         completeCurrentGame(newFrames);
       }
     } else {
-      // Roll 3 of 10th frame
       const updatedFrame: FrameData = {
         ...existing,
         roll3: pins,
@@ -298,23 +289,42 @@ export default function LogPage() {
   }
 
   function advanceFrame(newFrames: FrameData[]) {
-    if (currentFrame >= 10) {
-      completeCurrentGame(newFrames);
-      return;
+    const filledNumbers = new Set(newFrames.map((f) => f.frameNumber));
+
+    // Find next empty frame after current
+    for (let i = currentFrame + 1; i <= 10; i++) {
+      if (!filledNumbers.has(i)) {
+        setCurrentFrame(i);
+        setCurrentRoll(1);
+        setStandingPins(getAllPins());
+        return;
+      }
     }
-    setCurrentFrame(currentFrame + 1);
-    setCurrentRoll(1);
-    setStandingPins([]);
+    // Wrap around from start
+    for (let i = 1; i < currentFrame; i++) {
+      if (!filledNumbers.has(i)) {
+        setCurrentFrame(i);
+        setCurrentRoll(1);
+        setStandingPins(getAllPins());
+        return;
+      }
+    }
+
+    // All 10 frames filled
+    completeCurrentGame(newFrames);
   }
 
   function completeCurrentGame(completedFrames: FrameData[]) {
-    const scores = calculateFrameScores(completedFrames);
+    const sorted = [...completedFrames].sort(
+      (a, b) => a.frameNumber - b.frameNumber,
+    );
+    const scores = calculateFrameScores(sorted);
     const total = scores[scores.length - 1] ?? 0;
 
     const game: GameData = {
       entryType: "detailed",
       totalScore: total,
-      frames: completedFrames,
+      frames: sorted,
     };
 
     const newGames = [...games, game];
@@ -355,7 +365,6 @@ export default function LogPage() {
 
     const totalPins = games.reduce((sum, g) => sum + g.totalScore, 0);
 
-    // Create session
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: session, error: sessionError } = await (supabase as any)
       .from("sessions")
@@ -375,7 +384,6 @@ export default function LogPage() {
       return;
     }
 
-    // Create games
     for (let i = 0; i < games.length; i++) {
       const game = games[i];
       const clean =
@@ -403,7 +411,6 @@ export default function LogPage() {
 
       if (gameError || !gameRow) continue;
 
-      // Create frames for detailed games
       if (game.entryType === "detailed" && game.frames.length > 0) {
         const frameScores = calculateFrameScores(game.frames);
         const frameInserts = game.frames.map((f, fi) => ({
@@ -440,9 +447,12 @@ export default function LogPage() {
   }, [hasProgress]);
 
   const allGamesComplete = games.length === gameCount;
-  const scores = calculateFrameScores(frames);
+  const sortedFrames = [...frames].sort(
+    (a, b) => a.frameNumber - b.frameNumber,
+  );
+  const scores = calculateFrameScores(sortedFrames);
   const currentScore = scores[scores.length - 1] ?? 0;
-  const maxPossible = calculateMaxPossible(frames);
+  const maxPossible = calculateMaxPossible(sortedFrames);
 
   function getAvailablePins(): number[] {
     if (currentFrame <= 9) {
@@ -450,21 +460,21 @@ export default function LogPage() {
       const f = frames.find((fr) => fr.frameNumber === currentFrame);
       return f?.pinsRemaining ?? getAllPins();
     }
-    // 10th frame
     const f10 = frames.find((fr) => fr.frameNumber === 10);
-    if (!f10) return getAllPins(); // roll 1
+    if (!f10) return getAllPins();
     if (f10.roll2 === null) {
-      // roll 2
-      if (f10.isStrike) return getAllPins(); // fresh rack after strike
+      if (f10.isStrike) return getAllPins();
       return f10.pinsRemaining ?? getAllPins();
     }
-    // roll 3
-    if (f10.roll2 === 10 || f10.isSpare) return getAllPins(); // fresh rack
-    return getAllPins(); // fallback for remaining pins
+    if (f10.roll2 === 10 || f10.isSpare) return getAllPins();
+    return getAllPins();
   }
 
   const availablePins = getAvailablePins();
   const isFreshRack = availablePins.length === 10;
+  const showStrikeButton =
+    isFreshRack && (currentRoll === 1 || currentFrame === 10);
+
   // SETUP STEP
   if (step === "setup") {
     return (
@@ -649,7 +659,6 @@ export default function LogPage() {
       </div>
 
       {entryMode === "quick" ? (
-        // QUICK ENTRY
         <div className="flex flex-col gap-4">
           <div className="glass p-6 text-center">
             <label className="mb-2 block text-sm text-text-muted">
@@ -679,11 +688,10 @@ export default function LogPage() {
           </button>
         </div>
       ) : (
-        // DETAILED ENTRY
         <div className="flex flex-col gap-3">
           {/* Scorecard */}
           <FrameScorecard
-            frames={frames}
+            frames={sortedFrames}
             currentFrame={currentFrame}
             currentRoll={currentRoll}
             onFrameTap={handleFrameTap}
@@ -715,7 +723,7 @@ export default function LogPage() {
             standingPins={standingPins}
             availablePins={availablePins}
             onPinToggle={handlePinToggle}
-            label="Tap pins left standing"
+            label="Tap knocked down pins"
           />
 
           {/* Action buttons */}
@@ -728,16 +736,22 @@ export default function LogPage() {
                 <Undo2 size={18} />
               </button>
             )}
-            {isFreshRack ? (
+            {showStrikeButton ? (
               <button
-                onClick={handleStrike}
+                onClick={() => {
+                  saveHistory();
+                  handleStrike();
+                }}
                 className="flex-1 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-green/25"
               >
                 STRIKE
               </button>
             ) : (
               <button
-                onClick={handleSpare}
+                onClick={() => {
+                  saveHistory();
+                  handleSpare();
+                }}
                 className="flex-1 rounded-xl bg-gradient-to-r from-gold to-amber-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-gold/25"
               >
                 SPARE

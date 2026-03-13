@@ -46,9 +46,18 @@ export interface SessionRow {
   created_at: string;
 }
 
+export interface GameRowWithFrames extends GameRow {
+  frames: FrameRow[];
+}
+
 export interface SessionWithGamesAndProfile extends SessionRow {
   profiles: ProfileRow;
   games: GameRow[];
+}
+
+export interface SessionWithGamesFramesAndProfile extends SessionRow {
+  profiles: ProfileRow;
+  games: GameRowWithFrames[];
 }
 
 export interface SessionWithGames extends SessionRow {
