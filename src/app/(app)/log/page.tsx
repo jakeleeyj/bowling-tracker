@@ -14,7 +14,7 @@ import {
 } from "@/lib/bowling";
 import PinDiagram from "@/components/PinDiagram";
 import FrameScorecard from "@/components/FrameScorecard";
-import { ArrowLeft, Check, Undo2 } from "lucide-react";
+import { ArrowLeft, Check, Undo2, Pencil, Trash2 } from "lucide-react";
 
 type EntryMode = "quick" | "detailed";
 type Step = "setup" | "game";
@@ -165,6 +165,40 @@ export default function LogPage() {
     } else {
       resetGameState();
     }
+  }
+
+  function editCurrentGame() {
+    const game = games[currentGameIndex];
+    if (!game) return;
+
+    // Remove from completed games
+    const newGames = [...games];
+    delete newGames[currentGameIndex];
+    setGames(newGames);
+
+    // Load frames back into editor
+    if (game.entryType === "detailed" && game.frames.length > 0) {
+      setFrames(game.frames.map((f) => ({ ...f })));
+      setCurrentFrame(1);
+      setCurrentRoll(1);
+      setStandingPins([]);
+      setEntryMode("detailed");
+    } else {
+      setQuickScore(game.totalScore.toString());
+      setEntryMode("quick");
+    }
+    setHistory([]);
+
+    // Clear saved editor state
+    editorStatesRef.current.delete(currentGameIndex);
+  }
+
+  function deleteCurrentGame() {
+    const newGames = [...games];
+    delete newGames[currentGameIndex];
+    setGames(newGames);
+    editorStatesRef.current.delete(currentGameIndex);
+    resetGameState();
   }
 
   function switchToGame(gameIndex: number) {
@@ -751,9 +785,10 @@ export default function LogPage() {
       <div className="mb-3 flex items-center justify-between">
         <button
           onClick={() => {
+            const hasAnyProgress = frames.length > 0 || games.some(Boolean);
             if (
-              frames.length > 0 &&
-              !confirm("Leave this session? Your progress will be lost.")
+              hasAnyProgress &&
+              !confirm("Leave this session? All progress will be lost.")
             )
               return;
             setStep("setup");
@@ -798,146 +833,198 @@ export default function LogPage() {
         </div>
       )}
 
-      {/* Mode toggle */}
-      <div className="mb-4 flex rounded-lg bg-surface-light p-[3px]">
-        <button
-          onClick={() => setEntryMode("quick")}
-          className={`flex-1 rounded-md py-[6px] text-[13px] transition-colors ${
-            entryMode === "quick"
-              ? "bg-blue font-semibold text-white"
-              : "text-text-muted"
-          }`}
-        >
-          Quick
-        </button>
-        <button
-          onClick={() => setEntryMode("detailed")}
-          className={`flex-1 rounded-md py-[6px] text-[13px] transition-colors ${
-            entryMode === "detailed"
-              ? "bg-blue font-semibold text-white"
-              : "text-text-muted"
-          }`}
-        >
-          Detailed
-        </button>
-      </div>
-
-      {entryMode === "quick" ? (
-        <div className="flex flex-col gap-4">
-          <div className="glass p-6 text-center">
-            <label className="mb-2 block text-sm text-text-muted">
-              Total Score
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="300"
-              value={quickScore}
-              onChange={(e) => setQuickScore(e.target.value)}
-              placeholder="0"
-              className="w-full bg-transparent text-center text-5xl font-extrabold outline-none placeholder:text-surface-light"
+      {/* Completed game view */}
+      {currentGameComplete ? (
+        <div className="flex flex-col gap-3">
+          {games[currentGameIndex].entryType === "detailed" &&
+          games[currentGameIndex].frames.length > 0 ? (
+            <FrameScorecard
+              frames={games[currentGameIndex].frames}
+              currentFrame={0}
+              currentRoll={1}
             />
+          ) : null}
+
+          <div className="glass p-4 text-center">
+            <div className="text-xs text-text-muted">Final Score</div>
+            <div className="text-3xl font-extrabold">
+              {games[currentGameIndex].totalScore}
+            </div>
+            {games[currentGameIndex].entryType === "detailed" && (
+              <div className="mt-1 text-[11px] text-text-muted">
+                {countStrikes(games[currentGameIndex].frames)}X{" "}
+                {countSpares(games[currentGameIndex].frames)}/{" "}
+                {isCleanGame(games[currentGameIndex].frames) && (
+                  <span className="font-semibold text-green">CLEAN</span>
+                )}
+              </div>
+            )}
           </div>
-          <button
-            onClick={completeQuickGame}
-            disabled={
-              !quickScore ||
-              parseInt(quickScore) < 0 ||
-              parseInt(quickScore) > 300
-            }
-            className="rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 disabled:opacity-50"
-          >
-            <Check size={18} className="mr-2 inline" />
-            Done
-          </button>
+
+          <div className="flex gap-2">
+            <button
+              onClick={editCurrentGame}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-surface-light py-3.5 text-sm font-bold text-text-secondary active:bg-surface-light/80"
+            >
+              <Pencil size={16} />
+              Edit
+            </button>
+            <button
+              onClick={() => {
+                if (!confirm("Delete this game? You'll need to re-enter it."))
+                  return;
+                deleteCurrentGame();
+              }}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red/10 py-3.5 text-sm font-bold text-red active:bg-red/20"
+            >
+              <Trash2 size={16} />
+              Delete
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {/* Scorecard */}
-          <FrameScorecard
-            frames={sortedFrames}
-            currentFrame={currentFrame}
-            currentRoll={currentRoll}
-            onFrameTap={handleFrameTap}
-          />
-
-          {/* Score + Max */}
-          <div className="flex gap-2">
-            <div className="glass flex-1 p-2 text-center">
-              <div className="text-[10px] text-text-muted">Score</div>
-              <div className="text-xl font-extrabold">{currentScore}</div>
-            </div>
-            <div className="glass flex-1 p-2 text-center">
-              <div className="text-[10px] text-text-muted">Max Possible</div>
-              <div className="text-xl font-extrabold text-green">
-                {maxPossible}
-              </div>
-            </div>
+        <>
+          {/* Mode toggle */}
+          <div className="mb-4 flex rounded-lg bg-surface-light p-[3px]">
+            <button
+              onClick={() => setEntryMode("quick")}
+              className={`flex-1 rounded-md py-[6px] text-[13px] transition-colors ${
+                entryMode === "quick"
+                  ? "bg-blue font-semibold text-white"
+                  : "text-text-muted"
+              }`}
+            >
+              Quick
+            </button>
+            <button
+              onClick={() => setEntryMode("detailed")}
+              className={`flex-1 rounded-md py-[6px] text-[13px] transition-colors ${
+                entryMode === "detailed"
+                  ? "bg-blue font-semibold text-white"
+                  : "text-text-muted"
+              }`}
+            >
+              Detailed
+            </button>
           </div>
 
-          {/* Frame label */}
-          <p className="text-xs text-text-secondary">
-            Frame {currentFrame} &mdash; Roll {currentRoll}
-            {availablePins.length < 10 &&
-              ` | ${availablePins.length} pins in play`}
-          </p>
-
-          {/* Pin diagram */}
-          <PinDiagram
-            standingPins={standingPins}
-            availablePins={availablePins}
-            onPinToggle={handlePinToggle}
-            disabled={currentGameComplete}
-            label="Tap pins left standing"
-          />
-
-          {/* Action buttons */}
-          {!currentGameComplete && (
-            <div className="flex gap-2">
-              {history.length > 0 && (
-                <button
-                  onClick={handleUndo}
-                  className="flex w-12 items-center justify-center rounded-xl bg-surface-light text-text-muted active:bg-surface-light/80"
-                >
-                  <Undo2 size={18} />
-                </button>
-              )}
+          {entryMode === "quick" ? (
+            <div className="flex flex-col gap-4">
+              <div className="glass p-6 text-center">
+                <label className="mb-2 block text-sm text-text-muted">
+                  Total Score
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="300"
+                  value={quickScore}
+                  onChange={(e) => setQuickScore(e.target.value)}
+                  placeholder="0"
+                  className="w-full bg-transparent text-center text-5xl font-extrabold outline-none placeholder:text-surface-light"
+                />
+              </div>
               <button
-                onClick={handleGutter}
-                className="rounded-xl bg-surface-light px-3 py-3.5 text-xs font-bold text-text-muted active:bg-surface-light/80"
+                onClick={completeQuickGame}
+                disabled={
+                  !quickScore ||
+                  parseInt(quickScore) < 0 ||
+                  parseInt(quickScore) > 300
+                }
+                className="rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 disabled:opacity-50"
               >
-                GUTTER
-              </button>
-              {showStrikeButton ? (
-                <button
-                  onClick={() => {
-                    saveHistory();
-                    handleStrike();
-                  }}
-                  className="flex-1 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-green/25"
-                >
-                  STRIKE
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    saveHistory();
-                    handleSpare();
-                  }}
-                  className="flex-1 rounded-xl bg-gradient-to-r from-gold to-amber-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-gold/25"
-                >
-                  SPARE
-                </button>
-              )}
-              <button
-                onClick={confirmPinSelection}
-                className="flex-1 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-blue/25"
-              >
-                NEXT
+                <Check size={18} className="mr-2 inline" />
+                Done
               </button>
             </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {/* Scorecard */}
+              <FrameScorecard
+                frames={sortedFrames}
+                currentFrame={currentFrame}
+                currentRoll={currentRoll}
+                onFrameTap={handleFrameTap}
+              />
+
+              {/* Score + Max */}
+              <div className="flex gap-2">
+                <div className="glass flex-1 p-2 text-center">
+                  <div className="text-[10px] text-text-muted">Score</div>
+                  <div className="text-xl font-extrabold">{currentScore}</div>
+                </div>
+                <div className="glass flex-1 p-2 text-center">
+                  <div className="text-[10px] text-text-muted">
+                    Max Possible
+                  </div>
+                  <div className="text-xl font-extrabold text-green">
+                    {maxPossible}
+                  </div>
+                </div>
+              </div>
+
+              {/* Frame label */}
+              <p className="text-xs text-text-secondary">
+                Frame {currentFrame} &mdash; Roll {currentRoll}
+                {availablePins.length < 10 &&
+                  ` | ${availablePins.length} pins in play`}
+              </p>
+
+              {/* Pin diagram */}
+              <PinDiagram
+                standingPins={standingPins}
+                availablePins={availablePins}
+                onPinToggle={handlePinToggle}
+                label="Tap pins left standing"
+              />
+
+              {/* Action buttons */}
+              <div className="flex gap-2">
+                {history.length > 0 && (
+                  <button
+                    onClick={handleUndo}
+                    className="flex w-12 items-center justify-center rounded-xl bg-surface-light text-text-muted active:bg-surface-light/80"
+                  >
+                    <Undo2 size={18} />
+                  </button>
+                )}
+                <button
+                  onClick={handleGutter}
+                  className="rounded-xl bg-surface-light px-3 py-3.5 text-xs font-bold text-text-muted active:bg-surface-light/80"
+                >
+                  GUTTER
+                </button>
+                {showStrikeButton ? (
+                  <button
+                    onClick={() => {
+                      saveHistory();
+                      handleStrike();
+                    }}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-green/25"
+                  >
+                    STRIKE
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      saveHistory();
+                      handleSpare();
+                    }}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-gold to-amber-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-gold/25"
+                  >
+                    SPARE
+                  </button>
+                )}
+                <button
+                  onClick={confirmPinSelection}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-blue/25"
+                >
+                  NEXT
+                </button>
+              </div>
+            </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );
