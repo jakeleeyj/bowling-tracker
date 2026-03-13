@@ -24,6 +24,11 @@ import {
   getEventWeight,
 } from "@/lib/ranking";
 import SessionCard from "@/components/SessionCard";
+import {
+  ACHIEVEMENTS,
+  computeAchievementStats,
+  type AchievementStats,
+} from "@/lib/achievements";
 
 interface HistoryFrame {
   frame_number: number;
@@ -57,25 +62,6 @@ interface HistorySession {
   games: HistoryGame[];
 }
 
-interface AchievementDef {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  color: string;
-  bgColor: string;
-  check: (s: AchievementStats) => boolean;
-}
-
-interface AchievementStats {
-  highGame: number;
-  totalGames: number;
-  cleanGames: number;
-  maxConsecutiveStrikes: number;
-  maxConsecutiveSpares: number;
-  has200Game: boolean;
-}
-
 const AVATAR_GRADIENTS = [
   "from-blue to-indigo-500",
   "from-purple to-fuchsia-500",
@@ -93,71 +79,15 @@ function getAvatarGradient(name: string): string {
   return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
 }
 
-const ACHIEVEMENTS: AchievementDef[] = [
-  {
-    id: "first-200",
-    name: "200 Club",
-    description: "Score 200+",
-    icon: <Trophy size={20} />,
-    color: "text-gold",
-    bgColor: "bg-gold/10",
-    check: (s) => s.has200Game,
-  },
-  {
-    id: "turkey",
-    name: "Turkey",
-    description: "3 strikes in a row",
-    icon: <Zap size={20} />,
-    color: "text-green",
-    bgColor: "bg-green/10",
-    check: (s) => s.maxConsecutiveStrikes >= 3,
-  },
-  {
-    id: "clean-game",
-    name: "Clean Game",
-    description: "No open frames",
-    icon: <Sparkles size={20} />,
-    color: "text-blue",
-    bgColor: "bg-blue/10",
-    check: (s) => s.cleanGames > 0,
-  },
-  {
-    id: "six-pack",
-    name: "Six Pack",
-    description: "6 strikes in a row",
-    icon: <Flame size={20} />,
-    color: "text-red",
-    bgColor: "bg-red/10",
-    check: (s) => s.maxConsecutiveStrikes >= 6,
-  },
-  {
-    id: "perfect",
-    name: "Perfect Game",
-    description: "Score 300",
-    icon: <Crown size={20} />,
-    color: "text-gold",
-    bgColor: "bg-gold/10",
-    check: (s) => s.highGame === 300,
-  },
-  {
-    id: "spare-streak",
-    name: "Spare Master",
-    description: "5+ consecutive spares",
-    icon: <Target size={20} />,
-    color: "text-purple",
-    bgColor: "bg-purple/10",
-    check: (s) => s.maxConsecutiveSpares >= 5,
-  },
-  {
-    id: "century",
-    name: "Century Club",
-    description: "100+ games logged",
-    icon: <Award size={20} />,
-    color: "text-pink",
-    bgColor: "bg-pink/10",
-    check: (s) => s.totalGames >= 100,
-  },
-];
+const ACHIEVEMENT_ICONS: Record<string, React.ReactNode> = {
+  Trophy: <Trophy size={20} />,
+  Zap: <Zap size={20} />,
+  Sparkles: <Sparkles size={20} />,
+  Flame: <Flame size={20} />,
+  Target: <Target size={20} />,
+  Crown: <Crown size={20} />,
+  Award: <Award size={20} />,
+};
 
 export default function ProfilePage() {
   const supabase = createClient();
@@ -207,7 +137,9 @@ export default function ProfilePage() {
       // Fetch achievement stats + MMR
       const { data: games } = (await supabase
         .from("games")
-        .select("id, total_score, is_clean, session_id, sessions(event_label)")
+        .select(
+          "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
+        )
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })) as {
         data:
@@ -215,6 +147,8 @@ export default function ProfilePage() {
               id: string;
               total_score: number;
               is_clean: boolean;
+              strike_count: number;
+              spare_count: number;
               session_id: string;
               sessions: { event_label: string | null } | null;
             }[]
@@ -266,53 +200,9 @@ export default function ProfilePage() {
           | null;
       };
 
-      const totalGames = games?.length ?? 0;
-      const highGame =
-        totalGames > 0
-          ? Math.max(...(games?.map((g) => g.total_score) ?? [0]))
-          : 0;
-      const cleanGames = games?.filter((g) => g.is_clean).length ?? 0;
-      const has200Game = games?.some((g) => g.total_score >= 200) ?? false;
-
-      // Group frames by game for streak calc
-      const byGame: Record<
-        string,
-        { is_strike: boolean; spare_converted: boolean }[]
-      > = {};
-      frames?.forEach((f) => {
-        if (!byGame[f.game_id]) byGame[f.game_id] = [];
-        byGame[f.game_id].push(f);
-      });
-
-      let maxStrikes = 0,
-        maxSpares = 0;
-      for (const gFrames of Object.values(byGame)) {
-        let cs = 0,
-          cp = 0;
-        for (const f of gFrames) {
-          if (f.is_strike) {
-            cs++;
-            maxStrikes = Math.max(maxStrikes, cs);
-          } else {
-            cs = 0;
-          }
-          if (f.spare_converted) {
-            cp++;
-            maxSpares = Math.max(maxSpares, cp);
-          } else if (!f.is_strike) {
-            cp = 0;
-          }
-        }
-      }
-
-      setAchievementStats({
-        highGame,
-        totalGames,
-        cleanGames,
-        maxConsecutiveStrikes: maxStrikes,
-        maxConsecutiveSpares: maxSpares,
-        has200Game,
-      });
+      setAchievementStats(
+        computeAchievementStats(games ?? [], frames ?? [], gameIds),
+      );
     }
     load();
   }, [supabase]);
@@ -484,7 +374,7 @@ export default function ProfilePage() {
                 key={a.id}
                 className={`flex items-center gap-2 rounded-xl ${a.bgColor} px-3 py-2`}
               >
-                <span className={a.color}>{a.icon}</span>
+                <span className={a.color}>{ACHIEVEMENT_ICONS[a.iconName]}</span>
                 <div>
                   <p className="text-[11px] font-bold">{a.name}</p>
                   <p className="text-[9px] text-text-muted">{a.description}</p>
@@ -502,7 +392,9 @@ export default function ProfilePage() {
                 key={a.id}
                 className="flex items-center gap-2 rounded-xl bg-surface-light/50 px-3 py-2 opacity-40"
               >
-                <span className="text-text-muted">{a.icon}</span>
+                <span className="text-text-muted">
+                  {ACHIEVEMENT_ICONS[a.iconName]}
+                </span>
                 <div>
                   <p className="text-[11px] font-bold">{a.name}</p>
                   <p className="text-[9px] text-text-muted">{a.description}</p>

@@ -15,7 +15,20 @@ import {
 import PinDiagram from "@/components/PinDiagram";
 import FrameScorecard from "@/components/FrameScorecard";
 import FramePinDetail from "@/components/FramePinDetail";
-import { ArrowLeft, Check, Undo2, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Undo2,
+  Pencil,
+  Trash2,
+  Trophy,
+  Zap,
+  Sparkles,
+  Flame,
+  Target,
+  Crown,
+  Award,
+} from "lucide-react";
 import { useToast } from "@/components/Toast";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
 import {
@@ -25,6 +38,12 @@ import {
   getEventWeight,
   type RankTier,
 } from "@/lib/ranking";
+import {
+  ACHIEVEMENTS,
+  computeAchievementStats,
+  detectNewAchievements,
+  type AchievementDef,
+} from "@/lib/achievements";
 
 type EntryMode = "quick" | "detailed";
 type Step = "setup" | "game" | "results";
@@ -116,6 +135,16 @@ function RankEmblem({
   );
 }
 
+const RESULTS_ICON_MAP: Record<string, React.ReactNode> = {
+  Trophy: <Trophy size={24} />,
+  Zap: <Zap size={24} />,
+  Sparkles: <Sparkles size={24} />,
+  Flame: <Flame size={24} />,
+  Target: <Target size={24} />,
+  Crown: <Crown size={24} />,
+  Award: <Award size={24} />,
+};
+
 function ResultsScreen({
   data,
 }: {
@@ -131,9 +160,11 @@ function ResultsScreen({
     rankChanged: boolean;
     isRankUp: boolean;
     isRankDown: boolean;
+    unlockedAchievements: AchievementDef[];
   };
 }) {
   const [showRankChange, setShowRankChange] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const mmrDiff = data.newMmr - data.oldMmr;
   const displayRank =
     data.rankChanged && !showRankChange ? data.oldRank : data.newRank;
@@ -145,6 +176,14 @@ function ResultsScreen({
       return () => clearTimeout(timer);
     }
   }, [data.rankChanged]);
+
+  useEffect(() => {
+    if (data.unlockedAchievements.length > 0) {
+      const delay = data.rankChanged ? 2400 : 1600;
+      const timer = setTimeout(() => setShowAchievements(true), delay);
+      return () => clearTimeout(timer);
+    }
+  }, [data.unlockedAchievements.length, data.rankChanged]);
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center text-center">
@@ -209,6 +248,29 @@ function ResultsScreen({
           {mmrDiff} MMR
         </div>
       </div>
+
+      {/* Achievement unlocks */}
+      {showAchievements && data.unlockedAchievements.length > 0 && (
+        <div className="animate-results-fade mb-6 w-full max-w-[300px]">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gold">
+            Achievement Unlocked!
+          </p>
+          <div className="flex flex-col gap-2">
+            {data.unlockedAchievements.map((a) => (
+              <div
+                key={a.id}
+                className={`animate-results-flash flex items-center gap-3 rounded-xl ${a.bgColor} px-4 py-3`}
+              >
+                <span className={a.color}>{RESULTS_ICON_MAP[a.iconName]}</span>
+                <div className="text-left">
+                  <p className="text-sm font-bold">{a.name}</p>
+                  <p className="text-[10px] text-text-muted">{a.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Session stats */}
       <div className="mb-6 flex w-full max-w-[300px] gap-2">
@@ -308,6 +370,7 @@ function LogPage() {
     rankChanged: boolean;
     isRankUp: boolean;
     isRankDown: boolean;
+    unlockedAchievements: AchievementDef[];
   } | null>(null);
 
   const [history, setHistory] = useState<
@@ -847,13 +910,30 @@ function LogPage() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Snapshot MMR before save
+    // Snapshot MMR + achievements before save
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existingGames } = await (supabase as any)
       .from("games")
-      .select("total_score, sessions(event_label)")
+      .select(
+        "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
+      )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
+
+    const existingGameIds =
+      existingGames?.map((g: { id: string }) => g.id) ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingFrames } = await (supabase as any)
+      .from("frames")
+      .select("game_id, is_strike, spare_converted")
+      .in("game_id", existingGameIds.length > 0 ? existingGameIds : ["none"])
+      .order("frame_number", { ascending: true });
+
+    const oldAchievementStats = computeAchievementStats(
+      existingGames ?? [],
+      existingFrames ?? [],
+      existingGameIds,
+    );
 
     const oldScores =
       existingGames?.map((g: { total_score: number }) => g.total_score) ?? [];
@@ -953,6 +1033,35 @@ function LogPage() {
     const isRankUp = rankChanged && newMmr > oldMmr;
     const isRankDown = rankChanged && newMmr < oldMmr;
 
+    // Detect newly unlocked achievements
+    const sessionId = (session as Record<string, string>).id;
+    const newGameRecords = games.map((g, i) => ({
+      total_score: g.totalScore,
+      is_clean: g.entryType === "detailed" ? isCleanGame(g.frames) : false,
+      strike_count: g.entryType === "detailed" ? countStrikes(g.frames) : 0,
+      spare_count: g.entryType === "detailed" ? countSpares(g.frames) : 0,
+      session_id: sessionId,
+    }));
+    const newFrameRecords = games.flatMap((g, i) => {
+      if (g.entryType !== "detailed") return [];
+      const gameId = `new-${i}`;
+      return g.frames.map((f) => ({
+        game_id: gameId,
+        is_strike: f.isStrike,
+        spare_converted: f.spareConverted,
+      }));
+    });
+    const allGames = [...newGameRecords, ...(existingGames ?? [])];
+    const allFrames = [...newFrameRecords, ...(existingFrames ?? [])];
+    const newAchievementStats = computeAchievementStats(allGames, allFrames, [
+      ...games.map((_, i) => `new-${i}`),
+      ...existingGameIds,
+    ]);
+    const unlockedAchievements = detectNewAchievements(
+      oldAchievementStats,
+      newAchievementStats,
+    );
+
     setSaving(false);
     setHasUnsaved(false);
     setResultsData({
@@ -967,6 +1076,7 @@ function LogPage() {
       rankChanged,
       isRankUp,
       isRankDown,
+      unlockedAchievements,
     });
     setStep("results");
   }

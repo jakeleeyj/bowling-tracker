@@ -286,10 +286,31 @@ export default function SessionCard({
 }: SessionCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editingMeta, setEditingMeta] = useState(false);
+  const [editVenue, setEditVenue] = useState(venue ?? "");
+  const [editEvent, setEditEvent] = useState(eventLabel ?? "");
+  const [savingMeta, setSavingMeta] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   const highGame =
     games.length > 0 ? Math.max(...games.map((g) => g.total_score)) : 0;
+
+  async function handleSaveMeta() {
+    setSavingMeta(true);
+    const supabase = createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("sessions")
+      .update({
+        venue: editVenue || null,
+        event_label: editEvent || null,
+      })
+      .eq("id", sessionId);
+    setSavingMeta(false);
+    setEditingMeta(false);
+    toast("Session updated");
+    router.refresh();
+  }
 
   async function handleDeleteSession() {
     if (!confirm("Delete this entire session and all its games?")) return;
@@ -465,7 +486,64 @@ export default function SessionCard({
             })}
           </div>
           {isOwn && (
-            <div className="mt-2">
+            <div className="mt-2 flex flex-col gap-2">
+              {editingMeta ? (
+                <div className="rounded-lg bg-black/20 p-3">
+                  <input
+                    type="text"
+                    placeholder="Venue"
+                    value={editVenue}
+                    onChange={(e) => setEditVenue(e.target.value)}
+                    className="mb-2 w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-xs text-text-primary outline-none focus:border-blue"
+                  />
+                  <div className="mb-2 flex flex-wrap gap-1.5">
+                    {["League", "Tournament", "Casual", "Funbowl"].map(
+                      (label) => (
+                        <button
+                          key={label}
+                          onClick={() =>
+                            setEditEvent(editEvent === label ? "" : label)
+                          }
+                          className={`rounded-md px-2.5 py-1 text-[10px] font-semibold transition-colors ${
+                            editEvent === label
+                              ? "bg-blue text-white"
+                              : "bg-surface-light text-text-muted"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveMeta}
+                      disabled={savingMeta}
+                      className="flex-1 rounded-lg bg-blue/20 py-1.5 text-[11px] font-semibold text-blue active:bg-blue/30 disabled:opacity-50"
+                    >
+                      {savingMeta ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingMeta(false);
+                        setEditVenue(venue ?? "");
+                        setEditEvent(eventLabel ?? "");
+                      }}
+                      className="flex-1 rounded-lg bg-surface-light py-1.5 text-[11px] font-semibold text-text-muted"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setEditingMeta(true)}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-surface-light/50 py-2 text-[11px] font-semibold text-text-muted active:bg-surface-light"
+                >
+                  <Pencil size={10} />
+                  Edit Venue / Event
+                </button>
+              )}
               <button
                 onClick={handleDeleteSession}
                 disabled={deleting}
