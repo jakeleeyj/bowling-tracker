@@ -2,13 +2,13 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, PlusCircle, BarChart3, Trophy, User } from "lucide-react";
+import { Home, PlusCircle, BarChart3, Swords, User } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/log", label: "Log", icon: PlusCircle },
   { href: "/stats", label: "Stats", icon: BarChart3 },
-  { href: "/leaderboard", label: "Board", icon: Trophy },
+  { href: "/leaderboard", label: "Ranked", icon: Swords },
   { href: "/profile", label: "Me", icon: User },
 ];
 

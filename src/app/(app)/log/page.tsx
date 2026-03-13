@@ -91,6 +91,8 @@ function LogPage() {
   const [editGameId, setEditGameId] = useState<string | null>(null);
   const [editSessionId, setEditSessionId] = useState<string | null>(null);
   const [editLoading, setEditLoading] = useState(false);
+  const [editOriginalScore, setEditOriginalScore] = useState(0);
+  const [editOriginalFrames, setEditOriginalFrames] = useState<FrameData[]>([]);
 
   const [history, setHistory] = useState<
     Array<{
@@ -127,6 +129,7 @@ function LogPage() {
       setEditMode(true);
       setEditGameId(game.id);
       setEditSessionId(game.session_id);
+      setEditOriginalScore(game.total_score);
 
       if (game.entry_type === "detailed") {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -150,6 +153,7 @@ function LogPage() {
             }),
           );
           setFrames(loadedFrames);
+          setEditOriginalFrames(loadedFrames.map((f) => ({ ...f })));
           setEntryMode("detailed");
         }
       } else {
@@ -499,7 +503,12 @@ function LogPage() {
         }
       } else {
         setFrames(newFrames);
-        completeCurrentGame(newFrames);
+        if (editMode) {
+          setCurrentRoll(1);
+          setStandingPins([]);
+        } else {
+          completeCurrentGame(newFrames);
+        }
       }
     } else {
       const updatedFrame: FrameData = {
@@ -510,7 +519,12 @@ function LogPage() {
         f.frameNumber === 10 ? updatedFrame : f,
       );
       setFrames(newFrames);
-      completeCurrentGame(newFrames);
+      if (editMode) {
+        setCurrentRoll(1);
+        setStandingPins([]);
+      } else {
+        completeCurrentGame(newFrames);
+      }
     }
   }
 
@@ -537,6 +551,12 @@ function LogPage() {
     }
 
     // All 10 frames filled
+    if (editMode) {
+      // In edit mode, stay in editor — don't auto-complete
+      setCurrentRoll(1);
+      setStandingPins([]);
+      return;
+    }
     completeCurrentGame(newFrames);
   }
 
@@ -689,11 +709,16 @@ function LogPage() {
     if (!editGameId || !editSessionId) return;
     setSaving(true);
 
-    const game = games[0];
-    if (!game) {
-      setSaving(false);
-      return;
-    }
+    // Build game from current editor state if not already completed
+    const currentSorted = [...frames].sort(
+      (a, b) => a.frameNumber - b.frameNumber,
+    );
+    const currentScores = calculateFrameScores(currentSorted);
+    const game: GameData = games[0] ?? {
+      entryType: entryMode,
+      totalScore: currentScores[currentScores.length - 1] ?? 0,
+      frames: currentSorted,
+    };
 
     const clean =
       game.entryType === "detailed" ? isCleanGame(game.frames) : false;
@@ -1285,6 +1310,94 @@ function LogPage() {
                   NEXT
                 </button>
               </div>
+
+              {/* Edit mode: save button + diff */}
+              {editMode && sortedFrames.length === 10 && (
+                <div className="flex flex-col gap-2">
+                  {/* Score diff */}
+                  {editOriginalScore !== currentScore && (
+                    <div className="glass flex items-center justify-between p-3">
+                      <span className="text-xs text-text-muted">
+                        Score change
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-text-muted">
+                          {editOriginalScore}
+                        </span>
+                        <span className="text-text-muted">&rarr;</span>
+                        <span className="text-sm font-bold text-text-primary">
+                          {currentScore}
+                        </span>
+                        <span
+                          className={`text-xs font-bold ${
+                            currentScore > editOriginalScore
+                              ? "text-green"
+                              : currentScore < editOriginalScore
+                                ? "text-red"
+                                : "text-text-muted"
+                          }`}
+                        >
+                          {currentScore > editOriginalScore ? "+" : ""}
+                          {currentScore - editOriginalScore}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Frame changes */}
+                  {editOriginalFrames.length > 0 &&
+                    (() => {
+                      const changes = sortedFrames.filter((f) => {
+                        const orig = editOriginalFrames.find(
+                          (o) => o.frameNumber === f.frameNumber,
+                        );
+                        if (!orig) return true;
+                        return (
+                          orig.roll1 !== f.roll1 ||
+                          orig.roll2 !== f.roll2 ||
+                          orig.roll3 !== f.roll3
+                        );
+                      });
+                      if (changes.length === 0) return null;
+                      return (
+                        <div className="glass p-3">
+                          <p className="mb-1.5 text-[10px] font-semibold text-text-muted">
+                            Changed frames
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {changes.map((f) => (
+                              <span
+                                key={f.frameNumber}
+                                className="rounded bg-blue/15 px-2 py-0.5 text-[11px] font-bold text-blue"
+                              >
+                                F{f.frameNumber}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                  <button
+                    onClick={() => {
+                      // Build game from current frames and save
+                      const game: GameData = {
+                        entryType: "detailed",
+                        totalScore: currentScore,
+                        frames: sortedFrames,
+                      };
+                      const newGames = [...games];
+                      newGames[0] = game;
+                      setGames(newGames);
+                      updateExistingGame();
+                    }}
+                    disabled={saving}
+                    className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+                  >
+                    {saving ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </>

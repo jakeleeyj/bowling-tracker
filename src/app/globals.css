@@ -102,6 +102,21 @@ body {
   animation: slide-down 0.2s ease-out;
 }
 
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.2s ease-out;
+}
+
 .animate-fade-in {
   animation: fade-in 0.15s ease-out;
 }
