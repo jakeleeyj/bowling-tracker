@@ -80,12 +80,13 @@ export default async function StatsPage() {
       ? Math.round((sparesConverted / framesWithSpareOpportunity.length) * 100)
       : 0;
 
-  // Strike rate
-  const totalFramesForStrikeCalc =
-    allFrames?.filter((f) => f.frame_number <= 9).length ?? 0;
+  // Strike rate — count first-ball strikes per frame (10 frames per game)
+  const totalFramesPlayed = detailedGames.length * 10;
+  const firstBallStrikes =
+    allFrames?.filter((f) => f.is_strike && f.frame_number <= 10).length ?? 0;
   const strikeRate =
-    totalFramesForStrikeCalc > 0
-      ? Math.round((totalStrikes / totalFramesForStrikeCalc) * 100)
+    totalFramesPlayed > 0
+      ? Math.round((firstBallStrikes / totalFramesPlayed) * 100)
       : 0;
 
   // Pin leave frequency (which pins are left standing most)
@@ -193,7 +194,7 @@ export default async function StatsPage() {
             {strikeRate}%
           </div>
           <div className="text-[10px] text-text-muted">
-            {totalStrikes} total strikes
+            {firstBallStrikes} strikes in {totalFramesPlayed} frames
           </div>
         </div>
         <div className="glass flex-1 p-4">

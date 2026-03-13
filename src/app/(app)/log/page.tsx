@@ -109,52 +109,6 @@ export default function LogPage() {
     }
   }
 
-  function handleNumberPad(pins: number) {
-    if (currentFrame <= 9) {
-      if (currentRoll === 1) {
-        if (pins === 10) {
-          handleStrike();
-          return;
-        }
-        const remaining = 10 - pins;
-        const frame: FrameData = {
-          frameNumber: currentFrame,
-          roll1: pins,
-          roll2: null,
-          roll3: null,
-          isStrike: false,
-          isSpare: false,
-          pinsRemaining: null, // No pin-specific data from number pad
-          spareConverted: false,
-        };
-        setFrames([...frames, frame]);
-        setCurrentRoll(2);
-        // Reset standing pins to show only 'remaining' count worth
-        setStandingPins(getAllPins().slice(0, remaining));
-      } else {
-        const existingFrame = frames.find(
-          (f) => f.frameNumber === currentFrame,
-        );
-        if (!existingFrame) return;
-
-        const isSpare = existingFrame.roll1 + pins === 10;
-        const updatedFrame: FrameData = {
-          ...existingFrame,
-          roll2: pins,
-          isSpare,
-          spareConverted: isSpare,
-        };
-        const newFrames = frames.map((f) =>
-          f.frameNumber === currentFrame ? updatedFrame : f,
-        );
-        setFrames(newFrames);
-        advanceFrame(newFrames);
-      }
-    } else {
-      handle10thFrameRoll(pins);
-    }
-  }
-
   function handlePinToggle(pin: number) {
     if (currentRoll === 1) {
       // Toggle pin standing/knocked
@@ -286,7 +240,12 @@ export default function LogPage() {
         // Gets a 3rd roll
         setFrames(newFrames);
         setCurrentRoll(3);
-        setStandingPins(getAllPins());
+        // Reset pins if roll 2 was a strike or spare, keep remaining otherwise
+        if (pins === 10 || isSpare) {
+          setStandingPins(getAllPins());
+        } else {
+          setStandingPins(getAllPins().slice(0, 10 - pins));
+        }
       } else {
         // Game over
         setFrames(newFrames);
@@ -442,13 +401,7 @@ export default function LogPage() {
   const scores = calculateFrameScores(frames);
   const currentScore = scores[scores.length - 1] ?? 0;
   const maxPossible = calculateMaxPossible(frames);
-  const maxNumberPadValue =
-    currentRoll === 1
-      ? 10
-      : currentFrame <= 9
-        ? 10 - (frames.find((f) => f.frameNumber === currentFrame)?.roll1 ?? 0)
-        : 10;
-
+  const isFreshRack = standingPins.length === 10;
   // SETUP STEP
   if (step === "setup") {
     return (
@@ -682,7 +635,7 @@ export default function LogPage() {
           {/* Frame label */}
           <p className="text-xs text-text-secondary">
             Frame {currentFrame} &mdash; Roll {currentRoll}
-            {currentRoll === 2 &&
+            {currentRoll >= 2 &&
               currentFrame <= 9 &&
               ` | ${standingPins.length} pins remaining`}
           </p>
@@ -691,45 +644,37 @@ export default function LogPage() {
           <PinDiagram
             standingPins={standingPins}
             onPinToggle={handlePinToggle}
+            label={
+              isFreshRack
+                ? "Tap pins you knocked down"
+                : "Tap remaining pins you knocked"
+            }
           />
 
-          {/* Confirm pin selection */}
-          <button
-            onClick={confirmPinSelection}
-            className="rounded-lg bg-surface-light py-2 text-sm font-semibold text-text-secondary"
-          >
-            Confirm Pins
-          </button>
-
-          {/* Number pad */}
-          <div className="flex flex-wrap gap-[5px]">
-            {Array.from({ length: maxNumberPadValue + 1 }, (_, i) => (
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            {isFreshRack ? (
               <button
-                key={i}
-                onClick={() => handleNumberPad(i)}
-                className="flex h-8 w-8 items-center justify-center rounded-md bg-surface-light text-xs text-text-muted transition-colors active:bg-blue active:text-white"
+                onClick={handleStrike}
+                className="flex-1 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-green/25"
               >
-                {i}
+                STRIKE
               </button>
-            ))}
+            ) : (
+              <button
+                onClick={handleSpare}
+                className="flex-1 rounded-xl bg-gradient-to-r from-gold to-amber-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-gold/25"
+              >
+                SPARE
+              </button>
+            )}
+            <button
+              onClick={confirmPinSelection}
+              className="flex-1 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-blue/25"
+            >
+              NEXT
+            </button>
           </div>
-
-          {/* Strike / Spare button */}
-          {currentRoll === 1 ? (
-            <button
-              onClick={handleStrike}
-              className="rounded-xl bg-gradient-to-r from-green to-emerald-600 py-3.5 text-xl font-extrabold tracking-widest text-white shadow-lg shadow-green/25"
-            >
-              STRIKE X
-            </button>
-          ) : (
-            <button
-              onClick={handleSpare}
-              className="rounded-xl bg-gradient-to-r from-gold to-amber-600 py-3.5 text-xl font-extrabold tracking-widest text-base shadow-lg shadow-gold/25"
-            >
-              SPARE /
-            </button>
-          )}
         </div>
       )}
     </div>

@@ -13,7 +13,7 @@ export default function PinDiagram({
   standingPins,
   onPinToggle,
   disabled = false,
-  label = "Tap pins left standing",
+  label = "Tap pins you knocked down",
 }: PinDiagramProps) {
   return (
     <div className="glass rounded-xl p-5">
