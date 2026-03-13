@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import {
@@ -25,6 +25,23 @@ interface GameData {
   frames: FrameData[];
 }
 
+interface GameEditorState {
+  entryMode: EntryMode;
+  quickScore: string;
+  frames: FrameData[];
+  currentFrame: number;
+  currentRoll: 1 | 2 | 3;
+  standingPins: number[];
+  history: Array<{
+    frames: FrameData[];
+    currentFrame: number;
+    currentRoll: 1 | 2 | 3;
+    standingPins: number[];
+  }>;
+  isComplete: boolean;
+  totalScore: number;
+}
+
 function upsertFrame(frames: FrameData[], frame: FrameData): FrameData[] {
   const without = frames.filter((f) => f.frameNumber !== frame.frameNumber);
   return [...without, frame].sort((a, b) => a.frameNumber - b.frameNumber);
@@ -47,7 +64,7 @@ export default function LogPage() {
   const [frames, setFrames] = useState<FrameData[]>([]);
   const [currentFrame, setCurrentFrame] = useState(1);
   const [currentRoll, setCurrentRoll] = useState<1 | 2 | 3>(1);
-  const [standingPins, setStandingPins] = useState<number[]>(getAllPins());
+  const [standingPins, setStandingPins] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
 
   const [history, setHistory] = useState<
@@ -58,6 +75,8 @@ export default function LogPage() {
       standingPins: number[];
     }>
   >([]);
+
+  const editorStatesRef = useRef<Map<number, GameEditorState>>(new Map());
 
   function saveHistory() {
     setHistory((prev) => [
@@ -94,13 +113,14 @@ export default function LogPage() {
     setFrames(newFrames);
     setCurrentFrame(frameNumber);
     setCurrentRoll(1);
-    setStandingPins(getAllPins());
+    setStandingPins([]);
   }
 
   function startSession() {
     setStep("game");
     setGames([]);
     setCurrentGameIndex(0);
+    editorStatesRef.current.clear();
     resetGameState();
   }
 
@@ -108,10 +128,50 @@ export default function LogPage() {
     setFrames([]);
     setCurrentFrame(1);
     setCurrentRoll(1);
-    setStandingPins(getAllPins());
+    setStandingPins([]);
     setQuickScore("");
     setEntryMode("detailed");
     setHistory([]);
+  }
+
+  function saveEditorState(gameIndex: number) {
+    editorStatesRef.current.set(gameIndex, {
+      entryMode,
+      quickScore,
+      frames: frames.map((f) => ({ ...f })),
+      currentFrame,
+      currentRoll,
+      standingPins: [...standingPins],
+      history: history.map((h) => ({
+        ...h,
+        frames: h.frames.map((f) => ({ ...f })),
+        standingPins: [...h.standingPins],
+      })),
+      isComplete: games[gameIndex] !== undefined,
+      totalScore: games[gameIndex]?.totalScore ?? 0,
+    });
+  }
+
+  function loadEditorState(gameIndex: number) {
+    const saved = editorStatesRef.current.get(gameIndex);
+    if (saved) {
+      setEntryMode(saved.entryMode);
+      setQuickScore(saved.quickScore);
+      setFrames(saved.frames);
+      setCurrentFrame(saved.currentFrame);
+      setCurrentRoll(saved.currentRoll);
+      setStandingPins(saved.standingPins);
+      setHistory(saved.history);
+    } else {
+      resetGameState();
+    }
+  }
+
+  function switchToGame(gameIndex: number) {
+    if (gameIndex === currentGameIndex) return;
+    saveEditorState(currentGameIndex);
+    setCurrentGameIndex(gameIndex);
+    loadEditorState(gameIndex);
   }
 
   function handleStrike() {
@@ -159,6 +219,45 @@ export default function LogPage() {
         ? 10
         : (existing.pinsRemaining?.length ?? 10 - existing.roll1);
       handle10thFrameRoll(available);
+    }
+  }
+
+  function handleGutter() {
+    saveHistory();
+    if (currentFrame <= 9) {
+      if (currentRoll === 1) {
+        const frame: FrameData = {
+          frameNumber: currentFrame,
+          roll1: 0,
+          roll2: null,
+          roll3: null,
+          isStrike: false,
+          isSpare: false,
+          pinsRemaining: getAllPins(),
+          spareConverted: false,
+        };
+        setFrames(upsertFrame(frames, frame));
+        setCurrentRoll(2);
+        setStandingPins(getAllPins());
+      } else {
+        const existingFrame = frames.find(
+          (f) => f.frameNumber === currentFrame,
+        );
+        if (!existingFrame) return;
+        const updatedFrame: FrameData = {
+          ...existingFrame,
+          roll2: 0,
+          isSpare: false,
+          spareConverted: false,
+        };
+        const newFrames = frames.map((f) =>
+          f.frameNumber === currentFrame ? updatedFrame : f,
+        );
+        setFrames(newFrames);
+        advanceFrame(newFrames);
+      }
+    } else {
+      handle10thFrameRoll(0);
     }
   }
 
@@ -251,7 +350,7 @@ export default function LogPage() {
       setFrames(upsertFrame(frames, frame));
       setCurrentRoll(2);
       if (pins === 10) {
-        setStandingPins(getAllPins());
+        setStandingPins([]);
       }
     } else if (existing.roll2 === null) {
       const isSpare = !existing.isStrike && existing.roll1 + pins === 10;
@@ -269,7 +368,7 @@ export default function LogPage() {
         setFrames(newFrames);
         setCurrentRoll(3);
         if (pins === 10 || isSpare) {
-          setStandingPins(getAllPins());
+          setStandingPins([]);
         }
       } else {
         setFrames(newFrames);
@@ -296,7 +395,7 @@ export default function LogPage() {
       if (!filledNumbers.has(i)) {
         setCurrentFrame(i);
         setCurrentRoll(1);
-        setStandingPins(getAllPins());
+        setStandingPins([]);
         return;
       }
     }
@@ -305,7 +404,7 @@ export default function LogPage() {
       if (!filledNumbers.has(i)) {
         setCurrentFrame(i);
         setCurrentRoll(1);
-        setStandingPins(getAllPins());
+        setStandingPins([]);
         return;
       }
     }
@@ -327,12 +426,31 @@ export default function LogPage() {
       frames: sorted,
     };
 
-    const newGames = [...games, game];
+    // Update or insert game at current index
+    const newGames = [...games];
+    newGames[currentGameIndex] = game;
     setGames(newGames);
 
-    if (newGames.length < gameCount) {
-      setCurrentGameIndex(newGames.length);
-      resetGameState();
+    // Save completed state
+    editorStatesRef.current.set(currentGameIndex, {
+      entryMode: "detailed",
+      quickScore: "",
+      frames: sorted,
+      currentFrame: 10,
+      currentRoll: 1,
+      standingPins: [],
+      history: [],
+      isComplete: true,
+      totalScore: total,
+    });
+
+    // Auto-advance to next incomplete game
+    for (let i = 0; i < gameCount; i++) {
+      if (!newGames[i]) {
+        setCurrentGameIndex(i);
+        loadEditorState(i);
+        return;
+      }
     }
   }
 
@@ -346,12 +464,29 @@ export default function LogPage() {
       frames: [],
     };
 
-    const newGames = [...games, game];
+    const newGames = [...games];
+    newGames[currentGameIndex] = game;
     setGames(newGames);
 
-    if (newGames.length < gameCount) {
-      setCurrentGameIndex(newGames.length);
-      resetGameState();
+    editorStatesRef.current.set(currentGameIndex, {
+      entryMode: "quick",
+      quickScore,
+      frames: [],
+      currentFrame: 1,
+      currentRoll: 1,
+      standingPins: [],
+      history: [],
+      isComplete: true,
+      totalScore: score,
+    });
+
+    // Auto-advance to next incomplete game
+    for (let i = 0; i < gameCount; i++) {
+      if (!newGames[i]) {
+        setCurrentGameIndex(i);
+        loadEditorState(i);
+        return;
+      }
     }
   }
 
@@ -446,7 +581,8 @@ export default function LogPage() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [hasProgress]);
 
-  const allGamesComplete = games.length === gameCount;
+  const allGamesComplete = games.filter(Boolean).length === gameCount;
+  const currentGameComplete = games[currentGameIndex] !== undefined;
   const sortedFrames = [...frames].sort(
     (a, b) => a.frameNumber - b.frameNumber,
   );
@@ -612,17 +748,15 @@ export default function LogPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between">
         <button
           onClick={() => {
-            if (currentGameIndex === 0) {
-              if (
-                frames.length > 0 &&
-                !confirm("Leave this game? Your progress will be lost.")
-              )
-                return;
-              setStep("setup");
-            }
+            if (
+              frames.length > 0 &&
+              !confirm("Leave this session? Your progress will be lost.")
+            )
+              return;
+            setStep("setup");
           }}
           className="text-text-muted"
         >
@@ -633,6 +767,36 @@ export default function LogPage() {
         </h1>
         <div className="w-5" />
       </div>
+
+      {/* Game tabs */}
+      {gameCount > 1 && (
+        <div className="mb-3 flex gap-1">
+          {Array.from({ length: gameCount }, (_, i) => {
+            const isActive = i === currentGameIndex;
+            const isDone = games[i] !== undefined;
+            return (
+              <button
+                key={i}
+                onClick={() => switchToGame(i)}
+                className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-colors ${
+                  isActive
+                    ? "bg-blue text-white"
+                    : isDone
+                      ? "bg-green/15 text-green"
+                      : "bg-surface-light text-text-muted"
+                }`}
+              >
+                G{i + 1}
+                {isDone && !isActive && (
+                  <span className="ml-1 text-[10px]">
+                    {games[i].totalScore}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Mode toggle */}
       <div className="mb-4 flex rounded-lg bg-surface-light p-[3px]">
@@ -723,47 +887,56 @@ export default function LogPage() {
             standingPins={standingPins}
             availablePins={availablePins}
             onPinToggle={handlePinToggle}
-            label="Tap knocked down pins"
+            disabled={currentGameComplete}
+            label="Tap pins left standing"
           />
 
           {/* Action buttons */}
-          <div className="flex gap-2">
-            {history.length > 0 && (
+          {!currentGameComplete && (
+            <div className="flex gap-2">
+              {history.length > 0 && (
+                <button
+                  onClick={handleUndo}
+                  className="flex w-12 items-center justify-center rounded-xl bg-surface-light text-text-muted active:bg-surface-light/80"
+                >
+                  <Undo2 size={18} />
+                </button>
+              )}
               <button
-                onClick={handleUndo}
-                className="flex w-12 items-center justify-center rounded-xl bg-surface-light text-text-muted active:bg-surface-light/80"
+                onClick={handleGutter}
+                className="rounded-xl bg-surface-light px-3 py-3.5 text-xs font-bold text-text-muted active:bg-surface-light/80"
               >
-                <Undo2 size={18} />
+                GUTTER
               </button>
-            )}
-            {showStrikeButton ? (
+              {showStrikeButton ? (
+                <button
+                  onClick={() => {
+                    saveHistory();
+                    handleStrike();
+                  }}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-green/25"
+                >
+                  STRIKE
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    saveHistory();
+                    handleSpare();
+                  }}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-gold to-amber-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-gold/25"
+                >
+                  SPARE
+                </button>
+              )}
               <button
-                onClick={() => {
-                  saveHistory();
-                  handleStrike();
-                }}
-                className="flex-1 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-green/25"
+                onClick={confirmPinSelection}
+                className="flex-1 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-blue/25"
               >
-                STRIKE
+                NEXT
               </button>
-            ) : (
-              <button
-                onClick={() => {
-                  saveHistory();
-                  handleSpare();
-                }}
-                className="flex-1 rounded-xl bg-gradient-to-r from-gold to-amber-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-gold/25"
-              >
-                SPARE
-              </button>
-            )}
-            <button
-              onClick={confirmPinSelection}
-              className="flex-1 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-blue/25"
-            >
-              NEXT
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -192,3 +192,35 @@ export function getAllPins(): number[] {
 //      2  3
 //        1
 export const PIN_LAYOUT = [[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]] as const;
+
+// Common split patterns (headpin must be down, 2+ non-adjacent pins remaining)
+const SPLIT_PATTERNS = [
+  [7, 10],
+  [4, 6],
+  [4, 10],
+  [6, 7],
+  [3, 10],
+  [2, 7],
+  [4, 6, 7, 10],
+  [4, 6, 7, 9, 10],
+  [3, 7],
+  [2, 10],
+  [3, 7, 10],
+  [2, 7, 10],
+  [4, 7, 10],
+  [6, 7, 10],
+  [2, 4, 10],
+  [3, 6, 7],
+  [4, 9],
+  [6, 8],
+  [5, 7],
+  [5, 10],
+];
+
+export function isSplit(pins: number[]): boolean {
+  if (pins.length < 2 || pins.includes(1)) return false;
+  return SPLIT_PATTERNS.some(
+    (pattern) =>
+      pattern.length === pins.length && pattern.every((p) => pins.includes(p)),
+  );
+}

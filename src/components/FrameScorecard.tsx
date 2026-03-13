@@ -1,7 +1,7 @@
 "use client";
 
 import type { FrameData } from "@/lib/bowling";
-import { calculateFrameScores } from "@/lib/bowling";
+import { calculateFrameScores, isSplit } from "@/lib/bowling";
 
 interface FrameScorecardProps {
   frames: FrameData[];
@@ -103,7 +103,14 @@ export default function FrameScorecard({
                             </span>
                           ) : (
                             <>
-                              <span className="text-text-secondary">
+                              <span
+                                className={
+                                  frame.pinsRemaining &&
+                                  isSplit(frame.pinsRemaining)
+                                    ? "font-bold text-red"
+                                    : "text-text-secondary"
+                                }
+                              >
                                 {formatRoll(frame, 1, i)}
                               </span>
                               <span

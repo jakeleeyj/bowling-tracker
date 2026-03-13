@@ -264,25 +264,22 @@ export default function SessionCard({
               href={`/game/${game.id}`}
               className={`flex-1 rounded-md bg-black/30 py-[5px] text-center transition-colors hover:bg-black/50 ${isHigh ? "border border-gold/35" : isClean ? "border border-green/35" : "border border-transparent"}`}
             >
-              <div className="relative inline-block">
-                {isHigh && (
-                  <Star
-                    size={8}
-                    className="absolute -right-2.5 -top-1 fill-gold text-gold"
-                  />
-                )}
-                {isClean && !isHigh && (
-                  <Check
-                    size={8}
-                    className="absolute -right-2.5 -top-1 text-green"
-                    strokeWidth={3}
-                  />
-                )}
+              <div className="flex items-center gap-1">
                 <span
                   className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : ""}`}
                 >
                   {game.total_score}
                 </span>
+                {isHigh && (
+                  <Star size={9} className="shrink-0 fill-gold text-gold" />
+                )}
+                {isClean && !isHigh && (
+                  <Check
+                    size={9}
+                    className="shrink-0 text-green"
+                    strokeWidth={3}
+                  />
+                )}
               </div>
             </Link>
           );
