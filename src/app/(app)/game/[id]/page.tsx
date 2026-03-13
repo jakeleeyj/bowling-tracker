@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { GameWithSession, FrameRow } from "@/lib/queries";
+import DeleteSessionButton from "@/components/DeleteSessionButton";
 
 export default async function GameDetailPage({
   params,
@@ -167,6 +168,11 @@ export default async function GameDetailPage({
           Quick entry — no frame breakdown available
         </div>
       )}
+
+      {/* Delete */}
+      <div className="mt-6">
+        <DeleteSessionButton sessionId={game.session_id} />
+      </div>
     </div>
   );
 }
