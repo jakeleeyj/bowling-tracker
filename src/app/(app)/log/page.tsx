@@ -207,8 +207,7 @@ function ResultsScreen({
       {/* Continue button */}
       <button
         onClick={() => {
-          router.push("/dashboard");
-          router.refresh();
+          window.location.href = "/dashboard";
         }}
         className="w-full max-w-[300px] rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 active:scale-[0.97]"
       >
