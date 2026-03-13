@@ -14,6 +14,7 @@ import {
 } from "@/lib/bowling";
 import PinDiagram from "@/components/PinDiagram";
 import FrameScorecard from "@/components/FrameScorecard";
+import FramePinDetail from "@/components/FramePinDetail";
 import { ArrowLeft, Check, Undo2, Pencil, Trash2 } from "lucide-react";
 
 type EntryMode = "quick" | "detailed";
@@ -838,11 +839,25 @@ export default function LogPage() {
         <div className="flex flex-col gap-3">
           {games[currentGameIndex].entryType === "detailed" &&
           games[currentGameIndex].frames.length > 0 ? (
-            <FrameScorecard
-              frames={games[currentGameIndex].frames}
-              currentFrame={0}
-              currentRoll={1}
-            />
+            <>
+              <FrameScorecard
+                frames={games[currentGameIndex].frames}
+                currentFrame={0}
+                currentRoll={1}
+              />
+              <FramePinDetail
+                frames={games[currentGameIndex].frames.map((f) => ({
+                  frame_number: f.frameNumber,
+                  roll_1: f.roll1,
+                  roll_2: f.roll2,
+                  roll_3: f.roll3,
+                  is_strike: f.isStrike,
+                  is_spare: f.isSpare,
+                  pins_remaining: f.pinsRemaining,
+                  spare_converted: f.spareConverted,
+                }))}
+              />
+            </>
           ) : null}
 
           <div className="glass p-4 text-center">

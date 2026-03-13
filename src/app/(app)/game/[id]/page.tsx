@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { GameWithSession, FrameRow } from "@/lib/queries";
 import DeleteSessionButton from "@/components/DeleteSessionButton";
+import FramePinDetail from "@/components/FramePinDetail";
 
 export default async function GameDetailPage({
   params,
@@ -76,93 +77,99 @@ export default async function GameDetailPage({
 
       {/* Frame breakdown */}
       {frames && frames.length > 0 ? (
-        <div className="glass overflow-hidden rounded-lg">
-          <table className="w-full border-collapse text-center text-[10px]">
-            <thead>
-              <tr>
-                {frames.map((f) => (
-                  <th
-                    key={f.frame_number}
-                    className="border border-border px-0 py-[3px] font-normal text-text-muted"
-                  >
-                    {f.frame_number}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="h-[22px]">
-                {frames.map((f) => (
-                  <td key={f.frame_number} className="border border-border">
-                    <div className="flex justify-around px-[2px] text-[11px]">
-                      <span
-                        className={
-                          f.is_strike
-                            ? "font-bold text-green"
-                            : "text-text-secondary"
-                        }
-                      >
-                        {f.is_strike ? "X" : f.roll_1.toString()}
-                      </span>
-                      {f.frame_number < 10 ? (
-                        !f.is_strike && (
-                          <span
-                            className={
-                              f.is_spare
-                                ? "font-bold text-gold"
-                                : "text-text-secondary"
-                            }
-                          >
-                            {f.is_spare ? "/" : (f.roll_2?.toString() ?? "")}
-                          </span>
-                        )
-                      ) : (
-                        <>
-                          <span
-                            className={
-                              f.roll_2 === 10
-                                ? "font-bold text-green"
-                                : f.is_spare
-                                  ? "font-bold text-gold"
-                                  : "text-text-secondary"
-                            }
-                          >
-                            {f.roll_2 === 10
-                              ? "X"
-                              : f.is_spare
-                                ? "/"
-                                : (f.roll_2?.toString() ?? "")}
-                          </span>
-                          {f.roll_3 !== null && (
+        <>
+          <div className="glass overflow-hidden rounded-lg">
+            <table className="w-full border-collapse text-center text-[10px]">
+              <thead>
+                <tr>
+                  {frames.map((f) => (
+                    <th
+                      key={f.frame_number}
+                      className="border border-border px-0 py-[3px] font-normal text-text-muted"
+                    >
+                      {f.frame_number}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="h-[22px]">
+                  {frames.map((f) => (
+                    <td key={f.frame_number} className="border border-border">
+                      <div className="flex justify-around px-[2px] text-[11px]">
+                        <span
+                          className={
+                            f.is_strike
+                              ? "font-bold text-green"
+                              : "text-text-secondary"
+                          }
+                        >
+                          {f.is_strike ? "X" : f.roll_1.toString()}
+                        </span>
+                        {f.frame_number < 10 ? (
+                          !f.is_strike && (
                             <span
                               className={
-                                f.roll_3 === 10
-                                  ? "font-bold text-green"
+                                f.is_spare
+                                  ? "font-bold text-gold"
                                   : "text-text-secondary"
                               }
                             >
-                              {f.roll_3 === 10 ? "X" : f.roll_3}
+                              {f.is_spare ? "/" : (f.roll_2?.toString() ?? "")}
                             </span>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </td>
-                ))}
-              </tr>
-              <tr className="h-[26px]">
-                {frames.map((f) => (
-                  <td
-                    key={f.frame_number}
-                    className="border border-border text-[12px] font-bold"
-                  >
-                    {f.frame_score}
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                          )
+                        ) : (
+                          <>
+                            <span
+                              className={
+                                f.roll_2 === 10
+                                  ? "font-bold text-green"
+                                  : f.is_spare
+                                    ? "font-bold text-gold"
+                                    : "text-text-secondary"
+                              }
+                            >
+                              {f.roll_2 === 10
+                                ? "X"
+                                : f.is_spare
+                                  ? "/"
+                                  : (f.roll_2?.toString() ?? "")}
+                            </span>
+                            {f.roll_3 !== null && (
+                              <span
+                                className={
+                                  f.roll_3 === 10
+                                    ? "font-bold text-green"
+                                    : "text-text-secondary"
+                                }
+                              >
+                                {f.roll_3 === 10 ? "X" : f.roll_3}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  ))}
+                </tr>
+                <tr className="h-[26px]">
+                  {frames.map((f) => (
+                    <td
+                      key={f.frame_number}
+                      className="border border-border text-[12px] font-bold"
+                    >
+                      {f.frame_score}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          {/* Pin leave detail */}
+          <div className="mt-2">
+            <FramePinDetail frames={frames} />
+          </div>
+        </>
       ) : (
         <div className="glass p-4 text-center text-sm text-text-muted">
           Quick entry — no frame breakdown available
