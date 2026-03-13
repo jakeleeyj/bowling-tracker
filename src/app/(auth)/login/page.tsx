@@ -5,6 +5,58 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
 
+function Logo() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 180 240"
+      className="h-28 w-auto"
+    >
+      <defs>
+        <linearGradient id="lp" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#f8fafc" />
+          <stop offset="100%" stopColor="#cbd5e1" />
+        </linearGradient>
+        <linearGradient id="ls" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#60a5fa" />
+          <stop offset="100%" stopColor="#2563eb" />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="8" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      {/* Pin */}
+      <g transform="translate(30, 10)">
+        <circle cx="40" cy="30" r="26" fill="url(#lp)" />
+        <ellipse cx="40" cy="65" rx="16" ry="10" fill="url(#lp)" />
+        <ellipse cx="40" cy="128" rx="36" ry="52" fill="url(#lp)" />
+        <rect x="24" y="55" width="32" height="22" fill="url(#lp)" />
+        <rect x="12" y="72" width="56" height="32" fill="url(#lp)" />
+        <rect x="22" y="60" width="36" height="5" rx="2.5" fill="#ef4444" />
+        <rect x="22" y="68" width="36" height="5" rx="2.5" fill="#ef4444" />
+      </g>
+      {/* "/" slash */}
+      <rect
+        x="115"
+        y="20"
+        width="24"
+        height="180"
+        rx="12"
+        fill="url(#ls)"
+        transform="rotate(15, 127, 110)"
+        filter="url(#glow)"
+        opacity="0.9"
+      />
+      {/* "?" dot */}
+      <circle cx="138" cy="218" r="12" fill="#f59e0b" filter="url(#glow)" />
+    </svg>
+  );
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,14 +86,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="glow-blue glow-purple flex min-h-dvh items-center justify-center overflow-hidden px-4">
-      <div className="glass-strong relative z-10 w-full max-w-sm p-8">
-        <h1 className="mb-1 text-2xl font-extrabold">Welcome back</h1>
-        <p className="mb-6 text-sm text-text-muted">
-          Sign in to track your scores
+    <div className="glow-blue glow-purple flex min-h-dvh flex-col items-center justify-center overflow-hidden px-6">
+      {/* Brand */}
+      <div className="relative z-10 mb-8 flex flex-col items-center">
+        <Logo />
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight">
+          Spare Me<span className="text-gold">?</span>
+        </h1>
+        <p className="mt-1 text-sm text-text-muted">
+          Track scores. Chase spares. Talk trash.
         </p>
+      </div>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
+      {/* Form card */}
+      <div className="glass-strong relative z-10 w-full max-w-sm p-6">
+        <form onSubmit={handleLogin} className="flex flex-col gap-3">
           <input
             type="email"
             placeholder="Email"
@@ -64,13 +123,13 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold shadow-lg shadow-blue/25 transition-opacity disabled:opacity-50"
+            className="mt-1 rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold shadow-lg shadow-blue/25 transition-opacity disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-text-muted">
+        <p className="mt-5 text-center text-sm text-text-muted">
           No account?{" "}
           <Link href="/signup" className="font-medium text-blue">
             Sign up

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import {
@@ -14,7 +14,7 @@ import {
 } from "@/lib/bowling";
 import PinDiagram from "@/components/PinDiagram";
 import FrameScorecard from "@/components/FrameScorecard";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Undo2 } from "lucide-react";
 
 type EntryMode = "quick" | "detailed";
 type Step = "setup" | "game";
@@ -48,6 +48,47 @@ export default function LogPage() {
   const [standingPins, setStandingPins] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
 
+  // Undo history
+  const [history, setHistory] = useState<
+    Array<{
+      frames: FrameData[];
+      currentFrame: number;
+      currentRoll: 1 | 2 | 3;
+      standingPins: number[];
+    }>
+  >([]);
+
+  function saveHistory() {
+    setHistory((prev) => [
+      ...prev,
+      {
+        frames: frames.map((f) => ({ ...f })),
+        currentFrame,
+        currentRoll,
+        standingPins: [...standingPins],
+      },
+    ]);
+  }
+
+  function handleUndo() {
+    if (history.length === 0) return;
+    const prev = history[history.length - 1];
+    setFrames(prev.frames);
+    setCurrentFrame(prev.currentFrame);
+    setCurrentRoll(prev.currentRoll);
+    setStandingPins(prev.standingPins);
+    setHistory(history.slice(0, -1));
+  }
+
+  function handleFrameTap(frameNumber: number) {
+    // Jump back to this frame, discard it and all after
+    saveHistory();
+    setFrames(frames.filter((f) => f.frameNumber < frameNumber));
+    setCurrentFrame(frameNumber);
+    setCurrentRoll(1);
+    setStandingPins([]);
+  }
+
   function startSession() {
     setStep("game");
     setGames([]);
@@ -65,6 +106,7 @@ export default function LogPage() {
   }
 
   function handleStrike() {
+    saveHistory();
     if (currentFrame <= 9) {
       const frame: FrameData = {
         frameNumber: currentFrame,
@@ -86,6 +128,7 @@ export default function LogPage() {
   }
 
   function handleSpare() {
+    saveHistory();
     if (currentFrame <= 9) {
       const existingFrame = frames.find((f) => f.frameNumber === currentFrame);
       if (!existingFrame) return;
@@ -129,6 +172,7 @@ export default function LogPage() {
   }
 
   function confirmPinSelection() {
+    saveHistory();
     if (currentFrame <= 9) {
       if (currentRoll === 1) {
         // Standing pins = what user marked as still up
@@ -149,7 +193,7 @@ export default function LogPage() {
         };
         setFrames([...frames, frame]);
         setCurrentRoll(2);
-        setStandingPins([]);
+        // Keep standing pins — they show which pins are still up for roll 2
       } else {
         const existingFrame = frames.find(
           (f) => f.frameNumber === currentFrame,
@@ -212,7 +256,7 @@ export default function LogPage() {
       };
       setFrames([...frames, frame]);
       setCurrentRoll(2);
-      setStandingPins([]);
+      if (pins === 10) setStandingPins([]); // Fresh rack after strike only
     } else if (existing.roll2 === null) {
       // Roll 2 of 10th frame
       const isSpare = !existing.isStrike && existing.roll1 + pins === 10;
@@ -230,7 +274,10 @@ export default function LogPage() {
         // Gets a 3rd roll
         setFrames(newFrames);
         setCurrentRoll(3);
-        setStandingPins([]);
+        if (pins === 10 || isSpare) {
+          setStandingPins([]); // Fresh rack
+        }
+        // Otherwise keep standing pins for roll 3 spare attempt
       } else {
         // Game over
         setFrames(newFrames);
@@ -381,6 +428,16 @@ export default function LogPage() {
     router.push("/dashboard");
     router.refresh();
   }
+
+  // Warn before leaving mid-game
+  const hasProgress =
+    step === "game" && (frames.length > 0 || games.length > 0);
+  useEffect(() => {
+    if (!hasProgress) return;
+    const handler = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasProgress]);
 
   const allGamesComplete = games.length === gameCount;
   const scores = calculateFrameScores(frames);
@@ -547,9 +604,16 @@ export default function LogPage() {
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <button
-          onClick={() =>
-            currentGameIndex === 0 ? setStep("setup") : undefined
-          }
+          onClick={() => {
+            if (currentGameIndex === 0) {
+              if (
+                frames.length > 0 &&
+                !confirm("Leave this game? Your progress will be lost.")
+              )
+                return;
+              setStep("setup");
+            }
+          }}
           className="text-text-muted"
         >
           <ArrowLeft size={20} />
@@ -622,6 +686,7 @@ export default function LogPage() {
             frames={frames}
             currentFrame={currentFrame}
             currentRoll={currentRoll}
+            onFrameTap={handleFrameTap}
           />
 
           {/* Score + Max */}
@@ -655,6 +720,14 @@ export default function LogPage() {
 
           {/* Action buttons */}
           <div className="flex gap-2">
+            {history.length > 0 && (
+              <button
+                onClick={handleUndo}
+                className="flex w-12 items-center justify-center rounded-xl bg-surface-light text-text-muted active:bg-surface-light/80"
+              >
+                <Undo2 size={18} />
+              </button>
+            )}
             {isFreshRack ? (
               <button
                 onClick={handleStrike}

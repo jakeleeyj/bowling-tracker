@@ -1,4 +1,4 @@
-# Bowl Tracker
+# Spare Me?
 
 A mobile-first bowling score tracker for you and your friends. Track scores frame-by-frame, monitor spare conversions, see which pins you leave most often, and compete on a shared leaderboard.
 

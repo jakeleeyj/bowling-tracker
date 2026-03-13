@@ -1,6 +1,6 @@
 {
-  "name": "Bowl Tracker",
-  "short_name": "Bowl",
+  "name": "Spare Me?",
+  "short_name": "Spare Me",
   "description": "Track bowling scores with friends",
   "start_url": "/dashboard",
   "display": "standalone",

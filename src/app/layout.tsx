@@ -8,14 +8,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Bowl Tracker",
+  title: "Spare Me?",
   description: "Track bowling scores with friends",
   manifest: "/manifest.json",
   themeColor: "#0a0e1a",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Bowl Tracker",
+    title: "Spare Me?",
   },
 };
 

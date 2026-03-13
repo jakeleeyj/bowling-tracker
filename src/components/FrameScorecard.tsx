@@ -7,6 +7,7 @@ interface FrameScorecardProps {
   frames: FrameData[];
   currentFrame: number;
   currentRoll: 1 | 2 | 3;
+  onFrameTap?: (frameNumber: number) => void;
 }
 
 function formatRoll(
@@ -56,6 +57,7 @@ export default function FrameScorecard({
   frames,
   currentFrame,
   currentRoll,
+  onFrameTap,
 }: FrameScorecardProps) {
   const scores = calculateFrameScores(frames);
 
@@ -81,11 +83,13 @@ export default function FrameScorecard({
             {Array.from({ length: 10 }, (_, i) => {
               const frame = frames.find((f) => f.frameNumber === i + 1);
               const isCurrentFrame = i + 1 === currentFrame;
+              const isCompleted = !!frame && !isCurrentFrame;
 
               return (
                 <td
                   key={i}
-                  className={`border border-border text-[11px] ${isCurrentFrame ? "bg-blue/10" : ""}`}
+                  onClick={() => isCompleted && onFrameTap?.(i + 1)}
+                  className={`border border-border text-[11px] ${isCurrentFrame ? "bg-blue/10" : ""} ${isCompleted && onFrameTap ? "cursor-pointer active:bg-blue/5" : ""}`}
                 >
                   {frame ? (
                     <div
