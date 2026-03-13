@@ -41,13 +41,15 @@ interface SessionCardProps {
   avatarGradient: string;
   isOwn?: boolean;
   mmrChange?: number;
+  rankLabel?: string;
+  rankColor?: string;
 }
 
 const EVENT_COLORS: Record<string, string> = {
   League: "bg-blue/12 text-blue",
-  Practice: "bg-purple/12 text-purple",
   Tournament: "bg-gold/12 text-gold",
   Casual: "bg-green/12 text-green",
+  Funbowl: "bg-pink/12 text-pink",
 };
 
 function PinIcon({ className }: { className?: string }) {
@@ -279,6 +281,8 @@ export default function SessionCard({
   avatarGradient,
   isOwn = false,
   mmrChange,
+  rankLabel,
+  rankColor,
 }: SessionCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -329,7 +333,16 @@ export default function SessionCard({
             {realName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="text-[13px] font-semibold">{name}</p>
+            <p className="text-[13px] font-semibold">
+              {name}
+              {rankLabel && (
+                <span
+                  className={`ml-1.5 text-[10px] font-semibold ${rankColor ?? "text-text-muted"}`}
+                >
+                  {rankLabel}
+                </span>
+              )}
+            </p>
             <p className="text-[10px] text-text-muted">
               {dateLabel} &bull; avg {avg}
             </p>

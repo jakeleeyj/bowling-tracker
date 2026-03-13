@@ -69,6 +69,27 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(10)) as { data: SessionWithGamesFramesAndProfile[] | null };
 
+  // Get all games for all users (for rank display on cards)
+  const { data: allGamesForRank } = (await supabase
+    .from("games")
+    .select("user_id, total_score")
+    .order("created_at", { ascending: false })) as {
+    data: { user_id: string; total_score: number }[] | null;
+  };
+
+  // Compute per-user rank
+  const userRanks: Record<string, ReturnType<typeof getRank>> = {};
+  if (allGamesForRank) {
+    const byUser: Record<string, number[]> = {};
+    allGamesForRank.forEach((g) => {
+      if (!byUser[g.user_id]) byUser[g.user_id] = [];
+      byUser[g.user_id].push(g.total_score);
+    });
+    for (const [uid, uScores] of Object.entries(byUser)) {
+      userRanks[uid] = getRank(calculateMMR(uScores));
+    }
+  }
+
   const scores = userGames?.map((g) => g.total_score) ?? [];
   const mmr = calculateMMR(scores);
   const rank = getRank(mmr);
@@ -245,6 +266,12 @@ export default async function DashboardPage() {
               mmrChange={
                 isOwnSession ? sessionMmrChange[session.id] : undefined
               }
+              rankLabel={
+                userRanks[session.user_id]
+                  ? `${userRanks[session.user_id].name}${userRanks[session.user_id].division ? ` ${userRanks[session.user_id].division}` : ""}`
+                  : undefined
+              }
+              rankColor={userRanks[session.user_id]?.color}
             />
           );
         })}

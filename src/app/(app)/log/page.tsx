@@ -18,7 +18,12 @@ import FramePinDetail from "@/components/FramePinDetail";
 import { ArrowLeft, Check, Undo2, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
-import { calculateMMR, getRank, formatMMR, type RankTier } from "@/lib/ranking";
+import {
+  calculateMMR,
+  getRank,
+  getDivisionProgress,
+  type RankTier,
+} from "@/lib/ranking";
 
 type EntryMode = "quick" | "detailed";
 type Step = "setup" | "game" | "results";
@@ -122,21 +127,23 @@ function ResultsScreen({
     sessionHigh: number;
     totalPins: number;
     gameScores: number[];
-    rankedUp: boolean;
+    rankChanged: boolean;
+    isRankUp: boolean;
+    isRankDown: boolean;
   };
 }) {
-  const router = useRouter();
-  const [showRankUp, setShowRankUp] = useState(false);
+  const [showRankChange, setShowRankChange] = useState(false);
   const mmrDiff = data.newMmr - data.oldMmr;
   const displayRank =
-    data.rankedUp && !showRankUp ? data.oldRank : data.newRank;
+    data.rankChanged && !showRankChange ? data.oldRank : data.newRank;
+  const progress = getDivisionProgress(data.newMmr);
 
   useEffect(() => {
-    if (data.rankedUp) {
-      const timer = setTimeout(() => setShowRankUp(true), 1400);
+    if (data.rankChanged) {
+      const timer = setTimeout(() => setShowRankChange(true), 1400);
       return () => clearTimeout(timer);
     }
-  }, [data.rankedUp]);
+  }, [data.rankChanged]);
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center text-center">
@@ -153,19 +160,43 @@ function ResultsScreen({
         </span>
       </div>
 
-      {/* Rank up flash */}
-      {data.rankedUp && showRankUp && (
-        <div className="animate-results-flash mb-3">
-          <span className="text-sm font-bold text-gold">
-            {data.newRank.name !== data.oldRank.name
-              ? "RANK UP!"
-              : "DIVISION UP!"}
+      {/* Rank change flash */}
+      {data.rankChanged && showRankChange && (
+        <div className="animate-results-flash mb-2">
+          <span
+            className={`text-sm font-bold ${data.isRankUp ? "text-gold" : "text-red"}`}
+          >
+            {data.isRankUp
+              ? data.newRank.name !== data.oldRank.name
+                ? "RANK UP!"
+                : "DIVISION UP!"
+              : data.newRank.name !== data.oldRank.name
+                ? "RANK DOWN"
+                : "DIVISION DOWN"}
           </span>
         </div>
       )}
 
+      {/* Progress bar */}
+      <div className="animate-results-fade mb-1 w-full max-w-[200px]">
+        <div className="h-1.5 overflow-hidden rounded-full bg-surface-light">
+          <div
+            className={`h-full rounded-full transition-all duration-1000 ${
+              mmrDiff >= 0
+                ? "bg-gradient-to-r from-blue to-green"
+                : "bg-gradient-to-r from-red to-gold"
+            }`}
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="mt-1 flex justify-between text-[9px] text-text-muted">
+          <span>{displayRank.division ?? displayRank.name}</span>
+          <span>{progress}%</span>
+        </div>
+      </div>
+
       {/* MMR counter */}
-      <div className="animate-results-fade mb-6">
+      <div className="animate-results-fade mb-6 mt-3">
         <div className="text-4xl font-extrabold tabular-nums text-text-primary">
           <AnimatedCounter from={data.oldMmr} to={data.newMmr} />
           <span className="text-lg text-text-muted"> MMR</span>
@@ -241,7 +272,7 @@ function LogPage() {
   const [step, setStep] = useState<Step>("setup");
   const [venue, setVenue] = useState("");
   const [eventLabel, setEventLabel] = useState("");
-  const [gameCount, setGameCount] = useState(3);
+  const [gameCount, setGameCount] = useState(4);
 
   const [currentGameIndex, setCurrentGameIndex] = useState(0);
   const [games, setGames] = useState<GameData[]>([]);
@@ -273,7 +304,9 @@ function LogPage() {
     sessionHigh: number;
     totalPins: number;
     gameScores: number[];
-    rankedUp: boolean;
+    rankChanged: boolean;
+    isRankUp: boolean;
+    isRankDown: boolean;
   } | null>(null);
 
   const [history, setHistory] = useState<
@@ -906,9 +939,11 @@ function LogPage() {
     );
     const sessionHigh = Math.max(...gameScores);
 
-    const rankedUp =
+    const rankChanged =
       newRank.name !== oldRank.name ||
       (newRank.division ?? "") !== (oldRank.division ?? "");
+    const isRankUp = rankChanged && newMmr > oldMmr;
+    const isRankDown = rankChanged && newMmr < oldMmr;
 
     setSaving(false);
     setHasUnsaved(false);
@@ -921,7 +956,9 @@ function LogPage() {
       sessionHigh,
       totalPins,
       gameScores,
-      rankedUp,
+      rankChanged,
+      isRankUp,
+      isRankDown,
     });
     setStep("results");
   }
@@ -1104,7 +1141,7 @@ function LogPage() {
               Event (optional)
             </label>
             <div className="flex flex-wrap gap-2">
-              {["League", "Practice", "Tournament", "Casual"].map((label) => (
+              {["League", "Tournament", "Casual", "Funbowl"].map((label) => (
                 <button
                   key={label}
                   onClick={() =>
@@ -1127,7 +1164,7 @@ function LogPage() {
               Number of games
             </label>
             <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((n) => (
+              {[1, 2, 3, 4, 5, 6].map((n) => (
                 <button
                   key={n}
                   onClick={() => setGameCount(n)}
@@ -1286,6 +1323,12 @@ function LogPage() {
               </button>
             );
           })}
+          <button
+            onClick={() => setGameCount((c) => c + 1)}
+            className="flex h-auto w-8 shrink-0 items-center justify-center rounded-lg bg-surface-light text-sm font-bold text-text-muted active:scale-95"
+          >
+            +
+          </button>
         </div>
       )}
 
