@@ -178,6 +178,7 @@ export default async function DashboardPage() {
               eventLabel={session.event_label}
               games={sessionGames}
               avatarGradient={getAvatarGradient(realName)}
+              isOwn={isOwnSession}
             />
           );
         })}

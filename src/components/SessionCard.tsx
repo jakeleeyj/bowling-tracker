@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Star, Check, ChevronDown } from "lucide-react";
+import { createClient } from "@/lib/supabase-browser";
+import { Star, Check, ChevronDown, Pencil, Trash2 } from "lucide-react";
 
 interface FrameInfo {
   frame_number: number;
@@ -36,6 +38,7 @@ interface SessionCardProps {
   eventLabel: string | null;
   games: SessionGame[];
   avatarGradient: string;
+  isOwn?: boolean;
 }
 
 const EVENT_COLORS: Record<string, string> = {
@@ -191,6 +194,7 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
 }
 
 export default function SessionCard({
+  sessionId,
   name,
   realName,
   dateLabel,
@@ -200,9 +204,39 @@ export default function SessionCard({
   eventLabel,
   games,
   avatarGradient,
+  isOwn = false,
 }: SessionCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
   const highGame = Math.max(...games.map((g) => g.total_score), 0);
+
+  async function handleDeleteSession() {
+    if (!confirm("Delete this entire session and all its games?")) return;
+    setDeleting(true);
+    const supabase = createClient();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: gameRows } = await (supabase as any)
+      .from("games")
+      .select("id")
+      .eq("session_id", sessionId);
+
+    const gameIds = gameRows?.map((g: { id: string }) => g.id) ?? [];
+    if (gameIds.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("frames").delete().in("game_id", gameIds);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from("games")
+        .delete()
+        .eq("session_id", sessionId);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("sessions").delete().eq("id", sessionId);
+
+    router.refresh();
+  }
 
   return (
     <div className="glass overflow-hidden">
@@ -302,16 +336,9 @@ export default function SessionCard({
                   className="rounded-md bg-black/20 px-3 py-2 transition-colors hover:bg-black/30"
                 >
                   <div className="mb-1.5 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-semibold">
-                        Game {game.game_number}
-                      </span>
-                      {game.entry_type === "detailed" && (
-                        <span className="ml-2 text-[10px] text-text-muted">
-                          {game.strike_count}X {game.spare_count}/
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-xs font-semibold">
+                      Game {game.game_number}
+                    </span>
                     <div className="flex items-center gap-2">
                       {isClean && (
                         <span className="text-[9px] font-semibold text-green">
@@ -330,9 +357,25 @@ export default function SessionCard({
               );
             })}
           </div>
-          <p className="mt-1.5 text-center text-[9px] text-text-muted">
-            Tap a game to see full breakdown
-          </p>
+          {isOwn && (
+            <div className="mt-2 flex gap-2">
+              <Link
+                href={`/game/${games[0]?.id}`}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-surface-light py-2 text-[11px] font-semibold text-text-secondary active:bg-surface-light/80"
+              >
+                <Pencil size={12} />
+                View / Edit
+              </Link>
+              <button
+                onClick={handleDeleteSession}
+                disabled={deleting}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red/10 py-2 text-[11px] font-semibold text-red active:bg-red/20 disabled:opacity-50"
+              >
+                <Trash2 size={12} />
+                {deleting ? "Deleting..." : "Delete Session"}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
