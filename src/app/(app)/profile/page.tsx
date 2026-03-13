@@ -6,8 +6,6 @@ import { createClient } from "@/lib/supabase-browser";
 import {
   LogOut,
   Smartphone,
-  Star,
-  Check,
   Settings,
   X,
   Trophy,
@@ -17,10 +15,32 @@ import {
   Target,
   Crown,
   Award,
-  Pencil,
 } from "lucide-react";
-import type { SessionWithGames } from "@/lib/queries";
 import { useToast } from "@/components/Toast";
+import { calculateMMR, getRank, formatMMR } from "@/lib/ranking";
+import SessionCard from "@/components/SessionCard";
+
+interface HistoryFrame {
+  frame_number: number;
+  roll_1: number;
+  roll_2: number | null;
+  roll_3: number | null;
+  is_strike: boolean;
+  is_spare: boolean;
+  frame_score: number;
+  pins_remaining: number[] | null;
+}
+
+interface HistoryGame {
+  id: string;
+  game_number: number;
+  total_score: number;
+  is_clean: boolean;
+  entry_type: string;
+  strike_count: number;
+  spare_count: number;
+  frames: HistoryFrame[];
+}
 
 interface HistorySession {
   id: string;
@@ -29,12 +49,7 @@ interface HistorySession {
   venue: string | null;
   event_label: string | null;
   total_pins: number;
-  games: {
-    id: string;
-    game_number: number;
-    total_score: number;
-    is_clean: boolean;
-  }[];
+  games: HistoryGame[];
 }
 
 interface AchievementDef {
@@ -54,6 +69,23 @@ interface AchievementStats {
   maxConsecutiveStrikes: number;
   maxConsecutiveSpares: number;
   has200Game: boolean;
+}
+
+const AVATAR_GRADIENTS = [
+  "from-blue to-indigo-500",
+  "from-purple to-fuchsia-500",
+  "from-pink to-rose-500",
+  "from-green to-emerald-500",
+  "from-gold to-orange-500",
+  "from-cyan-500 to-blue",
+];
+
+function getAvatarGradient(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
 }
 
 const ACHIEVEMENTS: AchievementDef[] = [
@@ -135,6 +167,8 @@ export default function ProfilePage() {
   const [sessions, setSessions] = useState<HistorySession[]>([]);
   const [achievementStats, setAchievementStats] =
     useState<AchievementStats | null>(null);
+  const [mmr, setMmr] = useState(0);
+  const [rank, setRank] = useState<ReturnType<typeof getRank> | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -152,23 +186,30 @@ export default function ProfilePage() {
 
       if (profile) setDisplayName(profile.display_name);
 
-      // Fetch history
+      // Fetch history with full frame data for SessionCard
       const { data: sessionData } = (await supabase
         .from("sessions")
-        .select("*, games(id, game_number, total_score, is_clean)")
+        .select("*, games(*, frames(*))")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })) as {
-        data: SessionWithGames[] | null;
+        data: HistorySession[] | null;
       };
-      if (sessionData) setSessions(sessionData as unknown as HistorySession[]);
+      if (sessionData) setSessions(sessionData);
 
-      // Fetch achievement stats
+      // Fetch achievement stats + MMR
       const { data: games } = (await supabase
         .from("games")
         .select("id, total_score, is_clean")
-        .eq("user_id", user.id)) as {
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })) as {
         data: { id: string; total_score: number; is_clean: boolean }[] | null;
       };
+
+      // Calculate MMR (games already ordered newest-first)
+      const scores = games?.map((g) => g.total_score) ?? [];
+      const userMmr = calculateMMR(scores);
+      setMmr(userMmr);
+      setRank(getRank(userMmr));
 
       const gameIds = games?.map((g) => g.id) ?? [];
       const { data: frames } = (await supabase
@@ -432,6 +473,42 @@ export default function ProfilePage() {
         )}
       </div>
 
+      {/* Rank Card */}
+      {rank && (achievementStats?.totalGames ?? 0) > 0 && (
+        <div
+          className={`glass mb-5 flex items-center gap-3 border p-3 ${rank.borderColor}`}
+        >
+          <div className="flex h-10 w-10 items-center justify-center">
+            <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z"
+                fill="currentColor"
+                fillOpacity={0.15}
+                stroke="currentColor"
+                strokeWidth={1.5}
+                strokeLinejoin="round"
+                className={rank.color}
+              />
+              <path
+                d="M12 7l3 5-3 5-3-5z"
+                fill="currentColor"
+                fillOpacity={0.4}
+                stroke="currentColor"
+                strokeWidth={0.75}
+                className={rank.color}
+              />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <span className={`text-sm font-extrabold ${rank.color}`}>
+              {rank.name}
+              {rank.division ? ` ${rank.division}` : ""}
+            </span>
+            <p className="text-[10px] text-text-muted">{formatMMR(mmr)} MMR</p>
+          </div>
+        </div>
+      )}
+
       {/* Game History */}
       <div>
         <h2 className="mb-3 text-sm font-bold">Game History</h2>
@@ -454,78 +531,36 @@ export default function ProfilePage() {
                       sessionGames.length,
                   )
                 : 0;
-            const highGame = Math.max(
-              ...sessionGames.map((g) => g.total_score),
-              0,
-            );
+
+            const sessionDate = new Date(session.session_date);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            let dateLabel = sessionDate.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            });
+            if (sessionDate.toDateString() === today.toDateString())
+              dateLabel = "Today";
+            if (sessionDate.toDateString() === yesterday.toDateString())
+              dateLabel = "Yesterday";
 
             return (
-              <div key={session.id} className="glass p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <div>
-                    <p className="text-[13px] font-bold">
-                      {new Date(session.session_date).toLocaleDateString(
-                        "en-US",
-                        { weekday: "short", month: "short", day: "numeric" },
-                      )}
-                      <span className="ml-1.5 text-[10px] font-normal text-text-muted">
-                        {new Date(session.created_at).toLocaleTimeString(
-                          "en-US",
-                          { hour: "numeric", minute: "2-digit" },
-                        )}
-                      </span>
-                    </p>
-                    <p className="text-[10px] text-text-muted">
-                      {session.venue && `${session.venue} \u2022 `}
-                      {session.event_label && `${session.event_label} \u2022 `}
-                      avg {avg}
-                    </p>
-                  </div>
-                  <div className="text-lg font-extrabold">
-                    {session.total_pins}
-                  </div>
-                </div>
-
-                <div className="flex gap-1">
-                  {sessionGames.map((game) => {
-                    const isHigh = game.total_score === highGame;
-                    const isClean = game.is_clean;
-
-                    return (
-                      <button
-                        key={game.id}
-                        onClick={() => router.push(`/log?editGame=${game.id}`)}
-                        className={`w-14 rounded-md bg-black/30 py-[5px] text-center active:scale-95 ${isHigh ? "border border-gold/35" : isClean ? "border border-green/35" : "border border-transparent"}`}
-                      >
-                        <div className="flex items-center justify-center gap-1">
-                          <span
-                            className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : "text-text-primary"}`}
-                          >
-                            {game.total_score}
-                          </span>
-                          {isHigh && (
-                            <Star
-                              size={9}
-                              className="shrink-0 fill-gold text-gold"
-                            />
-                          )}
-                          {isClean && !isHigh && (
-                            <Check
-                              size={9}
-                              className="shrink-0 text-green"
-                              strokeWidth={3}
-                            />
-                          )}
-                        </div>
-                        <Pencil
-                          size={8}
-                          className="mx-auto mt-0.5 text-text-muted"
-                        />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <SessionCard
+                key={session.id}
+                sessionId={session.id}
+                name="You"
+                realName={displayName || "You"}
+                dateLabel={dateLabel}
+                avg={avg}
+                totalPins={session.total_pins}
+                venue={session.venue}
+                eventLabel={session.event_label}
+                games={sessionGames}
+                avatarGradient={getAvatarGradient(displayName || "You")}
+                isOwn
+              />
             );
           })}
         </div>

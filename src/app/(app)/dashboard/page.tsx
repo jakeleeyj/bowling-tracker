@@ -7,6 +7,7 @@ import type {
   SessionWithGamesFramesAndProfile,
 } from "@/lib/queries";
 import SessionCard from "@/components/SessionCard";
+import { calculateMMR, getRank, formatMMR } from "@/lib/ranking";
 
 const AVATAR_GRADIENTS = [
   "from-blue to-indigo-500",
@@ -39,11 +40,12 @@ export default async function DashboardPage() {
     .eq("id", user?.id ?? "")
     .single()) as { data: ProfileRow | null };
 
-  // Get user's game stats
+  // Get user's game stats (newest first for MMR)
   const { data: userGames } = (await supabase
     .from("games")
     .select("total_score")
-    .eq("user_id", user?.id ?? "")) as {
+    .eq("user_id", user?.id ?? "")
+    .order("created_at", { ascending: false })) as {
     data: { total_score: number }[] | null;
   };
 
@@ -66,6 +68,10 @@ export default async function DashboardPage() {
     .select("*, profiles(*), games(*, frames(*))")
     .order("created_at", { ascending: false })
     .limit(10)) as { data: SessionWithGamesFramesAndProfile[] | null };
+
+  const scores = userGames?.map((g) => g.total_score) ?? [];
+  const mmr = calculateMMR(scores);
+  const rank = getRank(mmr);
 
   const displayName = profile?.display_name ?? "Bowler";
   const initial = displayName.charAt(0).toUpperCase();
@@ -107,6 +113,46 @@ export default async function DashboardPage() {
           <div className="text-[10px] text-text-muted">all time</div>
         </div>
       </div>
+
+      {/* Rank Card */}
+      {totalGames > 0 && (
+        <Link
+          href="/leaderboard"
+          className={`glass mb-5 flex items-center gap-3 border p-3 ${rank.borderColor} active:scale-[0.98]`}
+        >
+          <div className={`flex h-10 w-10 items-center justify-center`}>
+            <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z"
+                fill="currentColor"
+                fillOpacity={0.15}
+                stroke="currentColor"
+                strokeWidth={1.5}
+                strokeLinejoin="round"
+                className={rank.color}
+              />
+              <path
+                d="M12 7l3 5-3 5-3-5z"
+                fill="currentColor"
+                fillOpacity={0.4}
+                stroke="currentColor"
+                strokeWidth={0.75}
+                className={rank.color}
+              />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <span className={`text-sm font-extrabold ${rank.color}`}>
+              {rank.name}
+              {rank.division ? ` ${rank.division}` : ""}
+            </span>
+            <p className="text-[10px] text-text-muted">{formatMMR(mmr)} MMR</p>
+          </div>
+          <span className="text-[10px] text-text-muted">
+            View Ranked &rsaquo;
+          </span>
+        </Link>
+      )}
 
       {/* CTA */}
       <Link
