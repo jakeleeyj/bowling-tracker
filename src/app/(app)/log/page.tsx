@@ -712,7 +712,7 @@ export default function LogPage() {
 
           <button
             onClick={startSession}
-            className="mt-4 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25"
+            className="mt-4 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
           >
             Start Bowling
           </button>
@@ -1015,7 +1015,7 @@ export default function LogPage() {
                       saveHistory();
                       handleStrike();
                     }}
-                    className="flex-1 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-green/25"
+                    className="flex-1 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97]"
                   >
                     STRIKE
                   </button>
@@ -1025,14 +1025,14 @@ export default function LogPage() {
                       saveHistory();
                       handleSpare();
                     }}
-                    className="flex-1 rounded-xl bg-gradient-to-r from-gold to-amber-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-gold/25"
+                    className="flex-1 rounded-xl bg-gradient-to-r from-gold to-amber-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-gold/25 transition-transform duration-150 active:scale-[0.97]"
                   >
                     SPARE
                   </button>
                 )}
                 <button
                   onClick={confirmPinSelection}
-                  className="flex-1 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-blue/25"
+                  className="flex-1 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
                 >
                   NEXT
                 </button>

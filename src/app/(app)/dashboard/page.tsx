@@ -111,7 +111,7 @@ export default async function DashboardPage() {
       {/* CTA */}
       <Link
         href="/log"
-        className="mb-5 block rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-center text-base font-bold shadow-lg shadow-blue/25"
+        className="mb-5 block rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-center text-base font-bold shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97]"
       >
         Log a Session
       </Link>

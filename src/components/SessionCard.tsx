@@ -14,6 +14,7 @@ interface FrameInfo {
   is_strike: boolean;
   is_spare: boolean;
   frame_score: number;
+  pins_remaining: number[] | null;
 }
 
 interface SessionGame {
@@ -107,83 +108,110 @@ function formatFrameRoll(frame: FrameInfo, rollNum: 1 | 2 | 3): string {
   return "";
 }
 
+// Micro pin layout rows: [7,8,9,10], [4,5,6], [2,3], [1]
+const MICRO_PINS = [[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]] as const;
+
+function MicroPinDiagram({
+  pinsRemaining,
+  isStrike,
+  isSpare,
+}: {
+  pinsRemaining: number[] | null;
+  isStrike: boolean;
+  isSpare: boolean;
+}) {
+  if (isStrike) {
+    return (
+      <div className="flex h-[22px] items-center justify-center">
+        <span className="text-[10px] font-extrabold text-green">X</span>
+      </div>
+    );
+  }
+
+  const pins = pinsRemaining ?? [];
+
+  return (
+    <div className="flex flex-col items-center gap-[1px] py-[2px]">
+      {MICRO_PINS.map((row, ri) => (
+        <div key={ri} className="flex gap-[1px]">
+          {row.map((pin) => {
+            const isLeft = pins.includes(pin);
+            return (
+              <div
+                key={pin}
+                className={`h-[4px] w-[4px] rounded-full ${
+                  isLeft ? (isSpare ? "bg-gold" : "bg-blue") : "bg-white/10"
+                }`}
+              />
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
   const sorted = [...frames].sort((a, b) => a.frame_number - b.frame_number);
 
   return (
     <div className="overflow-hidden rounded border border-border/50">
+      {/* Pin diagrams row */}
       <div className="flex">
         {Array.from({ length: 10 }, (_, i) => {
           const frame = sorted.find((f) => f.frame_number === i + 1);
-          if (!frame) {
-            return (
-              <div
-                key={i}
-                className="flex-1 border-r border-border/30 px-0 py-[2px] text-center text-[9px] text-text-muted last:border-r-0"
-              >
-                &mdash;
-              </div>
-            );
-          }
-
-          const r1 = formatFrameRoll(frame, 1);
-          const r2 = formatFrameRoll(frame, 2);
-          const r3 = i === 9 ? formatFrameRoll(frame, 3) : "";
 
           return (
             <div
               key={i}
-              className="flex-1 border-r border-border/30 px-0 py-[2px] text-center text-[9px] last:border-r-0"
+              className="flex flex-1 items-center justify-center border-r border-border/30 last:border-r-0"
             >
-              {i < 9 ? (
-                frame.is_strike ? (
-                  <span className="font-bold text-green">X</span>
+              {frame ? (
+                frame.pins_remaining && frame.pins_remaining.length > 0 ? (
+                  <MicroPinDiagram
+                    pinsRemaining={frame.pins_remaining}
+                    isStrike={frame.is_strike}
+                    isSpare={frame.is_spare}
+                  />
                 ) : (
-                  <span>
-                    <span className="text-text-secondary">{r1}</span>
-                    <span
-                      className={
-                        frame.is_spare
-                          ? "font-bold text-gold"
-                          : "text-text-secondary"
-                      }
-                    >
-                      {r2}
-                    </span>
-                  </span>
+                  <MicroPinDiagram
+                    pinsRemaining={null}
+                    isStrike={frame.is_strike}
+                    isSpare={false}
+                  />
                 )
               ) : (
-                <span className="text-[8px]">
-                  <span
-                    className={
-                      r1 === "X"
-                        ? "font-bold text-green"
-                        : "text-text-secondary"
-                    }
-                  >
-                    {r1}
-                  </span>
-                  <span
-                    className={
-                      r2 === "X"
-                        ? "font-bold text-green"
-                        : frame.is_spare
-                          ? "font-bold text-gold"
-                          : "text-text-secondary"
-                    }
-                  >
-                    {r2}
-                  </span>
-                  <span
-                    className={
-                      r3 === "X"
-                        ? "font-bold text-green"
-                        : "text-text-secondary"
-                    }
-                  >
-                    {r3}
-                  </span>
+                <span className="py-[2px] text-[8px] text-text-muted/30">
+                  &mdash;
                 </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {/* Running scores row */}
+      <div className="flex border-t border-border/30">
+        {Array.from({ length: 10 }, (_, i) => {
+          const frame = sorted.find((f) => f.frame_number === i + 1);
+          return (
+            <div
+              key={i}
+              className="flex-1 border-r border-border/30 py-[1px] text-center text-[8px] font-bold last:border-r-0"
+            >
+              {frame ? (
+                <span
+                  className={
+                    frame.is_strike
+                      ? "text-green"
+                      : frame.is_spare
+                        ? "text-gold"
+                        : "text-text-secondary"
+                  }
+                >
+                  {frame.frame_score}
+                </span>
+              ) : (
+                <span className="text-text-muted/30">&mdash;</span>
               )}
             </div>
           );
@@ -243,7 +271,7 @@ export default function SessionCard({
       {/* Clickable header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-between p-3 text-left"
+        className="flex w-full items-center justify-between p-3 text-left transition-colors duration-150 active:bg-white/[0.03]"
       >
         <div className="flex items-center gap-2.5">
           <div
@@ -262,7 +290,7 @@ export default function SessionCard({
           <div className="text-lg font-extrabold">{totalPins}</div>
           <ChevronDown
             size={14}
-            className={`text-text-muted transition-transform ${expanded ? "rotate-180" : ""}`}
+            className={`text-text-muted transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
           />
         </div>
       </button>
@@ -296,7 +324,7 @@ export default function SessionCard({
             <Link
               key={game.id}
               href={`/game/${game.id}`}
-              className={`w-14 rounded-md bg-black/30 py-[5px] text-center transition-colors hover:bg-black/50 ${isHigh ? "border border-gold/35" : isClean ? "border border-green/35" : "border border-transparent"}`}
+              className={`w-14 rounded-md bg-black/30 py-[5px] text-center transition-all duration-150 active:scale-95 ${isHigh ? "border border-gold/35" : isClean ? "border border-green/35" : "border border-transparent"}`}
             >
               <div className="flex items-center justify-center gap-1">
                 <span
@@ -322,7 +350,7 @@ export default function SessionCard({
 
       {/* Expanded: per-game frame breakdown */}
       {expanded && (
-        <div className="border-t border-border/50 px-3 py-2">
+        <div className="animate-slide-down border-t border-border/50 px-3 py-2">
           <div className="flex flex-col gap-2">
             {games.map((game) => {
               const isHigh = game.total_score === highGame;
@@ -333,7 +361,7 @@ export default function SessionCard({
                 <Link
                   key={game.id}
                   href={`/game/${game.id}`}
-                  className="rounded-md bg-black/20 px-3 py-2 transition-colors hover:bg-black/30"
+                  className="rounded-md bg-black/20 px-3 py-2 transition-all duration-150 active:scale-[0.98] active:bg-black/30"
                 >
                   <div className="mb-1.5 flex items-center justify-between">
                     <span className="text-xs font-semibold">

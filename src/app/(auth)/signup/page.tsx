@@ -9,47 +9,22 @@ function Logo() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 180 240"
+      viewBox="0 0 180 180"
       className="h-24 w-auto"
     >
       <defs>
-        <linearGradient id="sp" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#f8fafc" />
-          <stop offset="100%" stopColor="#cbd5e1" />
-        </linearGradient>
-        <linearGradient id="ss" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id="sg" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#60a5fa" />
-          <stop offset="100%" stopColor="#2563eb" />
+          <stop offset="100%" stopColor="#3b82f6" />
         </linearGradient>
-        <filter id="glow2">
-          <feGaussianBlur stdDeviation="8" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
       </defs>
-      <g transform="translate(30, 10)">
-        <circle cx="40" cy="30" r="26" fill="url(#sp)" />
-        <ellipse cx="40" cy="65" rx="16" ry="10" fill="url(#sp)" />
-        <ellipse cx="40" cy="128" rx="36" ry="52" fill="url(#sp)" />
-        <rect x="24" y="55" width="32" height="22" fill="url(#sp)" />
-        <rect x="12" y="72" width="56" height="32" fill="url(#sp)" />
-        <rect x="22" y="60" width="36" height="5" rx="2.5" fill="#ef4444" />
-        <rect x="22" y="68" width="36" height="5" rx="2.5" fill="#ef4444" />
-      </g>
-      <rect
-        x="115"
-        y="20"
-        width="24"
-        height="180"
-        rx="12"
-        fill="url(#ss)"
-        transform="rotate(15, 127, 110)"
-        filter="url(#glow2)"
-        opacity="0.9"
-      />
-      <circle cx="138" cy="218" r="12" fill="#f59e0b" filter="url(#glow2)" />
+      <circle cx="90" cy="36" r="10" fill="#e2e8f0" />
+      <circle cx="66" cy="68" r="10" fill="#e2e8f0" />
+      <circle cx="114" cy="68" r="10" fill="#e2e8f0" />
+      <circle cx="42" cy="100" r="10" fill="url(#sg)" />
+      <circle cx="90" cy="100" r="10" fill="#e2e8f0" />
+      <circle cx="138" cy="100" r="10" fill="#e2e8f0" />
+      <circle cx="90" cy="148" r="8" fill="#f59e0b" />
     </svg>
   );
 }
