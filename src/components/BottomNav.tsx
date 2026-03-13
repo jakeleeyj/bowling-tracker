@@ -1,8 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { Home, PlusCircle, BarChart3, Swords, User } from "lucide-react";
+import { useUnsavedGuard } from "@/components/UnsavedGuard";
 
 const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
@@ -14,6 +14,14 @@ const navItems = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { confirmLeave } = useUnsavedGuard();
+
+  function handleNav(href: string) {
+    if (pathname.startsWith(href)) return;
+    if (!confirmLeave()) return;
+    router.push(href);
+  }
 
   return (
     <nav className="glass-strong fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px] pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 sm:bottom-4 sm:left-4 sm:right-4 sm:rounded-2xl">
@@ -21,9 +29,9 @@ export default function BottomNav() {
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
-            <Link
+            <button
               key={item.href}
-              href={item.href}
+              onClick={() => handleNav(item.href)}
               className="group flex flex-1 flex-col items-center gap-0.5 py-2"
             >
               <div
@@ -48,7 +56,7 @@ export default function BottomNav() {
               >
                 {item.label}
               </span>
-            </Link>
+            </button>
           );
         })}
       </div>

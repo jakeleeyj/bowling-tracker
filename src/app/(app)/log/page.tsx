@@ -17,6 +17,7 @@ import FrameScorecard from "@/components/FrameScorecard";
 import FramePinDetail from "@/components/FramePinDetail";
 import { ArrowLeft, Check, Undo2, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/components/Toast";
+import { useUnsavedGuard } from "@/components/UnsavedGuard";
 
 type EntryMode = "quick" | "detailed";
 type Step = "setup" | "game";
@@ -68,6 +69,7 @@ function LogPage() {
   const searchParams = useSearchParams();
   const supabase = createClient();
   const { toast } = useToast();
+  const { setHasUnsaved } = useUnsavedGuard();
 
   const [step, setStep] = useState<Step>("setup");
   const [venue, setVenue] = useState("");
@@ -700,6 +702,7 @@ function LogPage() {
     }
 
     setSaving(false);
+    setHasUnsaved(false);
     toast("Session saved");
     router.push("/dashboard");
     router.refresh();
@@ -794,6 +797,7 @@ function LogPage() {
     }
 
     setSaving(false);
+    setHasUnsaved(false);
     toast("Game updated");
     router.back();
     router.refresh();
@@ -803,11 +807,12 @@ function LogPage() {
   const hasProgress =
     step === "game" && (frames.length > 0 || games.length > 0);
   useEffect(() => {
+    setHasUnsaved(hasProgress);
     if (!hasProgress) return;
     const handler = (e: BeforeUnloadEvent) => e.preventDefault();
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [hasProgress]);
+  }, [hasProgress, setHasUnsaved]);
 
   const allGamesComplete =
     games.filter(Boolean).length === gameCount && !reviewMode;
