@@ -8,6 +8,7 @@ import {
   getRank,
   getDivisionProgress,
   formatMMR,
+  getEventWeight,
 } from "@/lib/ranking";
 
 const AVATAR_GRADIENTS = [
@@ -88,9 +89,11 @@ export default async function LeaderboardPage() {
 
   const { data: allGames } = (await supabase
     .from("games")
-    .select("*")
+    .select("*, sessions(event_label)")
     .order("created_at", { ascending: false })) as {
-    data: GameRow[] | null;
+    data:
+      | (GameRow & { sessions: { event_label: string | null } | null })[]
+      | null;
   };
 
   const rankings = (profiles ?? [])
@@ -101,7 +104,10 @@ export default async function LeaderboardPage() {
 
       // Scores newest-first (already sorted by query)
       const scores = userGames.map((g) => g.total_score);
-      const mmr = calculateMMR(scores);
+      const weights = userGames.map((g) =>
+        getEventWeight(g.sessions?.event_label ?? null),
+      );
+      const mmr = calculateMMR(scores, weights);
       const rank = getRank(mmr);
       const progress = getDivisionProgress(mmr);
       const avg = Math.round(scores.reduce((s, v) => s + v, 0) / scores.length);
@@ -110,8 +116,11 @@ export default async function LeaderboardPage() {
       // Recent trend: compare last 5 games MMR vs previous 5
       let trend: "up" | "down" | "stable" = "stable";
       if (scores.length >= 10) {
-        const recentMMR = calculateMMR(scores.slice(0, 5));
-        const olderMMR = calculateMMR(scores.slice(5, 10));
+        const recentMMR = calculateMMR(scores.slice(0, 5), weights.slice(0, 5));
+        const olderMMR = calculateMMR(
+          scores.slice(5, 10),
+          weights.slice(5, 10),
+        );
         if (recentMMR - olderMMR > 3) trend = "up";
         else if (olderMMR - recentMMR > 3) trend = "down";
       }

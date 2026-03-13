@@ -17,7 +17,12 @@ import {
   Award,
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
-import { calculateMMR, getRank, formatMMR } from "@/lib/ranking";
+import {
+  calculateMMR,
+  getRank,
+  formatMMR,
+  getEventWeight,
+} from "@/lib/ranking";
 import SessionCard from "@/components/SessionCard";
 
 interface HistoryFrame {
@@ -202,7 +207,7 @@ export default function ProfilePage() {
       // Fetch achievement stats + MMR
       const { data: games } = (await supabase
         .from("games")
-        .select("id, total_score, is_clean, session_id")
+        .select("id, total_score, is_clean, session_id, sessions(event_label)")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })) as {
         data:
@@ -211,13 +216,17 @@ export default function ProfilePage() {
               total_score: number;
               is_clean: boolean;
               session_id: string;
+              sessions: { event_label: string | null } | null;
             }[]
           | null;
       };
 
       // Calculate MMR (games already ordered newest-first)
       const scores = games?.map((g) => g.total_score) ?? [];
-      const userMmr = calculateMMR(scores);
+      const weights =
+        games?.map((g) => getEventWeight(g.sessions?.event_label ?? null)) ??
+        [];
+      const userMmr = calculateMMR(scores, weights);
       setMmr(userMmr);
       setRank(getRank(userMmr));
 
@@ -232,8 +241,11 @@ export default function ProfilePage() {
         });
         for (const [sid, indices] of Object.entries(sessionGameIndices)) {
           const scoresWithout = scores.filter((_, i) => !indices.includes(i));
+          const weightsWithout = weights.filter((_, i) => !indices.includes(i));
           const mmrWithout =
-            scoresWithout.length > 0 ? calculateMMR(scoresWithout) : 0;
+            scoresWithout.length > 0
+              ? calculateMMR(scoresWithout, weightsWithout)
+              : 0;
           mmrMap[sid] = userMmr - mmrWithout;
         }
       }

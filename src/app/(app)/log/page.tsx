@@ -22,6 +22,7 @@ import {
   calculateMMR,
   getRank,
   getDivisionProgress,
+  getEventWeight,
   type RankTier,
 } from "@/lib/ranking";
 
@@ -850,13 +851,18 @@ function LogPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existingGames } = await (supabase as any)
       .from("games")
-      .select("total_score")
+      .select("total_score, sessions(event_label)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     const oldScores =
       existingGames?.map((g: { total_score: number }) => g.total_score) ?? [];
-    const oldMmr = calculateMMR(oldScores);
+    const oldWeights =
+      existingGames?.map(
+        (g: { sessions: { event_label: string | null } | null }) =>
+          getEventWeight(g.sessions?.event_label ?? null),
+      ) ?? [];
+    const oldMmr = calculateMMR(oldScores, oldWeights);
     const oldRank = getRank(oldMmr);
 
     const totalPins = games.reduce((sum, g) => sum + g.totalScore, 0);
@@ -929,8 +935,10 @@ function LogPage() {
     }
 
     // Calculate new MMR after save
+    const newEventWeight = getEventWeight(eventLabel || null);
     const newScores = [...games.map((g) => g.totalScore), ...oldScores];
-    const newMmr = calculateMMR(newScores);
+    const newWeights = [...games.map(() => newEventWeight), ...oldWeights];
+    const newMmr = calculateMMR(newScores, newWeights);
     const newRank = getRank(newMmr);
 
     const gameScores = games.map((g) => g.totalScore);

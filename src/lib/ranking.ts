@@ -87,7 +87,23 @@ const TIERS = [
 // Divisions within a tier: IV (bottom) to I (top)
 const DIVISIONS = ["IV", "III", "II", "I"] as const;
 
-export function calculateMMR(scores: number[]): number {
+// Event type weights — competitive events count more
+export const EVENT_WEIGHTS: Record<string, number> = {
+  Tournament: 1.5,
+  Funbowl: 1.35,
+  League: 1.25,
+  Casual: 1.0,
+};
+
+export function getEventWeight(eventLabel: string | null): number {
+  if (!eventLabel) return 1.0;
+  return EVENT_WEIGHTS[eventLabel] ?? 1.0;
+}
+
+export function calculateMMR(
+  scores: number[],
+  eventWeights?: number[],
+): number {
   if (scores.length === 0) return 0;
 
   // Scores should be newest-first
@@ -95,7 +111,9 @@ export function calculateMMR(scores: number[]): number {
   let totalWeight = 0;
 
   for (let i = 0; i < scores.length; i++) {
-    const weight = Math.pow(DECAY_FACTOR, i);
+    const decay = Math.pow(DECAY_FACTOR, i);
+    const eventW = eventWeights?.[i] ?? 1.0;
+    const weight = decay * eventW;
     weightedSum += (scores[i] - BASE_SCORE) * weight;
     totalWeight += weight;
   }

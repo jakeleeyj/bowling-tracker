@@ -7,7 +7,12 @@ import type {
   SessionWithGamesFramesAndProfile,
 } from "@/lib/queries";
 import SessionCard from "@/components/SessionCard";
-import { calculateMMR, getRank, formatMMR } from "@/lib/ranking";
+import {
+  calculateMMR,
+  getRank,
+  formatMMR,
+  getEventWeight,
+} from "@/lib/ranking";
 
 const AVATAR_GRADIENTS = [
   "from-blue to-indigo-500",
@@ -43,10 +48,16 @@ export default async function DashboardPage() {
   // Get user's game stats (newest first for MMR)
   const { data: userGames } = (await supabase
     .from("games")
-    .select("total_score, session_id")
+    .select("total_score, session_id, sessions(event_label)")
     .eq("user_id", user?.id ?? "")
     .order("created_at", { ascending: false })) as {
-    data: { total_score: number; session_id: string }[] | null;
+    data:
+      | {
+          total_score: number;
+          session_id: string;
+          sessions: { event_label: string | null } | null;
+        }[]
+      | null;
   };
 
   const totalGames = userGames?.length ?? 0;
@@ -72,33 +83,43 @@ export default async function DashboardPage() {
   // Get all games for all users (for rank display on cards)
   const { data: allGamesForRank } = (await supabase
     .from("games")
-    .select("user_id, total_score")
+    .select("user_id, total_score, sessions(event_label)")
     .order("created_at", { ascending: false })) as {
-    data: { user_id: string; total_score: number }[] | null;
+    data:
+      | {
+          user_id: string;
+          total_score: number;
+          sessions: { event_label: string | null } | null;
+        }[]
+      | null;
   };
 
   // Compute per-user rank
   const userRanks: Record<string, ReturnType<typeof getRank>> = {};
   if (allGamesForRank) {
-    const byUser: Record<string, number[]> = {};
+    const byUser: Record<string, { scores: number[]; weights: number[] }> = {};
     allGamesForRank.forEach((g) => {
-      if (!byUser[g.user_id]) byUser[g.user_id] = [];
-      byUser[g.user_id].push(g.total_score);
+      if (!byUser[g.user_id]) byUser[g.user_id] = { scores: [], weights: [] };
+      byUser[g.user_id].scores.push(g.total_score);
+      byUser[g.user_id].weights.push(
+        getEventWeight(g.sessions?.event_label ?? null),
+      );
     });
-    for (const [uid, uScores] of Object.entries(byUser)) {
-      userRanks[uid] = getRank(calculateMMR(uScores));
+    for (const [uid, d] of Object.entries(byUser)) {
+      userRanks[uid] = getRank(calculateMMR(d.scores, d.weights));
     }
   }
 
   const scores = userGames?.map((g) => g.total_score) ?? [];
-  const mmr = calculateMMR(scores);
+  const eventWeights =
+    userGames?.map((g) => getEventWeight(g.sessions?.event_label ?? null)) ??
+    [];
+  const mmr = calculateMMR(scores, eventWeights);
   const rank = getRank(mmr);
 
   // Compute per-session MMR change for current user
-  // scores is newest-first; we walk from index 0 and remove each session's games
   const sessionMmrChange: Record<string, number> = {};
   if (userGames && userGames.length > 0) {
-    // Group game indices by session_id, preserving newest-first order
     const sessionGameIndices: Record<string, number[]> = {};
     userGames.forEach((g, i) => {
       if (!sessionGameIndices[g.session_id])
@@ -107,12 +128,15 @@ export default async function DashboardPage() {
     });
 
     for (const [sessionId, indices] of Object.entries(sessionGameIndices)) {
-      // MMR with all games
-      const mmrWith = calculateMMR(scores);
-      // MMR without this session's games
+      const mmrWith = calculateMMR(scores, eventWeights);
       const scoresWithout = scores.filter((_, i) => !indices.includes(i));
+      const weightsWithout = eventWeights.filter(
+        (_, i) => !indices.includes(i),
+      );
       const mmrWithout =
-        scoresWithout.length > 0 ? calculateMMR(scoresWithout) : 0;
+        scoresWithout.length > 0
+          ? calculateMMR(scoresWithout, weightsWithout)
+          : 0;
       sessionMmrChange[sessionId] = mmrWith - mmrWithout;
     }
   }
