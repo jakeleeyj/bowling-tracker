@@ -43,10 +43,10 @@ export default async function DashboardPage() {
   // Get user's game stats (newest first for MMR)
   const { data: userGames } = (await supabase
     .from("games")
-    .select("total_score")
+    .select("total_score, session_id")
     .eq("user_id", user?.id ?? "")
     .order("created_at", { ascending: false })) as {
-    data: { total_score: number }[] | null;
+    data: { total_score: number; session_id: string }[] | null;
   };
 
   const totalGames = userGames?.length ?? 0;
@@ -72,6 +72,29 @@ export default async function DashboardPage() {
   const scores = userGames?.map((g) => g.total_score) ?? [];
   const mmr = calculateMMR(scores);
   const rank = getRank(mmr);
+
+  // Compute per-session MMR change for current user
+  // scores is newest-first; we walk from index 0 and remove each session's games
+  const sessionMmrChange: Record<string, number> = {};
+  if (userGames && userGames.length > 0) {
+    // Group game indices by session_id, preserving newest-first order
+    const sessionGameIndices: Record<string, number[]> = {};
+    userGames.forEach((g, i) => {
+      if (!sessionGameIndices[g.session_id])
+        sessionGameIndices[g.session_id] = [];
+      sessionGameIndices[g.session_id].push(i);
+    });
+
+    for (const [sessionId, indices] of Object.entries(sessionGameIndices)) {
+      // MMR with all games
+      const mmrWith = calculateMMR(scores);
+      // MMR without this session's games
+      const scoresWithout = scores.filter((_, i) => !indices.includes(i));
+      const mmrWithout =
+        scoresWithout.length > 0 ? calculateMMR(scoresWithout) : 0;
+      sessionMmrChange[sessionId] = mmrWith - mmrWithout;
+    }
+  }
 
   const displayName = profile?.display_name ?? "Bowler";
   const initial = displayName.charAt(0).toUpperCase();
@@ -197,19 +220,13 @@ export default async function DashboardPage() {
                 )
               : 0;
 
-          const sessionDate = new Date(session.session_date);
-          const today = new Date();
-          const yesterday = new Date(today);
-          yesterday.setDate(yesterday.getDate() - 1);
-
-          let dateLabel = sessionDate.toLocaleDateString("en-US", {
+          const createdAt = new Date(session.created_at);
+          const dateLabel = createdAt.toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
           });
-          if (sessionDate.toDateString() === today.toDateString())
-            dateLabel = "Today";
-          if (sessionDate.toDateString() === yesterday.toDateString())
-            dateLabel = "Yesterday";
 
           return (
             <SessionCard
@@ -225,6 +242,9 @@ export default async function DashboardPage() {
               games={sessionGames}
               avatarGradient={getAvatarGradient(realName)}
               isOwn={isOwnSession}
+              mmrChange={
+                isOwnSession ? sessionMmrChange[session.id] : undefined
+              }
             />
           );
         })}

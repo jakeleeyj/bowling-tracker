@@ -651,6 +651,7 @@ function LogPage() {
 
     if (sessionError || !session) {
       setSaving(false);
+      toast("Failed to save session", "error");
       return;
     }
 

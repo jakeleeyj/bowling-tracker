@@ -40,6 +40,7 @@ interface SessionCardProps {
   games: SessionGame[];
   avatarGradient: string;
   isOwn?: boolean;
+  mmrChange?: number;
 }
 
 const EVENT_COLORS: Record<string, string> = {
@@ -277,12 +278,14 @@ export default function SessionCard({
   games,
   avatarGradient,
   isOwn = false,
+  mmrChange,
 }: SessionCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const highGame = Math.max(...games.map((g) => g.total_score), 0);
+  const highGame =
+    games.length > 0 ? Math.max(...games.map((g) => g.total_score)) : 0;
 
   async function handleDeleteSession() {
     if (!confirm("Delete this entire session and all its games?")) return;
@@ -333,7 +336,19 @@ export default function SessionCard({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="text-lg font-extrabold">{totalPins}</div>
+          <div className="text-right">
+            <div className="text-lg font-extrabold leading-tight">
+              {totalPins}
+            </div>
+            {mmrChange !== undefined && (
+              <div
+                className={`text-[10px] font-semibold leading-tight ${mmrChange > 0 ? "text-green" : mmrChange < 0 ? "text-red" : "text-text-muted"}`}
+              >
+                {mmrChange > 0 ? "+" : ""}
+                {mmrChange} MMR
+              </div>
+            )}
+          </div>
           <ChevronDown
             size={14}
             className={`text-text-muted transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}

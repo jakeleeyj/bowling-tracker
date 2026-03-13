@@ -28,9 +28,11 @@ export function UnsavedGuardProvider({
 
   const confirmLeave = useCallback(() => {
     if (!hasUnsaved) return true;
-    return window.confirm(
+    const shouldLeave = window.confirm(
       "You have unsaved scoring in progress. Leave anyway?",
     );
+    if (shouldLeave) setHasUnsaved(false);
+    return shouldLeave;
   }, [hasUnsaved]);
 
   return (

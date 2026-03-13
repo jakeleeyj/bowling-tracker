@@ -169,6 +169,9 @@ export default function ProfilePage() {
     useState<AchievementStats | null>(null);
   const [mmr, setMmr] = useState(0);
   const [rank, setRank] = useState<ReturnType<typeof getRank> | null>(null);
+  const [sessionMmrChanges, setSessionMmrChanges] = useState<
+    Record<string, number>
+  >({});
 
   useEffect(() => {
     async function load() {
@@ -199,10 +202,17 @@ export default function ProfilePage() {
       // Fetch achievement stats + MMR
       const { data: games } = (await supabase
         .from("games")
-        .select("id, total_score, is_clean")
+        .select("id, total_score, is_clean, session_id")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })) as {
-        data: { id: string; total_score: number; is_clean: boolean }[] | null;
+        data:
+          | {
+              id: string;
+              total_score: number;
+              is_clean: boolean;
+              session_id: string;
+            }[]
+          | null;
       };
 
       // Calculate MMR (games already ordered newest-first)
@@ -210,6 +220,24 @@ export default function ProfilePage() {
       const userMmr = calculateMMR(scores);
       setMmr(userMmr);
       setRank(getRank(userMmr));
+
+      // Per-session MMR change
+      const mmrMap: Record<string, number> = {};
+      if (games && games.length > 0) {
+        const sessionGameIndices: Record<string, number[]> = {};
+        games.forEach((g, i) => {
+          if (!sessionGameIndices[g.session_id])
+            sessionGameIndices[g.session_id] = [];
+          sessionGameIndices[g.session_id].push(i);
+        });
+        for (const [sid, indices] of Object.entries(sessionGameIndices)) {
+          const scoresWithout = scores.filter((_, i) => !indices.includes(i));
+          const mmrWithout =
+            scoresWithout.length > 0 ? calculateMMR(scoresWithout) : 0;
+          mmrMap[sid] = userMmr - mmrWithout;
+        }
+      }
+      setSessionMmrChanges(mmrMap);
 
       const gameIds = games?.map((g) => g.id) ?? [];
       const { data: frames } = (await supabase
@@ -532,19 +560,13 @@ export default function ProfilePage() {
                   )
                 : 0;
 
-            const sessionDate = new Date(session.session_date);
-            const today = new Date();
-            const yesterday = new Date(today);
-            yesterday.setDate(yesterday.getDate() - 1);
-
-            let dateLabel = sessionDate.toLocaleDateString("en-US", {
+            const createdAt = new Date(session.created_at);
+            const dateLabel = createdAt.toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
             });
-            if (sessionDate.toDateString() === today.toDateString())
-              dateLabel = "Today";
-            if (sessionDate.toDateString() === yesterday.toDateString())
-              dateLabel = "Yesterday";
 
             return (
               <SessionCard
@@ -560,6 +582,7 @@ export default function ProfilePage() {
                 games={sessionGames}
                 avatarGradient={getAvatarGradient(displayName || "You")}
                 isOwn
+                mmrChange={sessionMmrChanges[session.id]}
               />
             );
           })}
