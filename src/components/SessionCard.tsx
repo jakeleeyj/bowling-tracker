@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
-import { Star, Check, ChevronDown, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Star, Check, ChevronDown, Pencil, Trash2 } from "lucide-react";
 
 interface FrameInfo {
   frame_number: number;
@@ -155,8 +156,32 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
 
   return (
     <div className="overflow-hidden rounded border border-border/50">
-      {/* Roll notation row */}
+      {/* Pin diagrams row */}
       <div className="flex">
+        {Array.from({ length: 10 }, (_, i) => {
+          const frame = sorted.find((f) => f.frame_number === i + 1);
+          return (
+            <div
+              key={i}
+              className="flex flex-1 items-center justify-center border-r border-border/30 last:border-r-0"
+            >
+              {frame ? (
+                <MicroPinDiagram
+                  pinsRemaining={frame.pins_remaining}
+                  isStrike={frame.is_strike}
+                  isSpare={frame.is_spare}
+                />
+              ) : (
+                <span className="py-[2px] text-[8px] text-text-muted/30">
+                  &mdash;
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {/* Roll notation row */}
+      <div className="flex border-t border-border/30">
         {Array.from({ length: 10 }, (_, i) => {
           const frame = sorted.find((f) => f.frame_number === i + 1);
           const isTenth = i === 9;
@@ -400,11 +425,18 @@ export default function SessionCard({
             })}
           </div>
           {isOwn && (
-            <div className="mt-2">
+            <div className="mt-2 flex gap-2">
+              <Link
+                href={`/log?edit=${sessionId}`}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-surface-light py-2 text-[11px] font-semibold text-text-secondary active:bg-surface-light/80"
+              >
+                <Pencil size={12} />
+                Edit
+              </Link>
               <button
                 onClick={handleDeleteSession}
                 disabled={deleting}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-red/10 py-2 text-[11px] font-semibold text-red active:bg-red/20 disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red/10 py-2 text-[11px] font-semibold text-red active:bg-red/20 disabled:opacity-50"
               >
                 <Trash2 size={12} />
                 {deleting ? "Deleting..." : "Delete Session"}

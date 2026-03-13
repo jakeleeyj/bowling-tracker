@@ -67,6 +67,7 @@ export default function LogPage() {
   const [currentRoll, setCurrentRoll] = useState<1 | 2 | 3>(1);
   const [standingPins, setStandingPins] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
+  const [reviewMode, setReviewMode] = useState(false);
 
   const [history, setHistory] = useState<
     Array<{
@@ -602,7 +603,8 @@ export default function LogPage() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [hasProgress]);
 
-  const allGamesComplete = games.filter(Boolean).length === gameCount;
+  const allGamesComplete =
+    games.filter(Boolean).length === gameCount && !reviewMode;
   const currentGameComplete = games[currentGameIndex] !== undefined;
   const sortedFrames = [...frames].sort(
     (a, b) => a.frameNumber - b.frameNumber,
@@ -714,7 +716,16 @@ export default function LogPage() {
 
     return (
       <div>
-        <h1 className="mb-2 text-xl font-extrabold">Session Complete</h1>
+        <div className="mb-3 flex items-center justify-between">
+          <button
+            onClick={() => setReviewMode(true)}
+            className="text-text-muted"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-base font-bold">Session Complete</h1>
+          <div className="w-5" />
+        </div>
         <p className="mb-4 text-sm text-text-muted">
           {venue && `${venue} • `}
           {eventLabel && `${eventLabel} • `}
@@ -899,7 +910,7 @@ export default function LogPage() {
                 </button>
               );
             }
-            if (allGamesComplete) {
+            if (games.filter(Boolean).length === gameCount) {
               return (
                 <button
                   onClick={saveSession}

@@ -363,9 +363,12 @@ export default function StatsPage() {
                 const height = ((score - chartMin) / chartRange) * 100;
                 const isAboveAvg = score >= avg;
                 return (
-                  <div key={i} className="relative flex-1">
+                  <div
+                    key={i}
+                    className="relative flex-1 h-full flex items-end"
+                  >
                     <div
-                      className={`rounded-t ${isAboveAvg ? "bg-blue" : "bg-surface-light"}`}
+                      className={`w-full rounded-t ${isAboveAvg ? "bg-blue" : "bg-surface-light"}`}
                       style={{ height: `${Math.max(height, 4)}%` }}
                     />
                   </div>
@@ -485,9 +488,12 @@ export default function StatsPage() {
                 {spareConvTrend.map((pct, i) => {
                   const height = (pct / spareChartMax) * 100;
                   return (
-                    <div key={i} className="relative flex-1">
+                    <div
+                      key={i}
+                      className="relative flex-1 h-full flex items-end"
+                    >
                       <div
-                        className={`rounded-t ${pct >= spareRate ? "bg-gold" : "bg-surface-light"}`}
+                        className={`w-full rounded-t ${pct >= spareRate ? "bg-gold" : "bg-surface-light"}`}
                         style={{ height: `${Math.max(height, 4)}%` }}
                       />
                     </div>
