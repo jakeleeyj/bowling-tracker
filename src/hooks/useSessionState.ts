@@ -216,7 +216,11 @@ export function useSessionState() {
       standingPins,
       editorStates: Object.fromEntries(editorStatesRef.current),
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // localStorage full — silently fail, session still in memory
+    }
   }, [
     step,
     venue,
@@ -848,13 +852,22 @@ export function useSessionState() {
     // Stay on current game so user can review/edit
   }
 
+  const savingRef = useRef(false);
+
   async function saveSession() {
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(true);
 
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setSaving(false);
+      savingRef.current = false;
+      toast("Not logged in — please sign in again", "error");
+      return;
+    }
 
     // Get display name for notifications
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -918,6 +931,7 @@ export function useSessionState() {
 
     if (sessionError || !session) {
       setSaving(false);
+      savingRef.current = false;
       toast("Failed to save session", "error");
       return;
     }
@@ -947,7 +961,15 @@ export function useSessionState() {
         .select()
         .single();
 
-      if (gameError || !gameRow) continue;
+      if (gameError || !gameRow) {
+        setSaving(false);
+        savingRef.current = false;
+        toast(
+          "Failed to save game " + (i + 1) + " — please try again",
+          "error",
+        );
+        return;
+      }
 
       if (game.entryType === "detailed" && game.frames.length > 0) {
         const frameScores = calculateFrameScores(game.frames);
@@ -1041,6 +1063,7 @@ export function useSessionState() {
     }).catch(() => {});
 
     setSaving(false);
+    savingRef.current = false;
     setHasUnsaved(false);
     const gamesBefore = oldScores.length;
     const totalGamesAfter = gamesBefore + games.length;
@@ -1067,6 +1090,8 @@ export function useSessionState() {
 
   async function updateExistingGame() {
     if (!editGameId || !editSessionId) return;
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(true);
 
     // Build game from current editor state if not already completed
@@ -1155,6 +1180,7 @@ export function useSessionState() {
     }
 
     setSaving(false);
+    savingRef.current = false;
     setHasUnsaved(false);
     toast("Game updated");
     router.back();

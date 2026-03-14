@@ -12,6 +12,7 @@ import PlayerSessions from "@/components/PlayerSessions";
 import {
   calculateLP,
   getRank,
+  getDivisionProgress,
   formatLP,
   getEventWeight,
   CALIBRATION_GAMES,
@@ -98,19 +99,76 @@ export default async function PlayerPage({
         />
         <div>
           <h1 className="text-xl font-extrabold">{profile.display_name}</h1>
-          {isCalibrating ? (
-            <p className="text-xs text-text-muted">
-              Calibrating ({totalGames}/{CALIBRATION_GAMES} games)
-            </p>
-          ) : (
-            <p className={`text-sm font-semibold ${rank.color}`}>
-              {rank.name}
-              {rank.division ? ` ${rank.division}` : ""}{" "}
-              <span className="text-text-muted">{formatLP(lp)} LP</span>
-            </p>
-          )}
         </div>
       </div>
+
+      {/* Rank Card */}
+      {totalGames > 0 && (
+        <div
+          className={`glass mb-5 flex items-center gap-3 border p-3 ${totalGames >= CALIBRATION_GAMES ? rank.borderColor : "border-border/30"}`}
+        >
+          <div className="flex h-10 w-10 items-center justify-center">
+            <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z"
+                fill="currentColor"
+                fillOpacity={0.15}
+                stroke="currentColor"
+                strokeWidth={1.5}
+                strokeLinejoin="round"
+                className={
+                  totalGames >= CALIBRATION_GAMES
+                    ? rank.color
+                    : "text-text-muted"
+                }
+              />
+              <path
+                d="M12 7l3 5-3 5-3-5z"
+                fill="currentColor"
+                fillOpacity={0.4}
+                stroke="currentColor"
+                strokeWidth={0.75}
+                className={
+                  totalGames >= CALIBRATION_GAMES
+                    ? rank.color
+                    : "text-text-muted"
+                }
+              />
+            </svg>
+          </div>
+          <div className="flex-1">
+            {totalGames >= CALIBRATION_GAMES ? (
+              <>
+                <span className={`text-sm font-extrabold ${rank.color}`}>
+                  {rank.name}
+                  {rank.division ? ` ${rank.division}` : ""}
+                </span>
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-light">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-blue to-green"
+                      style={{ width: `${getDivisionProgress(lp)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-text-muted">
+                    {formatLP(lp)} LP
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="text-sm font-extrabold text-text-muted">
+                  Calibrating
+                </span>
+                <p className="text-[10px] text-text-muted">
+                  {CALIBRATION_GAMES - totalGames} more game
+                  {CALIBRATION_GAMES - totalGames !== 1 ? "s" : ""} to rank
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="mb-5 flex gap-2">
@@ -125,16 +183,6 @@ export default async function PlayerPage({
             High
           </div>
           <div className="text-2xl font-extrabold text-gold">{high}</div>
-        </div>
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
-            LP
-          </div>
-          <div
-            className={`text-2xl font-extrabold ${isCalibrating ? "text-text-muted" : rank.color}`}
-          >
-            {isCalibrating ? "--" : formatLP(lp)}
-          </div>
         </div>
         <div className="glass flex-1 p-3 text-center">
           <div className="text-[10px] uppercase tracking-wide text-text-muted">
