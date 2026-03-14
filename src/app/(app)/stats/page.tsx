@@ -650,32 +650,19 @@ export default function StatsPage() {
             </div>
           </div>
 
-          {/* Spare Streak */}
+          {/* Clean Rate */}
           <div className="glass p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[10px] uppercase text-text-muted">
-                  Best Spare Streak
-                </div>
-                <div className="text-2xl font-extrabold">{maxSpareStreak}</div>
-                <div className="text-[10px] text-text-muted">
-                  consecutive spares
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-[10px] uppercase text-text-muted">
-                  Clean Rate
-                </div>
-                <div className="text-2xl font-extrabold text-green">
-                  {detailedGames.length > 0
-                    ? Math.round((cleanGames / detailedGames.length) * 100)
-                    : 0}
-                  %
-                </div>
-                <div className="text-[10px] text-text-muted">
-                  {cleanGames}/{detailedGames.length} games
-                </div>
-              </div>
+            <div className="text-[10px] uppercase text-text-muted">
+              Clean Rate
+            </div>
+            <div className="text-2xl font-extrabold text-green">
+              {detailedGames.length > 0
+                ? Math.round((cleanGames / detailedGames.length) * 100)
+                : 0}
+              %
+            </div>
+            <div className="text-[10px] text-text-muted">
+              {cleanGames}/{detailedGames.length} games
             </div>
           </div>
         </>
@@ -688,6 +675,22 @@ export default function StatsPage() {
         </div>
       ) : (
         <>
+          {/* Spare Conversion Rate */}
+          <div className="glass mb-4 p-4">
+            <div className="text-[10px] uppercase text-text-muted">
+              Spare Conversion
+            </div>
+            <div
+              className={`text-2xl font-extrabold ${spareRate >= 50 ? "text-gold" : "text-text-primary"}`}
+            >
+              {spareRate}%
+            </div>
+            <div className="text-[10px] text-text-muted">
+              {spareOpportunities.filter((s) => s.spare_converted).length}/
+              {spareOpportunities.length} attempts
+            </div>
+          </div>
+
           {/* Practice These */}
           {practiceTargets.length > 0 && (
             <div className="glass mb-4 border border-gold/20 p-4">

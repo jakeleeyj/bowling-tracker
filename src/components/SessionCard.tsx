@@ -162,7 +162,13 @@ function MicroPinDiagram({
               <div
                 key={pin}
                 className={`h-[4px] w-[4px] rounded-full ${
-                  isLeft ? (isSpare ? "bg-gold" : "bg-blue") : "bg-white/10"
+                  isLeft
+                    ? isSplit(pins)
+                      ? "bg-red"
+                      : isSpare
+                        ? "bg-gold"
+                        : "bg-blue"
+                    : "bg-white/10"
                 }`}
               />
             );

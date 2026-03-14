@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, Plus, BarChart3, Swords, User } from "lucide-react";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
@@ -27,6 +28,11 @@ export default function BottomNav() {
 
   const isLogActive = pathname.startsWith("/log");
 
+  const [hasSavedSession, setHasSavedSession] = useState(false);
+  useEffect(() => {
+    setHasSavedSession(localStorage.getItem("spare-me-session") !== null);
+  }, [pathname]);
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px] overflow-visible">
       {/* Floating circle — above the notch */}
@@ -36,9 +42,47 @@ export default function BottomNav() {
         className="absolute left-1/2 -top-6 z-20 -translate-x-1/2"
       >
         <div
-          className={`flex h-[52px] w-[52px] items-center justify-center rounded-full bg-gradient-to-br from-blue to-blue-dark shadow-[0_4px_20px_rgba(59,130,246,0.4),0_0_40px_rgba(59,130,246,0.15)] transition-transform duration-150 active:scale-95 ${isLogActive ? "ring-2 ring-white/20" : ""}`}
+          className={`flex h-[52px] w-[52px] items-center justify-center rounded-full transition-transform duration-150 active:scale-95 ${
+            hasSavedSession
+              ? "bg-gradient-to-br from-blue to-emerald-600 shadow-[0_4px_20px_rgba(59,130,246,0.3),0_0_40px_rgba(16,185,129,0.1)]"
+              : "bg-gradient-to-br from-blue to-blue-dark shadow-[0_4px_20px_rgba(59,130,246,0.4),0_0_40px_rgba(59,130,246,0.15)]"
+          } ${isLogActive ? "ring-2 ring-white/20" : ""}`}
         >
-          <Plus size={26} className="text-white" strokeWidth={2.5} />
+          {hasSavedSession ? (
+            <svg
+              width={24}
+              height={24}
+              viewBox="0 0 24 24"
+              fill="none"
+              className="animate-spin"
+              style={{ animationDuration: "3s" }}
+            >
+              <circle cx="12" cy="12" r="10" fill="white" />
+              <circle
+                cx="10"
+                cy="8"
+                r="1.5"
+                fill="currentColor"
+                className="text-green"
+              />
+              <circle
+                cx="14"
+                cy="8"
+                r="1.5"
+                fill="currentColor"
+                className="text-green"
+              />
+              <circle
+                cx="12"
+                cy="11.5"
+                r="1.5"
+                fill="currentColor"
+                className="text-green"
+              />
+            </svg>
+          ) : (
+            <Plus size={26} className="text-white" strokeWidth={2.5} />
+          )}
         </div>
       </button>
 
@@ -99,9 +143,9 @@ export default function BottomNav() {
           {/* Invisible spacer matching the icon area height */}
           <div className="h-8" />
           <span
-            className={`text-[10px] transition-colors duration-200 ${isLogActive ? "font-semibold text-blue" : "text-text-muted"}`}
+            className={`text-[10px] transition-colors duration-200 ${hasSavedSession ? "font-semibold bg-gradient-to-r from-blue to-emerald-600 bg-clip-text text-transparent" : isLogActive ? "font-semibold text-blue" : "text-text-muted"}`}
           >
-            Log
+            {hasSavedSession ? "Ongoing" : "Log"}
           </span>
         </button>
 

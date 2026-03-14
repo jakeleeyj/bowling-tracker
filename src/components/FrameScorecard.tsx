@@ -115,9 +115,13 @@ export default function FrameScorecard({
                               </span>
                               <span
                                 className={
-                                  frame.isSpare
-                                    ? "font-bold text-gold"
-                                    : "text-text-secondary"
+                                  frame.isSpare &&
+                                  frame.pinsRemaining &&
+                                  isSplit(frame.pinsRemaining)
+                                    ? "font-bold text-red"
+                                    : frame.isSpare
+                                      ? "font-bold text-gold"
+                                      : "text-text-secondary"
                                 }
                               >
                                 {formatRoll(frame, 2, i)}
@@ -140,9 +144,13 @@ export default function FrameScorecard({
                             className={
                               frame.roll2 === 10
                                 ? "font-bold text-green"
-                                : frame.isSpare
-                                  ? "font-bold text-gold"
-                                  : "text-text-secondary"
+                                : frame.isSpare &&
+                                    frame.pinsRemaining &&
+                                    isSplit(frame.pinsRemaining)
+                                  ? "font-bold text-red"
+                                  : frame.isSpare
+                                    ? "font-bold text-gold"
+                                    : "text-text-secondary"
                             }
                           >
                             {formatRoll(frame, 2, 10)}
@@ -151,7 +159,19 @@ export default function FrameScorecard({
                             className={
                               frame.roll3 === 10
                                 ? "font-bold text-green"
-                                : "text-text-secondary"
+                                : frame.roll2 !== null &&
+                                    frame.roll2 !== 10 &&
+                                    frame.roll3 !== null &&
+                                    frame.roll2 + frame.roll3 === 10 &&
+                                    frame.pinsRemaining &&
+                                    isSplit(frame.pinsRemaining)
+                                  ? "font-bold text-red"
+                                  : frame.roll2 !== null &&
+                                      frame.roll2 !== 10 &&
+                                      frame.roll3 !== null &&
+                                      frame.roll2 + frame.roll3 === 10
+                                    ? "font-bold text-gold"
+                                    : "text-text-secondary"
                             }
                           >
                             {formatRoll(frame, 3, 10)}
