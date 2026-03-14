@@ -1110,7 +1110,7 @@ function LogPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existingFrames } = await (supabase as any)
       .from("frames")
-      .select("game_id, is_strike, spare_converted")
+      .select("game_id, is_strike, is_spare, spare_converted, pins_remaining")
       .in("game_id", existingGameIds.length > 0 ? existingGameIds : ["none"])
       .order("frame_number", { ascending: true });
 
@@ -1235,7 +1235,9 @@ function LogPage() {
       return g.frames.map((f) => ({
         game_id: gameId,
         is_strike: f.isStrike,
+        is_spare: f.isSpare,
         spare_converted: f.spareConverted,
+        pins_remaining: f.pinsRemaining,
       }));
     });
     const allGames = [...newGameRecords, ...(existingGames ?? [])];
@@ -1250,10 +1252,13 @@ function LogPage() {
     );
 
     // Send push notification to other users (fire and forget)
-    const notifTitle = isNewPB ? "New PB!" : "Spare Me?";
-    const notifBody = isNewPB
-      ? `${playerName} just hit ${sessionHigh} — a new personal best!`
-      : `${playerName} just bowled! Avg: ${sessionAvg} across ${games.length} game${games.length !== 1 ? "s" : ""}`;
+    const has149 = gameScores.includes(149);
+    const notifTitle = has149 ? "149 Club!" : isNewPB ? "New PB!" : "Spare Me?";
+    const notifBody = has149
+      ? `${playerName} just bowled a 149. Welcome to the club.`
+      : isNewPB
+        ? `${playerName} just hit ${sessionHigh} — a new personal best!`
+        : `${playerName} just bowled! Avg: ${sessionAvg} across ${games.length} game${games.length !== 1 ? "s" : ""}`;
     fetch("/api/push/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

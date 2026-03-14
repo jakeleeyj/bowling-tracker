@@ -188,14 +188,18 @@ export default function ProfilePage() {
         const gameIds = games?.map((g) => g.id) ?? [];
         const { data: frames } = (await supabase
           .from("frames")
-          .select("game_id, is_strike, spare_converted")
+          .select(
+            "game_id, is_strike, is_spare, spare_converted, pins_remaining",
+          )
           .in("game_id", gameIds.length > 0 ? gameIds : ["none"])
           .order("frame_number", { ascending: true })) as {
           data:
             | {
                 game_id: string;
                 is_strike: boolean;
+                is_spare: boolean;
                 spare_converted: boolean;
+                pins_remaining: number[] | null;
               }[]
             | null;
         };
