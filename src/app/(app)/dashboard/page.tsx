@@ -2,6 +2,7 @@ export const revalidate = 300; // revalidate every 5 minutes
 
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import type {
   ProfileRow,
   SessionWithGamesFramesAndProfile,
@@ -104,6 +105,15 @@ export default async function DashboardPage() {
   const lp = calculateLP(scores, eventWeights);
   const rank = getRank(lp);
 
+  // Trend: compare recent 5 avg vs older 5 avg
+  let trend: "up" | "down" | "stable" = "stable";
+  if (scores.length >= 10) {
+    const recentAvg = scores.slice(0, 5).reduce((s, v) => s + v, 0) / 5;
+    const olderAvg = scores.slice(5, 10).reduce((s, v) => s + v, 0) / 5;
+    if (recentAvg - olderAvg > 5) trend = "up";
+    else if (olderAvg - recentAvg > 5) trend = "down";
+  }
+
   // Compute per-session LP change for all users shown in the feed
   const sessionLpChange: Record<string, number> = {};
   if (sessions) {
@@ -198,10 +208,18 @@ export default async function DashboardPage() {
           <div className="flex-1">
             {totalGames >= CALIBRATION_GAMES ? (
               <>
-                <span className={`text-sm font-extrabold ${rank.color}`}>
-                  {rank.name}
-                  {rank.division ? ` ${rank.division}` : ""}
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className={`text-sm font-extrabold ${rank.color}`}>
+                    {rank.name}
+                    {rank.division ? ` ${rank.division}` : ""}
+                  </span>
+                  {trend === "up" && (
+                    <ChevronUp size={14} className="text-green" />
+                  )}
+                  {trend === "down" && (
+                    <ChevronDown size={14} className="text-red" />
+                  )}
+                </div>
                 <div className="mt-1 flex items-center gap-2">
                   <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-light">
                     <div

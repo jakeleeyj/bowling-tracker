@@ -352,32 +352,9 @@ export default async function LeaderboardPage() {
                 </div>
 
                 {/* LP + trend */}
-                <div className="flex items-center gap-1 shrink-0">
-                  {entry.isCalibrating ? (
-                    <div className="text-right">
-                      <div className="text-sm font-extrabold text-text-muted">
-                        --
-                      </div>
-                      <div className="text-[9px] text-text-muted">LP</div>
-                    </div>
-                  ) : (
-                    <>
-                      {entry.trend === "up" && (
-                        <ChevronUp size={12} className="text-green" />
-                      )}
-                      {entry.trend === "down" && (
-                        <ChevronDown size={12} className="text-red" />
-                      )}
-                      {entry.trend === "stable" && null}
-                      <div className="text-right">
-                        <div className="text-sm font-extrabold text-text-primary">
-                          {formatLP(entry.mmr)}
-                        </div>
-                        <div className="text-[9px] text-text-muted">LP</div>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <span className="shrink-0 text-xs font-bold text-text-muted">
+                  {entry.isCalibrating ? "--" : `${formatLP(entry.mmr)} LP`}
+                </span>
 
                 <ChevronRight
                   size={14}
