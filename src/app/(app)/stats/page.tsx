@@ -64,7 +64,7 @@ function TrendChart({
 }) {
   if (values.length === 0) return null;
 
-  const padding = { top: 12, right: 8, bottom: 24, left: 32 };
+  const padding = { top: 12, right: 12, bottom: 24, left: 40 };
   const width = 320;
   const height = 160;
   const chartW = width - padding.left - padding.right;

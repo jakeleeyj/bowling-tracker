@@ -165,6 +165,7 @@ function ResultsScreen({
     unlockedAchievements: AchievementDef[];
     totalGamesAfter: number;
     gamesBefore: number;
+    isNewPB: boolean;
   };
 }) {
   const isCalibrating = data.totalGamesAfter < CALIBRATION_GAMES;
@@ -357,6 +358,16 @@ function ResultsScreen({
         </div>
       )}
 
+      {/* New PB callout */}
+      {data.isNewPB && (
+        <div className="animate-results-flash mb-4 rounded-xl bg-gold/10 px-5 py-3">
+          <p className="text-sm font-extrabold text-gold">New Personal Best!</p>
+          <p className="text-[10px] text-text-muted">
+            {data.sessionHigh} pins — your new high game
+          </p>
+        </div>
+      )}
+
       {/* Session stats */}
       <div className="mb-6 flex w-full max-w-[300px] gap-2">
         <div className="glass flex-1 p-3 text-center">
@@ -510,6 +521,7 @@ function LogPage() {
     unlockedAchievements: AchievementDef[];
     totalGamesAfter: number;
     gamesBefore: number;
+    isNewPB: boolean;
   } | null>(null);
 
   const [history, setHistory] = useState<
@@ -1190,6 +1202,8 @@ function LogPage() {
       gameScores.reduce((s, v) => s + v, 0) / gameScores.length,
     );
     const sessionHigh = Math.max(...gameScores);
+    const previousHigh = oldScores.length > 0 ? Math.max(...oldScores) : 0;
+    const isNewPB = sessionHigh > previousHigh && previousHigh > 0;
 
     const rankChanged =
       newRank.name !== oldRank.name ||
@@ -1256,6 +1270,7 @@ function LogPage() {
       unlockedAchievements,
       totalGamesAfter,
       gamesBefore,
+      isNewPB,
     });
     setStep("results");
   }

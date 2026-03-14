@@ -12,6 +12,7 @@ import NotificationPrompt from "@/components/NotificationPrompt";
 import {
   calculateLP,
   getRank,
+  getDivisionProgress,
   formatLP,
   getEventWeight,
   CALIBRATION_GAMES,
@@ -201,7 +202,17 @@ export default async function DashboardPage() {
                   {rank.name}
                   {rank.division ? ` ${rank.division}` : ""}
                 </span>
-                <p className="text-[10px] text-text-muted">{formatLP(lp)} LP</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-light">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-blue to-green"
+                      style={{ width: `${getDivisionProgress(lp)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-text-muted">
+                    {formatLP(lp)} LP
+                  </span>
+                </div>
               </>
             ) : (
               <>
