@@ -4,19 +4,6 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { isSplit } from "@/lib/bowling";
 
-const PIN_POSITIONS: Record<number, { x: number; y: number }> = {
-  7: { x: 30, y: 30 },
-  8: { x: 70, y: 30 },
-  9: { x: 110, y: 30 },
-  10: { x: 150, y: 30 },
-  4: { x: 50, y: 70 },
-  5: { x: 90, y: 70 },
-  6: { x: 130, y: 70 },
-  2: { x: 70, y: 110 },
-  3: { x: 110, y: 110 },
-  1: { x: 90, y: 150 },
-};
-
 interface GameData {
   id: string;
   total_score: number;
@@ -60,6 +47,214 @@ function getFramesForGames(
 ): FrameData[] {
   const ids = new Set(games.map((g) => g.id));
   return allFrames.filter((f) => ids.has(f.game_id));
+}
+
+function ScoreTrendChart({ scores, avg }: { scores: number[]; avg: number }) {
+  if (scores.length === 0) return null;
+
+  const padding = { top: 12, right: 8, bottom: 24, left: 32 };
+  const width = 320;
+  const height = 160;
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+
+  const rawMin = Math.min(...scores);
+  const rawMax = Math.max(...scores);
+  // Round to nearest 10 for clean gridlines
+  const yMin = Math.floor(Math.min(rawMin, avg) / 10) * 10;
+  const yMax = Math.ceil(Math.max(rawMax, avg) / 10) * 10;
+  const yRange = yMax - yMin || 1;
+
+  // Generate ~4 Y-axis gridlines
+  const yStep = Math.max(10, Math.ceil(yRange / 4 / 10) * 10);
+  const yTicks: number[] = [];
+  for (let v = yMin; v <= yMax; v += yStep) {
+    yTicks.push(v);
+  }
+  if (!yTicks.includes(yMax)) yTicks.push(yMax);
+
+  const toX = (i: number) =>
+    padding.left +
+    (scores.length === 1 ? chartW / 2 : (i / (scores.length - 1)) * chartW);
+  const toY = (v: number) =>
+    padding.top + chartH - ((v - yMin) / yRange) * chartH;
+
+  // Build SVG path
+  const points = scores.map((s, i) => `${toX(i)},${toY(s)}`);
+  const linePath = `M${points.join("L")}`;
+
+  // Average line Y
+  const avgY = toY(avg);
+
+  // X-axis labels: show first, last, and middle
+  const xLabels: { i: number; label: string }[] = [];
+  if (scores.length <= 6) {
+    scores.forEach((_, i) => xLabels.push({ i, label: `${i + 1}` }));
+  } else {
+    xLabels.push({ i: 0, label: "1" });
+    const mid = Math.floor(scores.length / 2);
+    xLabels.push({ i: mid, label: `${mid + 1}` });
+    xLabels.push({
+      i: scores.length - 1,
+      label: `${scores.length}`,
+    });
+  }
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full">
+      {/* Y gridlines + labels */}
+      {yTicks.map((v) => (
+        <g key={v}>
+          <line
+            x1={padding.left}
+            y1={toY(v)}
+            x2={width - padding.right}
+            y2={toY(v)}
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth={0.5}
+          />
+          <text
+            x={padding.left - 4}
+            y={toY(v)}
+            textAnchor="end"
+            dominantBaseline="middle"
+            fontSize={8}
+            fill="#64748b"
+          >
+            {v}
+          </text>
+        </g>
+      ))}
+
+      {/* Average line */}
+      <line
+        x1={padding.left}
+        y1={avgY}
+        x2={width - padding.right}
+        y2={avgY}
+        stroke="#3b82f6"
+        strokeWidth={0.75}
+        strokeDasharray="4 3"
+        opacity={0.5}
+      />
+
+      {/* Line */}
+      <path
+        d={linePath}
+        fill="none"
+        stroke="#3b82f6"
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+
+      {/* Dots */}
+      {scores.map((s, i) => (
+        <g key={i}>
+          <circle
+            cx={toX(i)}
+            cy={toY(s)}
+            r={3}
+            fill={s >= avg ? "#3b82f6" : "#334155"}
+            stroke={s >= avg ? "#3b82f6" : "#64748b"}
+            strokeWidth={1}
+          />
+          {/* Score label on dot for small datasets */}
+          {scores.length <= 10 && (
+            <text
+              x={toX(i)}
+              y={toY(s) - 7}
+              textAnchor="middle"
+              fontSize={7}
+              fontWeight="bold"
+              fill="#e2e8f0"
+            >
+              {s}
+            </text>
+          )}
+        </g>
+      ))}
+
+      {/* X-axis labels */}
+      {xLabels.map(({ i, label }) => (
+        <text
+          key={i}
+          x={toX(i)}
+          y={height - 4}
+          textAnchor="middle"
+          fontSize={8}
+          fill="#64748b"
+        >
+          {label}
+        </text>
+      ))}
+
+      {/* Avg label */}
+      <text
+        x={width - padding.right}
+        y={avgY - 4}
+        textAnchor="end"
+        fontSize={7}
+        fill="#3b82f6"
+      >
+        avg {avg}
+      </text>
+    </svg>
+  );
+}
+
+function LeaveItem({
+  pins,
+  attempts,
+  converted,
+  isSplitLeave,
+}: {
+  pins: number[];
+  attempts: number;
+  converted: number;
+  isSplitLeave: boolean;
+}) {
+  const rate = attempts > 0 ? Math.round((converted / attempts) * 100) : 0;
+  const label = pins.join("-");
+
+  return (
+    <div className="flex items-center gap-3 rounded-lg bg-black/20 px-3 py-2">
+      <div className="flex w-10 flex-col items-center gap-[1px]">
+        {([[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]] as const).map((row, ri) => (
+          <div key={ri} className="flex gap-[2px]">
+            {row.map((pin) => (
+              <div
+                key={pin}
+                className={`h-[5px] w-[5px] rounded-full ${
+                  pins.includes(pin)
+                    ? isSplitLeave
+                      ? "bg-red"
+                      : "bg-blue"
+                    : "bg-white/8"
+                }`}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-semibold">{label} leave</span>
+          {isSplitLeave && (
+            <span className="text-[9px] font-semibold text-red">SPLIT</span>
+          )}
+        </div>
+        <p className="text-[10px] text-text-muted">
+          {converted}/{attempts} converted
+        </p>
+      </div>
+      <span
+        className={`text-sm font-bold ${rate === 100 ? "text-green" : rate >= 50 ? "text-gold" : "text-text-secondary"}`}
+      >
+        {rate}%
+      </span>
+    </div>
+  );
 }
 
 export default function StatsPage() {
@@ -155,19 +350,47 @@ export default function StatsPage() {
       ? Math.round((firstBallStrikes / totalFramesPlayed) * 100)
       : 0;
 
-  // Pin leave frequency
-  const pinLeaveCount: Record<number, number> = {};
-  frames
-    .filter(
-      (f) =>
-        f.pins_remaining && Array.isArray(f.pins_remaining) && !f.is_strike,
-    )
-    .forEach((f) => {
-      (f.pins_remaining as number[]).forEach((pin) => {
-        pinLeaveCount[pin] = (pinLeaveCount[pin] ?? 0) + 1;
-      });
-    });
-  const maxLeaves = Math.max(...Object.values(pinLeaveCount), 1);
+  // Double rate: strike after strike %
+  // Group frames by game, sorted by frame number
+  const framesByGame: Record<string, FrameData[]> = {};
+  frames.forEach((f) => {
+    if (!framesByGame[f.game_id]) framesByGame[f.game_id] = [];
+    framesByGame[f.game_id].push(f);
+  });
+  let doubleOpportunities = 0;
+  let doubles = 0;
+  for (const gFrames of Object.values(framesByGame)) {
+    const sorted = [...gFrames].sort((a, b) => a.frame_number - b.frame_number);
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i - 1].is_strike) {
+        doubleOpportunities++;
+        if (sorted[i].is_strike) doubles++;
+      }
+    }
+  }
+  const doubleRate =
+    doubleOpportunities > 0
+      ? Math.round((doubles / doubleOpportunities) * 100)
+      : 0;
+
+  // Pocket hit % approximation: strike OR single-pin leave = pocket hit
+  const firstBallFrames = frames.filter((f) => f.frame_number <= 10);
+  let pocketHits = 0;
+  for (const f of firstBallFrames) {
+    if (f.is_strike) {
+      pocketHits++;
+    } else if (
+      f.pins_remaining &&
+      Array.isArray(f.pins_remaining) &&
+      (f.pins_remaining as number[]).length === 1
+    ) {
+      pocketHits++;
+    }
+  }
+  const pocketRate =
+    firstBallFrames.length > 0
+      ? Math.round((pocketHits / firstBallFrames.length) * 100)
+      : 0;
 
   // Spare streak
   let maxSpareStreak = 0;
@@ -227,11 +450,6 @@ export default function StatsPage() {
   const splitRate =
     splitAttempts > 0 ? Math.round((splitConverted / splitAttempts) * 100) : 0;
 
-  // Score chart
-  const chartMax = Math.max(...scores, 200);
-  const chartMin = Math.min(...scores, 0);
-  const chartRange = chartMax - chartMin || 1;
-
   // Spare conversion trend (rolling per-game spare %)
   const spareConvTrend = games
     .filter((g) => g.entry_type === "detailed")
@@ -247,21 +465,37 @@ export default function StatsPage() {
 
   const spareChartMax = 100;
 
-  // Spare leave log — group by leave pattern
+  // Spare leave log — group by leave pattern, categorized
   const leaveLog: Record<
     string,
-    { pins: number[]; attempts: number; converted: number }
+    {
+      pins: number[];
+      attempts: number;
+      converted: number;
+      category: "single" | "multi" | "split";
+    }
   > = {};
   for (const f of spareOpportunities) {
     const pins = [...(f.pins_remaining as number[])].sort((a, b) => a - b);
     const key = pins.join("-");
-    if (!leaveLog[key]) leaveLog[key] = { pins, attempts: 0, converted: 0 };
+    if (!leaveLog[key]) {
+      const category =
+        pins.length === 1 ? "single" : isSplit(pins) ? "split" : "multi";
+      leaveLog[key] = { pins, attempts: 0, converted: 0, category };
+    }
     leaveLog[key].attempts++;
     if (f.spare_converted) leaveLog[key].converted++;
   }
-  const sortedLeaves = Object.values(leaveLog).sort(
-    (a, b) => b.attempts - a.attempts,
-  );
+
+  const singlePinLeaves = Object.values(leaveLog)
+    .filter((l) => l.category === "single")
+    .sort((a, b) => b.attempts - a.attempts);
+  const multiPinLeaves = Object.values(leaveLog)
+    .filter((l) => l.category === "multi")
+    .sort((a, b) => b.attempts - a.attempts);
+  const splitLeaves = Object.values(leaveLog)
+    .filter((l) => l.category === "split")
+    .sort((a, b) => b.attempts - a.attempts);
 
   const filterLabels: Record<Filter, string> = {
     last10: "Last 10",
@@ -353,127 +587,90 @@ export default function StatsPage() {
             </div>
           </div>
 
-          {/* Score Trend */}
+          {/* Score Trend — Line Chart */}
           <div className="glass mb-4 p-4">
-            <h3 className="mb-3 text-xs font-bold text-text-secondary">
+            <h3 className="mb-2 text-xs font-bold text-text-secondary">
               Score Trend
             </h3>
-            <div className="flex h-32 items-end gap-[2px]">
-              {scores.map((score, i) => {
-                const height = ((score - chartMin) / chartRange) * 100;
-                const isAboveAvg = score >= avg;
-                return (
-                  <div
-                    key={i}
-                    className="relative flex-1 h-full flex items-end"
-                  >
-                    <div
-                      className={`w-full rounded-t ${isAboveAvg ? "bg-blue" : "bg-surface-light"}`}
-                      style={{ height: `${Math.max(height, 4)}%` }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-1 flex items-center justify-end gap-1">
-              <div className="h-px w-3 bg-blue" />
-              <span className="text-[9px] text-text-muted">avg {avg}</span>
-            </div>
+            <ScoreTrendChart scores={scores} avg={avg} />
           </div>
 
           {/* Strike & Spare rates */}
-          <div className="mb-4 flex gap-2">
-            <div className="glass flex-1 p-4">
-              <h3 className="mb-2 text-xs font-bold text-text-secondary">
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            <div className="glass p-3">
+              <div className="text-[10px] uppercase text-text-muted">
                 Strike %
-              </h3>
-              <div className="text-3xl font-extrabold text-green">
+              </div>
+              <div className="text-2xl font-extrabold text-green">
                 {strikeRate}%
               </div>
               <div className="text-[10px] text-text-muted">
-                {firstBallStrikes} in {totalFramesPlayed} frames
+                {firstBallStrikes}/{totalFramesPlayed}
               </div>
             </div>
-            <div className="glass flex-1 p-4">
-              <h3 className="mb-2 text-xs font-bold text-text-secondary">
+            <div className="glass p-3">
+              <div className="text-[10px] uppercase text-text-muted">
                 Spare %
-              </h3>
-              <div className="text-3xl font-extrabold text-gold">
+              </div>
+              <div className="text-2xl font-extrabold text-gold">
                 {spareRate}%
               </div>
               <div className="text-[10px] text-text-muted">
-                {sparesConverted}/{framesWithSpareOpp.length} converted
+                {sparesConverted}/{framesWithSpareOpp.length}
+              </div>
+            </div>
+            <div className="glass p-3">
+              <div className="text-[10px] uppercase text-text-muted">
+                Double %
+              </div>
+              <div className="text-2xl font-extrabold text-green">
+                {doubleRate}%
+              </div>
+              <div className="text-[10px] text-text-muted">
+                {doubles}/{doubleOpportunities} back-to-back
+              </div>
+            </div>
+            <div className="glass p-3">
+              <div className="text-[10px] uppercase text-text-muted">
+                Pocket %
+              </div>
+              <div className="text-2xl font-extrabold text-cyan-400">
+                {pocketRate}%
+              </div>
+              <div className="text-[10px] text-text-muted">
+                {pocketHits}/{firstBallFrames.length} first balls
               </div>
             </div>
           </div>
 
           {/* Spare Streak */}
-          <div className="glass mb-4 p-4">
-            <h3 className="mb-1 text-xs font-bold text-text-secondary">
-              Best Spare Streak
-            </h3>
-            <div className="text-3xl font-extrabold">{maxSpareStreak}</div>
-            <div className="text-[10px] text-text-muted">
-              consecutive spares picked up
+          <div className="glass p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[10px] uppercase text-text-muted">
+                  Best Spare Streak
+                </div>
+                <div className="text-2xl font-extrabold">{maxSpareStreak}</div>
+                <div className="text-[10px] text-text-muted">
+                  consecutive spares
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] uppercase text-text-muted">
+                  Clean Rate
+                </div>
+                <div className="text-2xl font-extrabold text-green">
+                  {detailedGames.length > 0
+                    ? Math.round((cleanGames / detailedGames.length) * 100)
+                    : 0}
+                  %
+                </div>
+                <div className="text-[10px] text-text-muted">
+                  {cleanGames}/{detailedGames.length} games
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Pin Leave Heatmap */}
-          {Object.keys(pinLeaveCount).length > 0 && (
-            <div className="glass p-4">
-              <h3 className="mb-3 text-xs font-bold text-text-secondary">
-                Pins Left Standing Most
-              </h3>
-              <svg viewBox="0 0 180 180" className="mx-auto w-48">
-                {Object.entries(PIN_POSITIONS).map(([pin, pos]) => {
-                  const count = pinLeaveCount[Number(pin)] ?? 0;
-                  const intensity = count / maxLeaves;
-                  const r = Math.round(239 * intensity + 30 * (1 - intensity));
-                  const g = Math.round(68 * intensity + 41 * (1 - intensity));
-                  const b = Math.round(68 * intensity + 59 * (1 - intensity));
-                  return (
-                    <g key={pin}>
-                      <circle
-                        cx={pos.x}
-                        cy={pos.y}
-                        r={16}
-                        fill={
-                          count > 0
-                            ? `rgb(${r}, ${g}, ${b})`
-                            : "rgba(255,255,255,0.05)"
-                        }
-                      />
-                      <text
-                        x={pos.x}
-                        y={pos.y}
-                        textAnchor="middle"
-                        dy="4"
-                        fontSize="10"
-                        fontWeight="bold"
-                        fill="white"
-                      >
-                        {pin}
-                      </text>
-                      {count > 0 && (
-                        <text
-                          x={pos.x}
-                          y={pos.y + 24}
-                          textAnchor="middle"
-                          fontSize="8"
-                          fill="#94a3b8"
-                        >
-                          {count}
-                        </text>
-                      )}
-                    </g>
-                  );
-                })}
-              </svg>
-              <p className="mt-2 text-center text-[10px] text-text-muted">
-                Darker = left standing more often
-              </p>
-            </div>
-          )}
         </>
       ) : (
         /* SPARES TAB */
@@ -490,7 +687,7 @@ export default function StatsPage() {
                   return (
                     <div
                       key={i}
-                      className="relative flex-1 h-full flex items-end"
+                      className="relative flex h-full flex-1 items-end"
                     >
                       <div
                         className={`w-full rounded-t ${pct >= spareRate ? "bg-gold" : "bg-surface-light"}`}
@@ -509,7 +706,7 @@ export default function StatsPage() {
             </div>
           )}
 
-          {/* Spare Breakdown */}
+          {/* Spare Breakdown Summary */}
           {spareOpportunities.length > 0 && (
             <div className="glass mb-4 p-4">
               <h3 className="mb-3 text-xs font-bold text-text-secondary">
@@ -575,68 +772,69 @@ export default function StatsPage() {
             </div>
           )}
 
-          {/* Leave Log */}
-          {sortedLeaves.length > 0 && (
-            <div className="glass p-4">
-              <h3 className="mb-3 text-xs font-bold text-text-secondary">
-                Every Spare Leave
+          {/* Leave Log — grouped by category */}
+          {singlePinLeaves.length > 0 && (
+            <div className="glass mb-4 p-4">
+              <h3 className="mb-2 text-xs font-bold text-green">
+                Single Pin Leaves
               </h3>
+              <p className="mb-3 text-[10px] text-text-muted">
+                {singlePinConverted}/{singlePinAttempts} converted (
+                {singlePinRate}%)
+              </p>
               <div className="flex flex-col gap-1.5">
-                {sortedLeaves.map(({ pins, attempts, converted }) => {
-                  const rate =
-                    attempts > 0 ? Math.round((converted / attempts) * 100) : 0;
-                  const isSplitLeave = isSplit(pins);
-                  const label = pins.join("-");
+                {singlePinLeaves.map((l) => (
+                  <LeaveItem
+                    key={l.pins.join("-")}
+                    pins={l.pins}
+                    attempts={l.attempts}
+                    converted={l.converted}
+                    isSplitLeave={false}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
-                  return (
-                    <div
-                      key={label}
-                      className="flex items-center gap-3 rounded-lg bg-black/20 px-3 py-2"
-                    >
-                      {/* Mini pin diagram */}
-                      <div className="flex w-10 flex-col items-center gap-[1px]">
-                        {([[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]] as const).map(
-                          (row, ri) => (
-                            <div key={ri} className="flex gap-[2px]">
-                              {row.map((pin) => (
-                                <div
-                                  key={pin}
-                                  className={`h-[5px] w-[5px] rounded-full ${
-                                    pins.includes(pin)
-                                      ? isSplitLeave
-                                        ? "bg-red"
-                                        : "bg-blue"
-                                      : "bg-white/8"
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          ),
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-semibold">
-                            {label} leave
-                          </span>
-                          {isSplitLeave && (
-                            <span className="text-[9px] font-semibold text-red">
-                              SPLIT
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[10px] text-text-muted">
-                          {converted}/{attempts} converted
-                        </p>
-                      </div>
-                      <span
-                        className={`text-sm font-bold ${rate === 100 ? "text-green" : rate >= 50 ? "text-gold" : "text-text-secondary"}`}
-                      >
-                        {rate}%
-                      </span>
-                    </div>
-                  );
-                })}
+          {multiPinLeaves.length > 0 && (
+            <div className="glass mb-4 p-4">
+              <h3 className="mb-2 text-xs font-bold text-gold">
+                Multi Pin Leaves
+              </h3>
+              <p className="mb-3 text-[10px] text-text-muted">
+                {multiPinConverted}/{multiPinAttempts} converted ({multiPinRate}
+                %)
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {multiPinLeaves.map((l) => (
+                  <LeaveItem
+                    key={l.pins.join("-")}
+                    pins={l.pins}
+                    attempts={l.attempts}
+                    converted={l.converted}
+                    isSplitLeave={false}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {splitLeaves.length > 0 && (
+            <div className="glass p-4">
+              <h3 className="mb-2 text-xs font-bold text-red">Split Leaves</h3>
+              <p className="mb-3 text-[10px] text-text-muted">
+                {splitConverted}/{splitAttempts} converted ({splitRate}%)
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {splitLeaves.map((l) => (
+                  <LeaveItem
+                    key={l.pins.join("-")}
+                    pins={l.pins}
+                    attempts={l.attempts}
+                    converted={l.converted}
+                    isSplitLeave={true}
+                  />
+                ))}
               </div>
             </div>
           )}

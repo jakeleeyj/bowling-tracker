@@ -101,7 +101,23 @@ export default async function LeaderboardPage() {
     .map((profile) => {
       const userGames = allGames?.filter((g) => g.user_id === profile.id) ?? [];
       const totalGames = userGames.length;
-      if (totalGames === 0) return null;
+
+      if (totalGames === 0) {
+        return {
+          id: profile.id,
+          name: profile.display_name,
+          mmr: 0,
+          rank: getRank(0),
+          progress: 0,
+          avg: 0,
+          high: 0,
+          games: 0,
+          trend: "stable" as const,
+          isCurrentUser: profile.id === user?.id,
+          isCalibrating: true,
+          isUnranked: true,
+        };
+      }
 
       // Scores newest-first (already sorted by query)
       const scores = userGames.map((g) => g.total_score);
@@ -138,14 +154,17 @@ export default async function LeaderboardPage() {
         trend,
         isCurrentUser: profile.id === user?.id,
         isCalibrating: totalGames < CALIBRATION_GAMES,
+        isUnranked: false,
       };
     })
-    .filter(Boolean)
     .sort((a, b) => {
-      // Calibrating users go to the bottom
-      if (a!.isCalibrating && !b!.isCalibrating) return 1;
-      if (!a!.isCalibrating && b!.isCalibrating) return -1;
-      return b!.mmr - a!.mmr;
+      // Unranked (0 games) at very bottom
+      if (a.isUnranked && !b.isUnranked) return 1;
+      if (!a.isUnranked && b.isUnranked) return -1;
+      // Calibrating users next to bottom
+      if (a.isCalibrating && !b.isCalibrating) return 1;
+      if (!a.isCalibrating && b.isCalibrating) return -1;
+      return b.mmr - a.mmr;
     });
 
   // Find current user's entry
@@ -315,7 +334,9 @@ export default async function LeaderboardPage() {
                   <p className="text-[10px] text-text-muted">
                     {entry.isCalibrating ? (
                       <span className="text-text-muted">
-                        Calibrating &bull; {entry.games} games
+                        {entry.isUnranked
+                          ? "No games yet"
+                          : `Calibrating \u2022 ${entry.games} games`}
                       </span>
                     ) : (
                       <>
