@@ -14,45 +14,45 @@ describe("calculateLP", () => {
     expect(calculateLP([])).toBe(0);
   });
 
-  it("returns starting LP (1200) for a single calibration game of 170 (base)", () => {
-    // 170 = base, so 0 gain, but starting LP is 1200
-    expect(calculateLP([170])).toBe(1200);
+  it("returns starting LP (1200) for a single calibration game of 180 (base)", () => {
+    // 180 = base, so 0 gain, but starting LP is 1200
+    expect(calculateLP([180])).toBe(1200);
   });
 
   it("gains LP for above-base scores", () => {
-    // Single calibration game of 200: (200-170) * 5 = +150
-    expect(calculateLP([200])).toBe(1350);
+    // Single calibration game of 200: (200-180) * 5 = +100
+    expect(calculateLP([200])).toBe(1300);
   });
 
   it("loses LP for below-base scores", () => {
-    // Single calibration game of 140: (140-170) * 5 = -150
-    expect(calculateLP([140])).toBe(1050);
+    // Single calibration game of 140: (140-180) * 5 = -200
+    expect(calculateLP([140])).toBe(1000);
   });
 
   it("calibration games earn 5x LP", () => {
-    // 3 calibration games of 190: (190-170) * 5 * 3 = +300
-    expect(calculateLP([190, 190, 190])).toBe(1500);
+    // 4 calibration games of 200: (200-180) * 5 * 4 = +400
+    expect(calculateLP([200, 200, 200, 200])).toBe(1600);
   });
 
   it("normal games earn 1x LP after calibration", () => {
-    // 3 cal games of 170 (0 gain) + 1 normal game of 190 (+20)
-    expect(calculateLP([190, 170, 170, 170])).toBe(1220);
+    // 4 cal games of 180 (0 gain) + 1 normal game of 200 (+20)
+    expect(calculateLP([200, 180, 180, 180, 180])).toBe(1220);
   });
 
   it("LP accumulates over many games", () => {
-    // 3 cal + 7 normal, all 190
-    // Cal: 3 * (20 * 5) = 300
-    // Normal: 7 * 20 = 140
-    // Total: 1200 + 300 + 140 = 1640
-    const scores = Array.from({ length: 10 }, () => 190);
-    expect(calculateLP(scores)).toBe(1640);
+    // 4 cal + 6 normal, all 200
+    // Cal: 4 * (20 * 5) = 400
+    // Normal: 6 * 20 = 120
+    // Total: 1200 + 400 + 120 = 1720
+    const scores = Array.from({ length: 10 }, () => 200);
+    expect(calculateLP(scores)).toBe(1720);
   });
 
   it("applies event weights", () => {
-    // 1 cal game of 190, tournament (1.5x): (20 * 1.5 * 5) = 150
-    const tournament = calculateLP([190], [1.5]);
-    // 1 cal game of 190, casual (1.0x): (20 * 1.0 * 5) = 100
-    const casual = calculateLP([190], [1.0]);
+    // 1 cal game of 200, tournament (1.5x): (20 * 1.5 * 5) = 150
+    const tournament = calculateLP([200], [1.5]);
+    // 1 cal game of 200, casual (1.0x): (20 * 1.0 * 5) = 100
+    const casual = calculateLP([200], [1.0]);
     expect(tournament).toBeGreaterThan(casual);
   });
 
@@ -165,7 +165,7 @@ describe("getEventWeight", () => {
 });
 
 describe("CALIBRATION_GAMES", () => {
-  it("is 3", () => {
-    expect(CALIBRATION_GAMES).toBe(3);
+  it("is 4", () => {
+    expect(CALIBRATION_GAMES).toBe(4);
   });
 });

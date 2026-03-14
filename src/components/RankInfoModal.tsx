@@ -55,12 +55,12 @@ export default function RankInfoModal() {
             <div className="mb-4 space-y-2.5 text-[12px] leading-relaxed text-text-secondary">
               <p>
                 You earn <span className="font-bold text-text-primary">LP</span>{" "}
-                (League Points) each game based on your score. Games above 170
-                earn LP, games below 170 lose LP. Your LP accumulates over time.
+                (League Points) each game based on your score. Games above 180
+                earn LP, games below 180 lose LP. Your LP accumulates over time.
               </p>
               <p>
                 Your first{" "}
-                <span className="font-bold text-text-primary">3 games</span> are
+                <span className="font-bold text-text-primary">4 games</span> are
                 calibration matches worth 5x LP to set your starting rank.
               </p>
               <p>

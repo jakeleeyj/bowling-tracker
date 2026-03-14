@@ -780,7 +780,14 @@ function LogPage() {
     loadEditorState(gameIndex);
   }
 
+  function haptic(pattern: number | number[]) {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(pattern);
+    }
+  }
+
   function handleStrike() {
+    haptic([15, 50, 15]);
     if (currentFrame <= 9) {
       const frame: FrameData = {
         frameNumber: currentFrame,
@@ -801,6 +808,7 @@ function LogPage() {
   }
 
   function handleSpare() {
+    haptic(10);
     if (currentFrame <= 9) {
       const existingFrame = frames.find((f) => f.frameNumber === currentFrame);
       if (!existingFrame) return;
@@ -874,6 +882,7 @@ function LogPage() {
   }
 
   function confirmPinSelection() {
+    haptic(5);
     saveHistory();
     if (currentFrame <= 9) {
       if (currentRoll === 1) {

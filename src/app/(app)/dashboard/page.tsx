@@ -28,25 +28,20 @@ export default async function DashboardPage() {
 
   const uid = user?.id ?? "";
 
-  // Run all queries in parallel
-  const [profileResult, userGamesResult, sessionsResult, allGamesResult] =
-    await Promise.all([
-      supabase.from("profiles").select("*").eq("id", uid).single(),
-      supabase
-        .from("games")
-        .select("total_score, session_id, sessions(event_label)")
-        .eq("user_id", uid)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("sessions")
-        .select("*, profiles(*), games(*, frames(*))")
-        .order("created_at", { ascending: false })
-        .limit(10),
-      supabase
-        .from("games")
-        .select("user_id, total_score, sessions(event_label)")
-        .order("created_at", { ascending: false }),
-    ]);
+  // Phase 1: fetch profile, user games, and recent sessions in parallel
+  const [profileResult, userGamesResult, sessionsResult] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", uid).single(),
+    supabase
+      .from("games")
+      .select("total_score, session_id, sessions(event_label)")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("sessions")
+      .select("*, profiles(*), games(*, frames(*))")
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
 
   const profile = profileResult.data as ProfileRow | null;
   const userGames = userGamesResult.data as
@@ -59,7 +54,18 @@ export default async function DashboardPage() {
   const sessions = sessionsResult.data as
     | SessionWithGamesFramesAndProfile[]
     | null;
-  const allGamesForRank = allGamesResult.data as
+
+  // Phase 2: only fetch games for users in the recent sessions (not ALL users)
+  const sessionUserIds = [...new Set(sessions?.map((s) => s.user_id) ?? [])];
+  const { data: feedGamesData } =
+    sessionUserIds.length > 0
+      ? await supabase
+          .from("games")
+          .select("user_id, total_score, sessions(event_label)")
+          .in("user_id", sessionUserIds)
+          .order("created_at", { ascending: false })
+      : { data: null };
+  const allGamesForRank = feedGamesData as
     | {
         user_id: string;
         total_score: number;
@@ -125,7 +131,7 @@ export default async function DashboardPage() {
       const eventW = getEventWeight(session.event_label);
       let gain = 0;
       for (const game of session.games) {
-        gain += Math.round((game.total_score - 170) * eventW);
+        gain += Math.round((game.total_score - 180) * eventW);
       }
       sessionLpChange[session.id] = gain;
     }

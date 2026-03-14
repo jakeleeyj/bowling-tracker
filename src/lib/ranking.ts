@@ -1,13 +1,13 @@
 // LP Ranking System (League Points, like LoL)
-// Each game earns LP = (score - 170) × event_weight
+// Each game earns LP = (score - 180) × event_weight
 // Calibration games (first 3) earn 3× LP to set your starting rank
 // LP accumulates over time, floor at 0
 // Starting LP: 1200 (Silver baseline)
 
-const LP_BASE_SCORE = 170;
+const LP_BASE_SCORE = 180;
 const STARTING_LP = 1200;
 const CALIBRATION_MULTIPLIER = 5;
-export const CALIBRATION_GAMES = 3;
+export const CALIBRATION_GAMES = 4;
 
 export interface RankTier {
   name: string;

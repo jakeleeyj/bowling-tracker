@@ -85,9 +85,17 @@ export default async function LeaderboardPage() {
       | null;
   };
 
+  // Pre-index games by user to avoid O(n*m) filtering
+  const gamesByUser = new Map<string, typeof allGames>();
+  allGames?.forEach((g) => {
+    const list = gamesByUser.get(g.user_id) ?? [];
+    list.push(g);
+    gamesByUser.set(g.user_id, list);
+  });
+
   const rankings = (profiles ?? [])
     .map((profile) => {
-      const userGames = allGames?.filter((g) => g.user_id === profile.id) ?? [];
+      const userGames = gamesByUser.get(profile.id) ?? [];
       const totalGames = userGames.length;
 
       if (totalGames === 0) {
