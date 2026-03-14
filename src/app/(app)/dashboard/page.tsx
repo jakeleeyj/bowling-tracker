@@ -2,7 +2,7 @@ export const revalidate = 300; // revalidate every 5 minutes
 
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import type {
   ProfileRow,
   SessionWithGamesFramesAndProfile,
@@ -244,9 +244,7 @@ export default async function DashboardPage() {
               </>
             )}
           </div>
-          <span className="text-[10px] text-text-muted">
-            View Ranked &rsaquo;
-          </span>
+          <ChevronRight size={14} className="shrink-0 text-text-muted/30" />
         </Link>
       )}
 
