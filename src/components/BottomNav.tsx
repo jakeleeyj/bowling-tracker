@@ -4,10 +4,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { Home, Plus, BarChart3, Swords, User } from "lucide-react";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
 
-const sideItems = [
+const leftItems = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/stats", label: "Stats", icon: BarChart3 },
-  // center gap
+];
+
+const rightItems = [
   { href: "/leaderboard", label: "Ranked", icon: Swords },
   { href: "/profile", label: "Me", icon: User },
 ];
@@ -24,13 +26,23 @@ export default function BottomNav() {
   }
 
   const isLogActive = pathname.startsWith("/log");
-  const left = sideItems.slice(0, 2);
-  const right = sideItems.slice(2);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px] overflow-visible">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px]">
+      {/* Floating circle — above the notch */}
+      <button
+        onClick={() => handleNav("/log")}
+        className="absolute left-1/2 -top-6 z-20 -translate-x-1/2"
+      >
+        <div
+          className={`flex h-[52px] w-[52px] items-center justify-center rounded-full bg-gradient-to-br from-blue to-blue-dark shadow-[0_4px_20px_rgba(59,130,246,0.4),0_0_40px_rgba(59,130,246,0.15)] transition-transform duration-150 active:scale-95 ${isLogActive ? "ring-2 ring-white/20" : ""}`}
+        >
+          <Plus size={26} className="text-white" strokeWidth={2.5} />
+        </div>
+      </button>
+
       {/* SVG background with notch cutout */}
-      <div className="absolute inset-0 -top-3.5 overflow-visible">
+      <div className="absolute inset-0 -top-3.5 overflow-visible pointer-events-none">
         <svg
           viewBox="0 0 480 80"
           preserveAspectRatio="none"
@@ -42,31 +54,13 @@ export default function BottomNav() {
             fill="rgba(15,23,41,0.92)"
             stroke="rgba(255,255,255,0.06)"
             strokeWidth="1"
-            style={{ backdropFilter: "blur(20px)" }}
           />
         </svg>
       </div>
 
-      {/* Center Log button — sits in the notch */}
-      <button
-        onClick={() => handleNav("/log")}
-        className="absolute left-1/2 -translate-x-1/2 bottom-[calc(max(0.5rem,env(safe-area-inset-bottom))+16px)] z-10 flex flex-col items-center gap-0.5"
-      >
-        <div
-          className={`flex h-[52px] w-[52px] items-center justify-center rounded-full bg-gradient-to-br from-blue to-blue-dark shadow-[0_4px_20px_rgba(59,130,246,0.4),0_0_40px_rgba(59,130,246,0.15)] transition-transform duration-150 active:scale-93 ${isLogActive ? "ring-2 ring-white/20" : ""}`}
-        >
-          <Plus size={26} className="text-white" strokeWidth={2.5} />
-        </div>
-        <span
-          className={`text-[10px] font-semibold ${isLogActive ? "text-blue" : "text-text-muted"}`}
-        >
-          Log
-        </span>
-      </button>
-
-      {/* Nav items row */}
+      {/* Nav items row — all 5 labels aligned */}
       <div className="relative z-[2] flex pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        {left.map((item) => {
+        {leftItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
             <button
@@ -96,10 +90,21 @@ export default function BottomNav() {
           );
         })}
 
-        {/* Spacer for center button */}
-        <div className="flex-1" />
+        {/* Center — "Log" label aligned with others, circle floats above */}
+        <button
+          onClick={() => handleNav("/log")}
+          className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
+        >
+          {/* Invisible spacer matching the icon area height */}
+          <div className="h-8" />
+          <span
+            className={`text-[10px] transition-colors duration-200 ${isLogActive ? "font-semibold text-blue" : "text-text-muted"}`}
+          >
+            Log
+          </span>
+        </button>
 
-        {right.map((item) => {
+        {rightItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
             <button
