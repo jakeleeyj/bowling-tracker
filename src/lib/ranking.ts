@@ -88,6 +88,15 @@ const TIERS = [
 // Divisions within a tier: IV (bottom) to I (top)
 const DIVISIONS = ["IV", "III", "II", "I"] as const;
 
+// Canonical event labels — used across log page, session cards, and ranking weights
+export const EVENT_LABELS = [
+  "League",
+  "Tournament",
+  "Casual",
+  "Funbowl",
+] as const;
+export type EventLabel = (typeof EVENT_LABELS)[number];
+
 // Event type weights — competitive events count more
 export const EVENT_WEIGHTS: Record<string, number> = {
   Tournament: 1.5,
@@ -156,10 +165,20 @@ export function getRank(mmr: number): RankTier {
 export function getDivisionProgress(mmr: number): number {
   const tier = TIERS.find((t) => mmr >= t.min && mmr < t.max) ?? TIERS[0];
 
-  if (tier.name === "Master" || tier.name === "Grandmaster") {
-    // Show progress within the tier
-    const range = tier.max === Infinity ? 20 : tier.max - tier.min;
-    const position = mmr - tier.min;
+  if (
+    tier.name === "Master" ||
+    tier.name === "Grandmaster" ||
+    tier.min === -Infinity
+  ) {
+    // Tiers with infinite bounds: show progress within a fixed range
+    const range =
+      tier.max === Infinity
+        ? 20
+        : tier.min === -Infinity
+          ? 20
+          : tier.max - tier.min;
+    const anchor = tier.min === -Infinity ? tier.max - range : tier.min;
+    const position = Math.max(0, mmr - anchor);
     return Math.min(Math.round((position / range) * 100), 100);
   }
 

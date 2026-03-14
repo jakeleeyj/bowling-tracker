@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 import { createClient } from "@/lib/supabase-server";
 import { Swords, ChevronUp, ChevronDown, Minus } from "lucide-react";

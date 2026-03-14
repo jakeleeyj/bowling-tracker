@@ -37,6 +37,7 @@ import {
   getDivisionProgress,
   getEventWeight,
   CALIBRATION_GAMES,
+  EVENT_LABELS,
   type RankTier,
 } from "@/lib/ranking";
 import {
@@ -1348,7 +1349,7 @@ function LogPage() {
               Event (optional)
             </label>
             <div className="flex flex-wrap gap-2">
-              {["League", "Tournament", "Casual", "Funbowl"].map((label) => (
+              {EVENT_LABELS.map((label) => (
                 <button
                   key={label}
                   onClick={() =>

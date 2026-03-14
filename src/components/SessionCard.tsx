@@ -14,6 +14,7 @@ import {
 import { useToast } from "@/components/Toast";
 import Avatar from "@/components/Avatar";
 import { isSplit } from "@/lib/bowling";
+import { EVENT_LABELS } from "@/lib/ranking";
 
 interface FrameInfo {
   frame_number: number;
@@ -714,23 +715,21 @@ export default function SessionCard({
                     className="mb-2 w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-xs text-text-primary outline-none focus:border-blue"
                   />
                   <div className="mb-2 flex flex-wrap gap-1.5">
-                    {["League", "Tournament", "Casual", "Funbowl"].map(
-                      (label) => (
-                        <button
-                          key={label}
-                          onClick={() =>
-                            setEditEvent(editEvent === label ? "" : label)
-                          }
-                          className={`rounded-md px-2.5 py-1 text-[10px] font-semibold transition-colors ${
-                            editEvent === label
-                              ? "bg-blue text-white"
-                              : "bg-surface-light text-text-muted"
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ),
-                    )}
+                    {EVENT_LABELS.map((label) => (
+                      <button
+                        key={label}
+                        onClick={() =>
+                          setEditEvent(editEvent === label ? "" : label)
+                        }
+                        className={`rounded-md px-2.5 py-1 text-[10px] font-semibold transition-colors ${
+                          editEvent === label
+                            ? "bg-blue text-white"
+                            : "bg-surface-light text-text-muted"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
                   <div className="flex gap-2">
                     <button

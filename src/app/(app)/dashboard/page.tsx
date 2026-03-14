@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // revalidate every 5 minutes
 
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
@@ -23,27 +23,46 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Get current user profile
-  const { data: profile } = (await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user?.id ?? "")
-    .single()) as { data: ProfileRow | null };
+  const uid = user?.id ?? "";
 
-  // Get user's game stats (newest first for MMR)
-  const { data: userGames } = (await supabase
-    .from("games")
-    .select("total_score, session_id, sessions(event_label)")
-    .eq("user_id", user?.id ?? "")
-    .order("created_at", { ascending: false })) as {
-    data:
-      | {
-          total_score: number;
-          session_id: string;
-          sessions: { event_label: string | null } | null;
-        }[]
-      | null;
-  };
+  // Run all queries in parallel
+  const [profileResult, userGamesResult, sessionsResult, allGamesResult] =
+    await Promise.all([
+      supabase.from("profiles").select("*").eq("id", uid).single(),
+      supabase
+        .from("games")
+        .select("total_score, session_id, sessions(event_label)")
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("sessions")
+        .select("*, profiles(*), games(*, frames(*))")
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("games")
+        .select("user_id, total_score, sessions(event_label)")
+        .order("created_at", { ascending: false }),
+    ]);
+
+  const profile = profileResult.data as ProfileRow | null;
+  const userGames = userGamesResult.data as
+    | {
+        total_score: number;
+        session_id: string;
+        sessions: { event_label: string | null } | null;
+      }[]
+    | null;
+  const sessions = sessionsResult.data as
+    | SessionWithGamesFramesAndProfile[]
+    | null;
+  const allGamesForRank = allGamesResult.data as
+    | {
+        user_id: string;
+        total_score: number;
+        sessions: { event_label: string | null } | null;
+      }[]
+    | null;
 
   const totalGames = userGames?.length ?? 0;
   const avgScore =
@@ -57,27 +76,6 @@ export default async function DashboardPage() {
     totalGames > 0
       ? Math.max(...(userGames?.map((g) => g.total_score) ?? [0]))
       : 0;
-
-  // Get recent sessions with games and profiles
-  const { data: sessions } = (await supabase
-    .from("sessions")
-    .select("*, profiles(*), games(*, frames(*))")
-    .order("created_at", { ascending: false })
-    .limit(10)) as { data: SessionWithGamesFramesAndProfile[] | null };
-
-  // Get all games for all users (for rank display on cards)
-  const { data: allGamesForRank } = (await supabase
-    .from("games")
-    .select("user_id, total_score, sessions(event_label)")
-    .order("created_at", { ascending: false })) as {
-    data:
-      | {
-          user_id: string;
-          total_score: number;
-          sessions: { event_label: string | null } | null;
-        }[]
-      | null;
-  };
 
   // Compute per-user rank and game count
   const userRanks: Record<string, ReturnType<typeof getRank>> = {};

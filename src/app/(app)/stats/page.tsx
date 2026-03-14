@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { isSplit } from "@/lib/bowling";
 import ErrorCard from "@/components/ErrorCard";
@@ -344,9 +344,15 @@ export default function StatsPage() {
     );
   }
 
-  const games = filterGames(allGames, filter);
-  const frames = getFramesForGames(allFrames, games);
-  const scores = games.map((g) => g.total_score);
+  const games = useMemo(
+    () => filterGames(allGames, filter),
+    [allGames, filter],
+  );
+  const frames = useMemo(
+    () => getFramesForGames(allFrames, games),
+    [allFrames, games],
+  );
+  const scores = useMemo(() => games.map((g) => g.total_score), [games]);
   const avg =
     scores.length > 0
       ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
@@ -490,50 +496,61 @@ export default function StatsPage() {
 
   const spareChartMax = 100;
 
-  // Spare leave log — group by leave pattern, categorized
-  const leaveLog: Record<
-    string,
-    {
-      pins: number[];
-      attempts: number;
-      converted: number;
-      category: "single" | "multi" | "split";
-    }
-  > = {};
-  for (const f of spareOpportunities) {
-    const pins = [...(f.pins_remaining as number[])].sort((a, b) => a - b);
-    const key = pins.join("-");
-    if (!leaveLog[key]) {
-      const category =
-        pins.length === 1 ? "single" : isSplit(pins) ? "split" : "multi";
-      leaveLog[key] = { pins, attempts: 0, converted: 0, category };
-    }
-    leaveLog[key].attempts++;
-    if (f.spare_converted) leaveLog[key].converted++;
-  }
+  // Spare leave log — group by leave pattern, categorized (memoized)
+  const { singlePinLeaves, multiPinLeaves, splitLeaves, practiceTargets } =
+    useMemo(() => {
+      const leaveLog: Record<
+        string,
+        {
+          pins: number[];
+          attempts: number;
+          converted: number;
+          category: "single" | "multi" | "split";
+        }
+      > = {};
+      for (const f of spareOpportunities) {
+        const pins = [...(f.pins_remaining as number[])].sort((a, b) => a - b);
+        const key = pins.join("-");
+        if (!leaveLog[key]) {
+          const category =
+            pins.length === 1 ? "single" : isSplit(pins) ? "split" : "multi";
+          leaveLog[key] = { pins, attempts: 0, converted: 0, category };
+        }
+        leaveLog[key].attempts++;
+        if (f.spare_converted) leaveLog[key].converted++;
+      }
 
-  // Sort by most missed (attempts - converted, descending)
-  const singlePinLeaves = Object.values(leaveLog)
-    .filter((l) => l.category === "single")
-    .sort((a, b) => b.attempts - b.converted - (a.attempts - a.converted));
-  const multiPinLeaves = Object.values(leaveLog)
-    .filter((l) => l.category === "multi")
-    .sort((a, b) => b.attempts - b.converted - (a.attempts - a.converted));
-  const splitLeaves = Object.values(leaveLog)
-    .filter((l) => l.category === "split")
-    .sort((a, b) => b.attempts - b.converted - (a.attempts - a.converted));
+      const sortByMissed = (
+        a: { attempts: number; converted: number },
+        b: { attempts: number; converted: number },
+      ) => b.attempts - b.converted - (a.attempts - a.converted);
 
-  // Practice targets: top 3 most missed leaves (at least 2 attempts)
-  const allLeaves = Object.values(leaveLog)
-    .filter((l) => l.attempts >= 2)
-    .sort((a, b) => {
-      const aMissed = a.attempts - a.converted;
-      const bMissed = b.attempts - b.converted;
-      if (bMissed !== aMissed) return bMissed - aMissed;
-      // Tie-break by conversion rate (lower is worse)
-      return a.converted / a.attempts - b.converted / b.attempts;
-    });
-  const practiceTargets = allLeaves.slice(0, 3);
+      const single = Object.values(leaveLog)
+        .filter((l) => l.category === "single")
+        .sort(sortByMissed);
+      const multi = Object.values(leaveLog)
+        .filter((l) => l.category === "multi")
+        .sort(sortByMissed);
+      const splits = Object.values(leaveLog)
+        .filter((l) => l.category === "split")
+        .sort(sortByMissed);
+
+      const all = Object.values(leaveLog)
+        .filter((l) => l.attempts >= 2)
+        .sort((a, b) => {
+          const aMissed = a.attempts - a.converted;
+          const bMissed = b.attempts - b.converted;
+          if (bMissed !== aMissed) return bMissed - aMissed;
+          return a.converted / a.attempts - b.converted / b.attempts;
+        });
+
+      return {
+        singlePinLeaves: single,
+        multiPinLeaves: multi,
+        splitLeaves: splits,
+        practiceTargets: all.slice(0, 3),
+      };
+    }, [spareOpportunities]);
 
   const filterLabels: Record<Filter, string> = {
     last10: "Last 10",
