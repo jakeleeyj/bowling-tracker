@@ -1,4 +1,4 @@
-import { Skeleton, SkeletonCard } from "@/components/Skeleton";
+import { BowlingSpinner, Skeleton } from "@/components/Skeleton";
 
 export default function GameLoading() {
   return (
@@ -8,16 +8,9 @@ export default function GameLoading() {
         <Skeleton className="h-6 w-40" />
       </div>
 
-      <SkeletonCard className="mb-4 h-24" />
-
-      {/* Scorecard skeleton */}
-      <SkeletonCard className="mb-4 h-32" />
-
-      {/* Stats */}
-      <div className="flex gap-2">
-        {[1, 2, 3].map((i) => (
-          <SkeletonCard key={i} className="h-16 flex-1" />
-        ))}
+      <div className="flex flex-col items-center py-16">
+        <BowlingSpinner />
+        <p className="mt-3 text-sm text-text-muted">Loading game...</p>
       </div>
     </div>
   );

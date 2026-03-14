@@ -237,7 +237,7 @@ export default async function DashboardPage() {
       {/* Activity Feed */}
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-bold">Recent Activity</h2>
-        <Link href="/profile" className="text-xs text-blue">
+        <Link href="/history" className="text-xs text-blue">
           See all
         </Link>
       </div>

@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 import { createClient } from "@/lib/supabase-server";
 import type { GameRow, FrameRow } from "@/lib/queries";
@@ -169,6 +169,14 @@ export default async function AchievementsPage() {
       <p className="mb-6 text-sm text-text-muted">
         {earned.length}/{ACHIEVEMENTS.length} unlocked
       </p>
+
+      {totalGames === 0 && (
+        <div className="glass mb-6 p-4 text-center">
+          <p className="text-sm text-text-muted">
+            Log your first game to start earning achievements!
+          </p>
+        </div>
+      )}
 
       {earned.length > 0 && (
         <div className="mb-6">

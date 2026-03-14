@@ -1,4 +1,4 @@
-import { Skeleton, SkeletonCard } from "@/components/Skeleton";
+import { BowlingSpinner, Skeleton, SkeletonCard } from "@/components/Skeleton";
 
 export default function HistoryLoading() {
   return (
@@ -8,15 +8,14 @@ export default function HistoryLoading() {
         <Skeleton className="h-6 w-28" />
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col items-center py-12">
+        <BowlingSpinner />
+        <p className="mt-3 text-sm text-text-muted">Loading...</p>
+      </div>
+
+      <div className="flex flex-col gap-2">
         {[1, 2, 3].map((i) => (
-          <div key={i}>
-            <Skeleton className="mb-2 h-4 w-24" />
-            <div className="flex flex-col gap-2">
-              <SkeletonCard className="h-20" />
-              <SkeletonCard className="h-20" />
-            </div>
-          </div>
+          <SkeletonCard key={i} className="h-20" />
         ))}
       </div>
     </div>

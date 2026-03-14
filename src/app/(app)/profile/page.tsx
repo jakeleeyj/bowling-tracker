@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
+import { BowlingSpinner } from "@/components/Skeleton";
 import {
   LogOut,
   Smartphone,
@@ -246,23 +247,9 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div>
-        <div className="mb-5 flex items-center justify-between">
-          <div className="h-6 w-12 animate-pulse rounded-lg bg-white/[0.06]" />
-          <div className="h-9 w-9 animate-pulse rounded-full bg-white/[0.06]" />
-        </div>
-        <div className="glass mb-5 h-16 animate-pulse" />
-        <div className="mb-5 flex flex-wrap gap-1.5">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="h-7 w-24 animate-pulse rounded-full bg-white/[0.06]"
-            />
-          ))}
-        </div>
-        <div className="flex flex-col gap-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="glass h-24 animate-pulse" />
-          ))}
+        <div className="flex flex-col items-center justify-center py-20">
+          <BowlingSpinner />
+          <p className="mt-3 text-sm text-text-muted">Loading profile...</p>
         </div>
       </div>
     );

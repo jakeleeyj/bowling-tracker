@@ -1,4 +1,4 @@
-import { Skeleton, SkeletonCard } from "@/components/Skeleton";
+import { BowlingSpinner, Skeleton, SkeletonCard } from "@/components/Skeleton";
 
 export default function DashboardLoading() {
   return (
@@ -12,20 +12,12 @@ export default function DashboardLoading() {
         <Skeleton className="h-10 w-10 rounded-full" />
       </div>
 
-      {/* Quick Stats */}
-      <div className="mb-5 flex gap-2">
-        {[1, 2, 3].map((i) => (
-          <SkeletonCard key={i} className="h-20 flex-1" />
-        ))}
+      <div className="flex flex-col items-center py-12">
+        <BowlingSpinner />
+        <p className="mt-3 text-sm text-text-muted">Loading...</p>
       </div>
 
-      {/* Rank Card */}
-      <SkeletonCard className="mb-5 h-16" />
-
-      {/* CTA */}
-      <Skeleton className="mb-5 h-14 rounded-xl" />
-
-      {/* Activity Feed */}
+      {/* Activity Feed skeleton */}
       <div className="mb-3 flex items-center justify-between">
         <Skeleton className="h-4 w-28" />
         <Skeleton className="h-3 w-12" />
