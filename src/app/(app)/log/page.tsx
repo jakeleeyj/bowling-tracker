@@ -658,11 +658,28 @@ function LogPage() {
     if (currentData && !currentData.isStrike && currentData.roll2 === null) {
       newFrames = newFrames.filter((f) => f.frameNumber !== currentFrame);
     }
+    // Clear frame 10 when re-editing — it has multi-roll state that
+    // handle10thFrameRoll checks incrementally (roll2 === null, etc.)
+    if (frameNumber === 10) {
+      newFrames = newFrames.filter((f) => f.frameNumber !== 10);
+    }
     setFrames(newFrames);
     setCurrentFrame(frameNumber);
-    // Always start from roll 1 — old frame data stays until new input replaces it via upsertFrame
+
+    // For frames 1-9 with existing data, show roll 1 with previous
+    // pin state so the user can see/adjust what was entered before
+    const targetData = newFrames.find((f) => f.frameNumber === frameNumber);
     setCurrentRoll(1);
-    setStandingPins([]);
+    if (
+      frameNumber <= 9 &&
+      targetData &&
+      !targetData.isStrike &&
+      targetData.pinsRemaining
+    ) {
+      setStandingPins([...targetData.pinsRemaining]);
+    } else {
+      setStandingPins([]);
+    }
   }
 
   function startSession() {
