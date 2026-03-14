@@ -56,6 +56,14 @@ interface SessionCardProps {
   rankColor?: string;
 }
 
+const DEFAULT_VENUES = [
+  "Planet Bowl",
+  "SuperBowl - Toa Payoh",
+  "SuperBowl - Mt Faber",
+  "Westwood Bowl",
+  "Sonic Bowl - Punggol",
+];
+
 const EVENT_COLORS: Record<string, string> = {
   League: "bg-blue/12 text-blue",
   Tournament: "bg-gold/12 text-gold",
@@ -719,14 +727,29 @@ export default function SessionCard({
             <div className="mt-2 flex flex-col gap-2">
               {editingMeta ? (
                 <div className="rounded-lg bg-black/20 p-3">
+                  <div className="mb-2 flex flex-wrap gap-1">
+                    {DEFAULT_VENUES.map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setEditVenue(editVenue === v ? "" : v)}
+                        className={`rounded-md px-2 py-1 text-[10px] font-medium transition-colors ${
+                          editVenue === v
+                            ? "bg-blue text-white"
+                            : "bg-surface-light text-text-muted"
+                        }`}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                  </div>
                   <input
                     type="text"
-                    placeholder="Venue"
-                    value={editVenue}
+                    placeholder="Or type a venue..."
+                    value={DEFAULT_VENUES.includes(editVenue) ? "" : editVenue}
                     onChange={(e) => setEditVenue(e.target.value)}
                     className="mb-2 w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-xs text-text-primary outline-none focus:border-blue"
                   />
-                  <div className="mb-2 flex flex-wrap gap-1.5">
+                  <div className="mb-2 grid grid-cols-2 gap-1.5">
                     {EVENT_LABELS.map((label) => (
                       <button
                         key={label}
