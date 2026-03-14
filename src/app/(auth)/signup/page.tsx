@@ -10,7 +10,7 @@ function Logo() {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 180 180"
-      className="h-24 w-auto"
+      className="h-28 w-auto"
     >
       <defs>
         <linearGradient id="sg" x1="0" y1="0" x2="1" y2="1">
@@ -112,9 +112,9 @@ export default function SignupPage() {
   return (
     <div className="glow-blue glow-purple flex min-h-dvh flex-col items-center justify-center overflow-hidden px-6">
       {/* Brand */}
-      <div className="relative z-10 mb-6 flex flex-col items-center">
+      <div className="relative z-10 mb-8 flex flex-col items-center">
         <Logo />
-        <h1 className="mt-3 text-2xl font-extrabold tracking-tight">
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight">
           Join Spare Me<span className="text-gold">?</span>
         </h1>
         <p className="mt-1 text-sm text-text-muted">

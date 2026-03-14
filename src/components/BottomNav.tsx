@@ -46,7 +46,7 @@ export default function BottomNav() {
       <div className="absolute inset-0 -top-3.5 overflow-visible pointer-events-none">
         <svg
           viewBox="0 0 480 80"
-          preserveAspectRatio="none"
+          preserveAspectRatio="xMidYMin slice"
           className="h-full w-full"
           xmlns="http://www.w3.org/2000/svg"
         >

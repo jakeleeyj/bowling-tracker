@@ -166,7 +166,6 @@ export default async function DashboardPage() {
             Games
           </div>
           <div className="my-1 text-2xl font-extrabold">{totalGames}</div>
-          <div className="text-[10px] text-text-muted">all time</div>
         </div>
       </div>
 

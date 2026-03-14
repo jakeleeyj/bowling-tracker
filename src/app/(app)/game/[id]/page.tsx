@@ -54,7 +54,7 @@ export default async function GameDetailPage({
       <div className="mb-4 flex items-center gap-3">
         <BackButton />
         <div className="flex-1">
-          <h1 className="text-base font-bold">
+          <h1 className="text-lg font-bold">
             Game {game.game_number} &mdash; {game.total_score}
           </h1>
           <p className="text-[10px] text-text-muted">
@@ -77,22 +77,28 @@ export default async function GameDetailPage({
       </div>
 
       {/* Stats */}
-      <div className="mb-4 flex gap-2">
+      <div className="mb-5 flex gap-2">
         <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] text-text-muted">Strikes</div>
-          <div className="text-xl font-extrabold text-green">
+          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            Strikes
+          </div>
+          <div className="text-2xl font-extrabold text-green">
             {game.strike_count}
           </div>
         </div>
         <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] text-text-muted">Spares</div>
-          <div className="text-xl font-extrabold text-gold">
+          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            Spares
+          </div>
+          <div className="text-2xl font-extrabold text-gold">
             {game.spare_count}
           </div>
         </div>
         <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] text-text-muted">Clean</div>
-          <div className="text-xl font-extrabold">
+          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            Clean
+          </div>
+          <div className="text-2xl font-extrabold">
             {game.is_clean ? "Yes" : "No"}
           </div>
         </div>
@@ -194,7 +200,7 @@ export default async function GameDetailPage({
           </div>
         </>
       ) : (
-        <div className="glass p-4 text-center text-sm text-text-muted">
+        <div className="glass p-8 text-center text-sm text-text-muted">
           Quick entry — no frame breakdown available
         </div>
       )}

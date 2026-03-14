@@ -115,15 +115,21 @@ export default async function PlayerPage({
       {/* Stats */}
       <div className="mb-5 flex gap-2">
         <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase text-text-muted">Avg</div>
+          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            Avg
+          </div>
           <div className="text-2xl font-extrabold">{avg}</div>
         </div>
         <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase text-text-muted">High</div>
+          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            High
+          </div>
           <div className="text-2xl font-extrabold text-gold">{high}</div>
         </div>
         <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase text-text-muted">Games</div>
+          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            Games
+          </div>
           <div className="text-2xl font-extrabold">{totalGames}</div>
         </div>
       </div>

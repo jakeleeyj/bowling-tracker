@@ -37,7 +37,7 @@ export default function Avatar({
       <img
         src={avatarUrl}
         alt={name}
-        className={`${s.container} rounded-full object-cover`}
+        className={`${s.container} shrink-0 rounded-full object-cover`}
       />
     );
   }

@@ -58,7 +58,7 @@ export default function NotificationPrompt() {
   if (!show) return null;
 
   return (
-    <div className="glass mb-4 flex items-center gap-3 p-3 animate-in fade-in slide-in-from-top-2 duration-300">
+    <div className="glass animate-slide-down mb-4 flex items-center gap-3 p-3">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue/15">
         <Bell size={18} className="text-blue" />
       </div>

@@ -281,7 +281,7 @@ export default function StatsPage() {
   if (loading) {
     return (
       <div>
-        <h1 className="mb-6 text-xl font-extrabold">My Stats</h1>
+        <h1 className="mb-6 text-xl font-extrabold">Stats</h1>
         <div className="flex flex-col items-center justify-center py-16">
           <BowlingSpinner />
           <p className="mt-3 text-sm text-text-muted">Loading stats...</p>
@@ -293,7 +293,7 @@ export default function StatsPage() {
   if (error) {
     return (
       <div>
-        <h1 className="mb-6 text-xl font-extrabold">My Stats</h1>
+        <h1 className="mb-6 text-xl font-extrabold">Stats</h1>
         <ErrorCard
           message="Failed to load stats"
           onRetry={() => window.location.reload()}
@@ -305,7 +305,7 @@ export default function StatsPage() {
   if (allGames.length === 0) {
     return (
       <div>
-        <h1 className="mb-6 text-xl font-extrabold">My Stats</h1>
+        <h1 className="mb-6 text-xl font-extrabold">Stats</h1>
         <div className="glass p-8 text-center">
           <p className="text-sm text-text-muted">
             No games logged yet. Play some games to see your stats!
@@ -512,10 +512,10 @@ export default function StatsPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-extrabold">My Stats</h1>
+      <h1 className="mb-5 text-xl font-extrabold">Stats</h1>
 
       {/* Filter pills */}
-      <div className="mb-4 flex gap-1.5">
+      <div className="mb-5 flex gap-1.5">
         {(["last10", "last50", "ytd"] as Filter[]).map((f) => (
           <button
             key={f}
@@ -535,7 +535,7 @@ export default function StatsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-4 flex rounded-lg bg-surface-light p-[3px]">
+      <div className="mb-5 flex rounded-lg bg-surface-light p-[3px]">
         <button
           onClick={() => setTab("overview")}
           className={`flex-1 rounded-md py-[6px] text-[13px] transition-colors ${
@@ -565,27 +565,27 @@ export default function StatsPage() {
       ) : tab === "overview" ? (
         <>
           {/* Overview stats */}
-          <div className="mb-4 grid grid-cols-2 gap-2">
+          <div className="mb-5 grid grid-cols-2 gap-2">
             <div className="glass p-3 text-center">
-              <div className="text-[10px] uppercase text-text-muted">
+              <div className="text-[10px] uppercase tracking-wide text-text-muted">
                 Average
               </div>
               <div className="text-2xl font-extrabold">{avg}</div>
             </div>
             <div className="glass p-3 text-center">
-              <div className="text-[10px] uppercase text-text-muted">
+              <div className="text-[10px] uppercase tracking-wide text-text-muted">
                 High Game
               </div>
               <div className="text-2xl font-extrabold text-gold">{high}</div>
             </div>
             <div className="glass p-3 text-center">
-              <div className="text-[10px] uppercase text-text-muted">
+              <div className="text-[10px] uppercase tracking-wide text-text-muted">
                 Low Game
               </div>
               <div className="text-2xl font-extrabold">{low}</div>
             </div>
             <div className="glass p-3 text-center">
-              <div className="text-[10px] uppercase text-text-muted">
+              <div className="text-[10px] uppercase tracking-wide text-text-muted">
                 Clean Games
               </div>
               <div className="text-2xl font-extrabold text-green">
@@ -595,7 +595,7 @@ export default function StatsPage() {
           </div>
 
           {/* Score Trend — Line Chart */}
-          <div className="glass mb-4 p-4">
+          <div className="glass mb-5 p-4">
             <h3 className="mb-2 text-xs font-bold text-text-secondary">
               Score Trend
             </h3>
@@ -603,9 +603,9 @@ export default function StatsPage() {
           </div>
 
           {/* Strike & Spare rates */}
-          <div className="mb-4 grid grid-cols-2 gap-2">
+          <div className="mb-5 grid grid-cols-2 gap-2">
             <div className="glass p-3">
-              <div className="text-[10px] uppercase text-text-muted">
+              <div className="text-[10px] uppercase tracking-wide text-text-muted">
                 Strike %
               </div>
               <div className="text-2xl font-extrabold text-green">
@@ -616,7 +616,7 @@ export default function StatsPage() {
               </div>
             </div>
             <div className="glass p-3">
-              <div className="text-[10px] uppercase text-text-muted">
+              <div className="text-[10px] uppercase tracking-wide text-text-muted">
                 Spare %
               </div>
               <div className="text-2xl font-extrabold text-gold">
@@ -627,7 +627,7 @@ export default function StatsPage() {
               </div>
             </div>
             <div className="glass p-3">
-              <div className="text-[10px] uppercase text-text-muted">
+              <div className="text-[10px] uppercase tracking-wide text-text-muted">
                 Double %
               </div>
               <div className="text-2xl font-extrabold text-green">
@@ -638,10 +638,10 @@ export default function StatsPage() {
               </div>
             </div>
             <div className="glass p-3">
-              <div className="text-[10px] uppercase text-text-muted">
+              <div className="text-[10px] uppercase tracking-wide text-text-muted">
                 Pocket %
               </div>
-              <div className="text-2xl font-extrabold text-cyan-400">
+              <div className="text-2xl font-extrabold text-blue">
                 {pocketRate}%
               </div>
               <div className="text-[10px] text-text-muted">

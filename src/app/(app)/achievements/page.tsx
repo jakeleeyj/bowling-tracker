@@ -71,7 +71,7 @@ export default async function AchievementsPage() {
   return (
     <div>
       <h1 className="mb-2 text-xl font-extrabold">Achievements</h1>
-      <p className="mb-6 text-sm text-text-muted">
+      <p className="mb-5 text-sm text-text-muted">
         {earned.length}/{ACHIEVEMENTS.length} unlocked
       </p>
 

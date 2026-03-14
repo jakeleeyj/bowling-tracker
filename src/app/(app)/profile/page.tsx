@@ -334,7 +334,7 @@ export default function ProfilePage() {
                   type="email"
                   value={email}
                   disabled
-                  className="w-full rounded-lg border border-border bg-surface-light px-4 py-3 text-sm text-text-muted"
+                  className="w-full rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-muted"
                 />
               </div>
               <button

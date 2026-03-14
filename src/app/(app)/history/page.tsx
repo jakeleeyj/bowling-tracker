@@ -44,7 +44,7 @@ export default async function HistoryPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-extrabold">Game History</h1>
+      <h1 className="mb-5 text-xl font-extrabold">Game History</h1>
 
       {(!sessions || sessions.length === 0) && (
         <div className="glass p-8 text-center">
