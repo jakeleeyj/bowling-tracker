@@ -1287,7 +1287,7 @@ function LogPage() {
     const has149 = gameScores.includes(149);
     const notifTitle = has149 ? "149 Club!" : isNewPB ? "New PB!" : "Spare Me?";
     const notifBody = has149
-      ? `${playerName} just bowled a 149. Welcome to the club.`
+      ? `${playerName} just bowled a 149. uh oh.`
       : isNewPB
         ? `${playerName} just hit ${sessionHigh} — a new personal best!`
         : `${playerName} just bowled! Avg: ${sessionAvg} across ${games.length} game${games.length !== 1 ? "s" : ""}`;
