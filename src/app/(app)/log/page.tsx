@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
+import VenueCombobox from "@/components/VenueCombobox";
 import {
   calculateLP,
   getRank,
@@ -614,12 +615,14 @@ function LogPage() {
         .not("venue", "is", null)
         .order("created_at", { ascending: false });
       if (data) {
-        const unique = [
-          ...new Set(
-            (data as { venue: string }[]).map((d) => d.venue).filter(Boolean),
-          ),
-        ];
+        const venues = (data as { venue: string }[])
+          .map((d) => d.venue)
+          .filter(Boolean);
+        const unique = [...new Set(venues)];
         setPastVenues(unique);
+        if (unique.length > 0 && !venue) {
+          setVenue(unique[0]);
+        }
       }
     }
     loadVenues();
@@ -1469,54 +1472,10 @@ function LogPage() {
             <label className="mb-1 block text-xs text-text-muted">
               Venue (optional)
             </label>
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {[
-                "Planet Bowl",
-                "SuperBowl - Toa Payoh",
-                "SuperBowl - Mt Faber",
-                "Westwood Bowl",
-                "Sonic Bowl - Punggol",
-                ...pastVenues.filter(
-                  (v) =>
-                    ![
-                      "Planet Bowl",
-                      "SuperBowl - Toa Payoh",
-                      "SuperBowl - Mt Faber",
-                      "Westwood Bowl",
-                      "Sonic Bowl - Punggol",
-                    ].includes(v),
-                ),
-              ].map((v) => (
-                <button
-                  key={v}
-                  onClick={() => setVenue(venue === v ? "" : v)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                    venue === v
-                      ? "bg-blue text-white"
-                      : "bg-surface-light text-text-secondary"
-                  }`}
-                >
-                  {v}
-                </button>
-              ))}
-            </div>
-            <input
-              type="text"
-              placeholder="Or type a venue..."
-              value={
-                [
-                  "Planet Bowl",
-                  "SuperBowl - Toa Payoh",
-                  "SuperBowl - Mt Faber",
-                  "Westwood Bowl",
-                  "Sonic Bowl - Punggol",
-                  ...pastVenues,
-                ].includes(venue)
-                  ? ""
-                  : venue
-              }
-              onChange={(e) => setVenue(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-light px-4 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+            <VenueCombobox
+              value={venue}
+              onChange={setVenue}
+              pastVenues={pastVenues}
             />
           </div>
 
