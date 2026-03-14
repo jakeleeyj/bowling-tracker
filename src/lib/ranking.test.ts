@@ -61,6 +61,33 @@ describe("calculateLP", () => {
     const scores = Array.from({ length: 50 }, () => 80);
     expect(calculateLP(scores)).toBe(0);
   });
+
+  it("recent games count more than old games (recency weighting)", () => {
+    // 45 games total: 4 calibration (180) + 41 normal
+    // Compare a 220 at position 5 (recent, 1.0x) vs position 35 (older, 0.5x)
+    const cal = Array.from({ length: 4 }, () => 180);
+
+    // 220 is the 5th newest game (index 4, recency 1.0x)
+    const recentScores = [
+      ...cal,
+      ...Array(4).fill(180),
+      220,
+      ...Array(36).fill(180),
+    ];
+    // 220 is the 35th newest game (index 34, recency 0.5x)
+    const oldScores = [
+      ...cal,
+      ...Array(34).fill(180),
+      220,
+      ...Array(6).fill(180),
+    ];
+
+    const lpRecent = calculateLP(recentScores);
+    const lpOld = calculateLP(oldScores);
+
+    // Recent 220 (1.0x) should give more LP than older 220 (0.5x)
+    expect(lpRecent).toBeGreaterThan(lpOld);
+  });
 });
 
 describe("getRank", () => {

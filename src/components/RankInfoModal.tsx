@@ -56,7 +56,8 @@ export default function RankInfoModal() {
               <p>
                 You earn <span className="font-bold text-text-primary">LP</span>{" "}
                 (League Points) each game based on your score. Games above 180
-                earn LP, games below 180 lose LP. Your LP accumulates over time.
+                earn LP, games below 180 lose LP. Recent games count more — your
+                last 30 games have full impact, older games gradually fade.
               </p>
               <p>
                 Your first{" "}

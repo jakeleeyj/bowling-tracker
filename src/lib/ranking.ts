@@ -1,6 +1,7 @@
 // LP Ranking System (League Points, like LoL)
-// Each game earns LP = (score - 180) × event_weight
-// Calibration games (first 3) earn 3× LP to set your starting rank
+// Each game earns LP = (score - 180) × event_weight × recency_weight
+// Calibration games (first 4) earn 5× LP to set your starting rank
+// Recency: last 30 games = 1.0x, 31-60 = 0.5x, 61+ = 0.25x
 // LP accumulates over time, floor at 0
 // Starting LP: 1200 (Silver baseline)
 
@@ -139,12 +140,17 @@ export function calculateLP(scores: number[], eventWeights?: number[]): number {
   const totalGames = scores.length;
 
   // Process oldest-first (reverse the newest-first array)
+  // i=0 is newest, i=length-1 is oldest
   for (let i = scores.length - 1; i >= 0; i--) {
     const chronologicalIndex = totalGames - 1 - i;
     const eventW = eventWeights?.[i] ?? 1.0;
     const isCal = chronologicalIndex < CALIBRATION_GAMES;
     const multiplier = isCal ? CALIBRATION_MULTIPLIER : 1;
-    const gain = Math.round((scores[i] - LP_BASE_SCORE) * eventW * multiplier);
+    // Recency: recent games count more
+    const recencyW = i >= 60 ? 0.25 : i >= 30 ? 0.5 : 1.0;
+    const gain = Math.round(
+      (scores[i] - LP_BASE_SCORE) * eventW * multiplier * recencyW,
+    );
     lp += gain;
   }
 
