@@ -553,12 +553,33 @@ function LogPage() {
     if (currentData && !currentData.isStrike && currentData.roll2 === null) {
       newFrames = newFrames.filter((f) => f.frameNumber !== currentFrame);
     }
+    const tappedFrame = newFrames.find((f) => f.frameNumber === frameNumber);
     // Remove tapped frame (will be re-entered)
     newFrames = newFrames.filter((f) => f.frameNumber !== frameNumber);
     setFrames(newFrames);
     setCurrentFrame(frameNumber);
-    setCurrentRoll(1);
-    setStandingPins([]);
+
+    // If the tapped frame had data, load its pin state so user can adjust
+    if (tappedFrame && tappedFrame.roll1 !== null) {
+      if (tappedFrame.isStrike) {
+        // Strike — start fresh on roll 1
+        setCurrentRoll(1);
+        setStandingPins([]);
+      } else {
+        // Non-strike — go to roll 2 with the pins that were left after roll 1
+        const allPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        const knocked = tappedFrame.roll1;
+        const remaining =
+          tappedFrame.pinsRemaining && tappedFrame.pinsRemaining.length > 0
+            ? tappedFrame.pinsRemaining
+            : allPins.slice(allPins.length - (10 - knocked));
+        setCurrentRoll(2);
+        setStandingPins(remaining);
+      }
+    } else {
+      setCurrentRoll(1);
+      setStandingPins([]);
+    }
   }
 
   function startSession() {
@@ -1257,7 +1278,7 @@ function LogPage() {
 
   // Warn before leaving mid-game
   const hasProgress =
-    step === "game" && (frames.length > 0 || games.length > 0);
+    step === "game" && !saving && (frames.length > 0 || games.length > 0);
   useEffect(() => {
     setHasUnsaved(hasProgress);
     if (!hasProgress) return;
@@ -1470,6 +1491,7 @@ function LogPage() {
           onClick={() => {
             if (editMode) {
               if (!confirm("Discard changes?")) return;
+              setHasUnsaved(false);
               router.back();
               return;
             }

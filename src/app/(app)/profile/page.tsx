@@ -81,13 +81,13 @@ function getAvatarGradient(name: string): string {
 }
 
 const ACHIEVEMENT_ICONS: Record<string, React.ReactNode> = {
-  Trophy: <Trophy size={20} />,
-  Zap: <Zap size={20} />,
-  Sparkles: <Sparkles size={20} />,
-  Flame: <Flame size={20} />,
-  Target: <Target size={20} />,
-  Crown: <Crown size={20} />,
-  Award: <Award size={20} />,
+  Trophy: <Trophy size={14} />,
+  Zap: <Zap size={14} />,
+  Sparkles: <Sparkles size={14} />,
+  Flame: <Flame size={14} />,
+  Target: <Target size={14} />,
+  Crown: <Crown size={14} />,
+  Award: <Award size={14} />,
 };
 
 export default function ProfilePage() {
@@ -356,56 +356,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Achievements */}
-      <div className="mb-5">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold">Achievements</h2>
-          {achievementStats && (
-            <span className="text-[10px] text-text-muted">
-              {earned.length}/{ACHIEVEMENTS.length}
-            </span>
-          )}
-        </div>
-
-        {/* Earned badges */}
-        {earned.length > 0 && (
-          <div className="mb-2 flex flex-wrap gap-2">
-            {earned.map((a) => (
-              <div
-                key={a.id}
-                className={`flex items-center gap-2 rounded-xl ${a.bgColor} px-3 py-2`}
-              >
-                <span className={a.color}>{ACHIEVEMENT_ICONS[a.iconName]}</span>
-                <div>
-                  <p className="text-[11px] font-bold">{a.name}</p>
-                  <p className="text-[9px] text-text-muted">{a.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Locked badges */}
-        {locked.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {locked.map((a) => (
-              <div
-                key={a.id}
-                className="flex items-center gap-2 rounded-xl bg-surface-light/50 px-3 py-2 opacity-40"
-              >
-                <span className="text-text-muted">
-                  {ACHIEVEMENT_ICONS[a.iconName]}
-                </span>
-                <div>
-                  <p className="text-[11px] font-bold">{a.name}</p>
-                  <p className="text-[9px] text-text-muted">{a.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* Rank Card */}
       {rank && (achievementStats?.totalGames ?? 0) > 0 && (
         <div
@@ -469,6 +419,45 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Achievements */}
+      <div className="mb-5">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-bold">Achievements</h2>
+          {achievementStats && (
+            <span className="text-[10px] text-text-muted">
+              {earned.length}/{ACHIEVEMENTS.length}
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {/* Earned badges */}
+          {earned.map((a) => (
+            <div
+              key={a.id}
+              className={`flex items-center gap-1.5 rounded-full ${a.bgColor} px-2.5 py-1`}
+              title={a.description}
+            >
+              <span className={a.color}>{ACHIEVEMENT_ICONS[a.iconName]}</span>
+              <span className="text-[10px] font-semibold">{a.name}</span>
+            </div>
+          ))}
+          {/* Locked badges */}
+          {locked.map((a) => (
+            <div
+              key={a.id}
+              className="flex items-center gap-1.5 rounded-full bg-surface-light/50 px-2.5 py-1 opacity-30"
+              title={a.description}
+            >
+              <span className="text-text-muted">
+                {ACHIEVEMENT_ICONS[a.iconName]}
+              </span>
+              <span className="text-[10px] font-semibold">{a.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Game History */}
       <div>
