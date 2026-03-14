@@ -2,7 +2,14 @@ export const revalidate = 300;
 
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
-import { Swords, ChevronUp, ChevronDown, Minus } from "lucide-react";
+import {
+  Swords,
+  ChevronUp,
+  ChevronDown,
+  Minus,
+  ChevronRight,
+} from "lucide-react";
+import RankInfoModal from "@/components/RankInfoModal";
 import type { ProfileRow, GameRow } from "@/lib/queries";
 import Avatar from "@/components/Avatar";
 import {
@@ -161,7 +168,10 @@ export default async function LeaderboardPage() {
     <div>
       <div className="mb-5 flex items-center gap-2">
         <Swords size={20} className="text-blue" />
-        <h1 className="text-xl font-extrabold text-text-primary">Ranked</h1>
+        <h1 className="flex-1 text-xl font-extrabold text-text-primary">
+          Ranked
+        </h1>
+        <RankInfoModal />
       </div>
 
       {/* Current user's rank card */}
@@ -262,6 +272,11 @@ export default async function LeaderboardPage() {
       )}
 
       {/* Rankings list */}
+      {rankings.length > 1 && (
+        <p className="mb-2 text-[11px] text-text-muted">
+          Tap a player to view their history
+        </p>
+      )}
       {rankings.length === 0 ? (
         <div className="glass p-8 text-center">
           <p className="text-sm text-text-muted">
@@ -344,7 +359,7 @@ export default async function LeaderboardPage() {
                 </div>
 
                 {/* MMR + trend */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   {entry.isCalibrating ? (
                     <div className="text-right">
                       <div className="text-sm font-extrabold text-text-muted">
@@ -372,6 +387,11 @@ export default async function LeaderboardPage() {
                     </>
                   )}
                 </div>
+
+                <ChevronRight
+                  size={14}
+                  className="shrink-0 text-text-muted/30"
+                />
               </Link>
             );
           })}
