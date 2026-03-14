@@ -61,11 +61,12 @@ export default function RankInfoModal() {
               <p>
                 Your first{" "}
                 <span className="font-bold text-text-primary">3 games</span> are
-                calibration matches worth 3x LP to set your starting rank.
+                calibration matches worth 5x LP to set your starting rank.
               </p>
               <p>
                 Competitive sessions earn more:{" "}
                 <span className="text-text-primary">Tournament</span> (1.5x),{" "}
+                <span className="text-text-primary">Funbowl</span> (1.35x),{" "}
                 <span className="text-text-primary">League</span> (1.25x),{" "}
                 <span className="text-text-primary">Casual</span> (1x).
               </p>

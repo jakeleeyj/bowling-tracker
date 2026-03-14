@@ -28,7 +28,7 @@ export default function BottomNav() {
   const right = sideItems.slice(2);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px] overflow-visible">
       {/* SVG background with notch cutout */}
       <div className="absolute inset-0 -top-3.5 overflow-visible">
         <svg

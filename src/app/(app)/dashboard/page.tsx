@@ -103,27 +103,20 @@ export default async function DashboardPage() {
   const lp = calculateLP(scores, eventWeights);
   const rank = getRank(lp);
 
-  // Compute per-session LP change for current user
+  // Compute per-session LP change for all users shown in the feed
   const sessionLpChange: Record<string, number> = {};
-  if (userGames && userGames.length > 0) {
-    const sessionGameIndices: Record<string, number[]> = {};
-    userGames.forEach((g, i) => {
-      if (!sessionGameIndices[g.session_id])
-        sessionGameIndices[g.session_id] = [];
-      sessionGameIndices[g.session_id].push(i);
-    });
+  if (sessions) {
+    for (const session of sessions) {
+      const userId = session.user_id;
+      // Only show LP change for ranked users (past calibration)
+      if ((userGameCounts[userId] ?? 0) < CALIBRATION_GAMES) continue;
 
-    for (const [sessionId, indices] of Object.entries(sessionGameIndices)) {
-      const lpWith = calculateLP(scores, eventWeights);
-      const scoresWithout = scores.filter((_, i) => !indices.includes(i));
-      const weightsWithout = eventWeights.filter(
-        (_, i) => !indices.includes(i),
-      );
-      const lpWithout =
-        scoresWithout.length > 0
-          ? calculateLP(scoresWithout, weightsWithout)
-          : 0;
-      sessionLpChange[sessionId] = lpWith - lpWithout;
+      const eventW = getEventWeight(session.event_label);
+      let gain = 0;
+      for (const game of session.games) {
+        gain += Math.round((game.total_score - 170) * eventW);
+      }
+      sessionLpChange[session.id] = gain;
     }
   }
 
@@ -293,11 +286,7 @@ export default async function DashboardPage() {
               games={sessionGames}
               avatarUrl={sessionProfile?.avatar_url}
               isOwn={isOwnSession}
-              lpChange={
-                isOwnSession && totalGames >= CALIBRATION_GAMES
-                  ? sessionLpChange[session.id]
-                  : undefined
-              }
+              lpChange={sessionLpChange[session.id]}
               rankLabel={
                 userRanks[session.user_id] &&
                 (userGameCounts[session.user_id] ?? 0) >= CALIBRATION_GAMES

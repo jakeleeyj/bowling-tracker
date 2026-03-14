@@ -6,7 +6,7 @@
 
 const LP_BASE_SCORE = 170;
 const STARTING_LP = 1200;
-const CALIBRATION_MULTIPLIER = 3;
+const CALIBRATION_MULTIPLIER = 5;
 export const CALIBRATION_GAMES = 3;
 
 export interface RankTier {
