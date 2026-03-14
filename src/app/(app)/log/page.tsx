@@ -553,26 +553,20 @@ function LogPage() {
     if (currentData && !currentData.isStrike && currentData.roll2 === null) {
       newFrames = newFrames.filter((f) => f.frameNumber !== currentFrame);
     }
-    const tappedFrame = newFrames.find((f) => f.frameNumber === frameNumber);
-    // Remove tapped frame (will be re-entered)
-    newFrames = newFrames.filter((f) => f.frameNumber !== frameNumber);
     setFrames(newFrames);
     setCurrentFrame(frameNumber);
 
-    // If the tapped frame had data, load its pin state so user can adjust
+    // Load existing pin state so user can adjust (frame stays in array until new input replaces it)
+    const tappedFrame = newFrames.find((f) => f.frameNumber === frameNumber);
     if (tappedFrame && tappedFrame.roll1 !== null) {
       if (tappedFrame.isStrike) {
-        // Strike — start fresh on roll 1
         setCurrentRoll(1);
         setStandingPins([]);
       } else {
-        // Non-strike — go to roll 2 with the pins that were left after roll 1
-        const allPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        const knocked = tappedFrame.roll1;
         const remaining =
           tappedFrame.pinsRemaining && tappedFrame.pinsRemaining.length > 0
             ? tappedFrame.pinsRemaining
-            : allPins.slice(allPins.length - (10 - knocked));
+            : Array.from({ length: 10 - tappedFrame.roll1 }, (_, i) => 10 - i);
         setCurrentRoll(2);
         setStandingPins(remaining);
       }

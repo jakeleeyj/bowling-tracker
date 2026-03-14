@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase-server";
 import { Swords, ChevronUp, ChevronDown, Minus } from "lucide-react";
 import type { ProfileRow, GameRow } from "@/lib/queries";
+import Avatar from "@/components/Avatar";
 import {
   calculateMMR,
   getRank,
@@ -11,23 +12,6 @@ import {
   getEventWeight,
   CALIBRATION_GAMES,
 } from "@/lib/ranking";
-
-const AVATAR_GRADIENTS = [
-  "from-blue to-indigo-500",
-  "from-purple to-fuchsia-500",
-  "from-pink to-rose-500",
-  "from-green to-emerald-500",
-  "from-gold to-orange-500",
-  "from-cyan-500 to-blue",
-];
-
-function getAvatarGradient(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
-}
 
 function RankEmblem({
   tierName,
@@ -106,6 +90,7 @@ export default async function LeaderboardPage() {
         return {
           id: profile.id,
           name: profile.display_name,
+          avatarUrl: profile.avatar_url,
           mmr: 0,
           rank: getRank(0),
           progress: 0,
@@ -145,6 +130,7 @@ export default async function LeaderboardPage() {
       return {
         id: profile.id,
         name: profile.display_name,
+        avatarUrl: profile.avatar_url,
         mmr,
         rank,
         progress,
@@ -320,11 +306,11 @@ export default async function LeaderboardPage() {
                 )}
 
                 {/* Avatar */}
-                <div
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${getAvatarGradient(entry.name)} text-[10px] font-bold`}
-                >
-                  {entry.name.charAt(0).toUpperCase()}
-                </div>
+                <Avatar
+                  name={entry.name}
+                  avatarUrl={entry.avatarUrl}
+                  size="sm"
+                />
 
                 {/* Name + rank */}
                 <div className="min-w-0 flex-1">

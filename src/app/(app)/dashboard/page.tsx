@@ -7,6 +7,7 @@ import type {
   SessionWithGamesFramesAndProfile,
 } from "@/lib/queries";
 import SessionCard from "@/components/SessionCard";
+import Avatar from "@/components/Avatar";
 import {
   calculateMMR,
   getRank,
@@ -14,23 +15,6 @@ import {
   getEventWeight,
   CALIBRATION_GAMES,
 } from "@/lib/ranking";
-
-const AVATAR_GRADIENTS = [
-  "from-blue to-indigo-500",
-  "from-purple to-fuchsia-500",
-  "from-pink to-rose-500",
-  "from-green to-emerald-500",
-  "from-gold to-orange-500",
-  "from-cyan-500 to-blue",
-];
-
-function getAvatarGradient(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
-}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -145,7 +129,6 @@ export default async function DashboardPage() {
   }
 
   const displayName = profile?.display_name ?? "Bowler";
-  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <div>
@@ -155,11 +138,7 @@ export default async function DashboardPage() {
           <p className="text-[13px] text-text-muted">Welcome back</p>
           <h1 className="text-xl font-extrabold">{displayName}</h1>
         </div>
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${getAvatarGradient(displayName)} text-base font-bold`}
-        >
-          {initial}
-        </div>
+        <Avatar name={displayName} avatarUrl={profile?.avatar_url} size="md" />
       </div>
 
       {/* Quick Stats */}
@@ -312,7 +291,7 @@ export default async function DashboardPage() {
               venue={session.venue}
               eventLabel={session.event_label}
               games={sessionGames}
-              avatarGradient={getAvatarGradient(realName)}
+              avatarUrl={sessionProfile?.avatar_url}
               isOwn={isOwnSession}
               mmrChange={
                 isOwnSession && totalGames >= CALIBRATION_GAMES

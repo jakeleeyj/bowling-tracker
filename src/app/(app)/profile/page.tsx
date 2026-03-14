@@ -27,6 +27,8 @@ import {
 } from "@/lib/ranking";
 import SessionCard from "@/components/SessionCard";
 import NotificationToggle from "@/components/NotificationToggle";
+import AvatarPicker from "@/components/AvatarPicker";
+import Avatar from "@/components/Avatar";
 import {
   ACHIEVEMENTS,
   computeAchievementStats,
@@ -65,23 +67,6 @@ interface HistorySession {
   games: HistoryGame[];
 }
 
-const AVATAR_GRADIENTS = [
-  "from-blue to-indigo-500",
-  "from-purple to-fuchsia-500",
-  "from-pink to-rose-500",
-  "from-green to-emerald-500",
-  "from-gold to-orange-500",
-  "from-cyan-500 to-blue",
-];
-
-function getAvatarGradient(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
-}
-
 const ACHIEVEMENT_ICONS: Record<string, React.ReactNode> = {
   Trophy: <Trophy size={14} />,
   Zap: <Zap size={14} />,
@@ -97,6 +82,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
   const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -124,11 +110,16 @@ export default function ProfilePage() {
         setEmail(user.email ?? "");
         const { data: profile } = (await supabase
           .from("profiles")
-          .select("display_name")
+          .select("display_name, avatar_url")
           .eq("id", user.id)
-          .single()) as { data: { display_name: string } | null };
+          .single()) as {
+          data: { display_name: string; avatar_url: string | null } | null;
+        };
 
-        if (profile) setDisplayName(profile.display_name);
+        if (profile) {
+          setDisplayName(profile.display_name);
+          setAvatarUrl(profile.avatar_url);
+        }
 
         // Fetch history with full frame data for SessionCard
         const { data: sessionData } = (await supabase
@@ -311,6 +302,16 @@ export default function ProfilePage() {
         <div className="animate-slide-down mb-5 flex flex-col gap-3">
           <div className="glass p-4">
             <div className="flex flex-col gap-3">
+              <div className="flex justify-center">
+                <AvatarPicker
+                  name={displayName || "You"}
+                  currentUrl={avatarUrl}
+                  onAvatarChange={(url) => {
+                    setAvatarUrl(url);
+                    toast("Avatar updated");
+                  }}
+                />
+              </div>
               <div>
                 <label className="mb-1 block text-xs text-text-muted">
                   Display Name
@@ -553,7 +554,7 @@ export default function ProfilePage() {
                 venue={session.venue}
                 eventLabel={session.event_label}
                 games={sessionGames}
-                avatarGradient={getAvatarGradient(displayName || "You")}
+                avatarUrl={avatarUrl}
                 isOwn
                 mmrChange={
                   (achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES

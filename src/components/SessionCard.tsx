@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { Star, Check, ChevronDown, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/components/Toast";
+import Avatar from "@/components/Avatar";
 
 interface FrameInfo {
   frame_number: number;
@@ -38,7 +39,8 @@ interface SessionCardProps {
   venue: string | null;
   eventLabel: string | null;
   games: SessionGame[];
-  avatarGradient: string;
+  avatarGradient?: string;
+  avatarUrl?: string | null;
   isOwn?: boolean;
   mmrChange?: number;
   rankLabel?: string;
@@ -279,6 +281,7 @@ export default function SessionCard({
   eventLabel,
   games,
   avatarGradient,
+  avatarUrl,
   isOwn = false,
   mmrChange,
   rankLabel,
@@ -348,11 +351,7 @@ export default function SessionCard({
         className="flex w-full items-center justify-between p-3 text-left transition-colors duration-150 active:bg-white/[0.03]"
       >
         <div className="flex items-center gap-2.5">
-          <div
-            className={`flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient} text-[11px] font-bold`}
-          >
-            {realName.charAt(0).toUpperCase()}
-          </div>
+          <Avatar name={realName} avatarUrl={avatarUrl} size="sm" />
           <div>
             <p className="text-[13px] font-semibold">
               {name}
