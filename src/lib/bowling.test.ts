@@ -25,6 +25,7 @@ function frame(
     isStrike,
     isSpare,
     pinsRemaining: null,
+    pinsRemainingRoll2: null,
     spareConverted: isSpare,
     ...opts,
   };
@@ -54,6 +55,7 @@ function tenthFrame(
     isStrike,
     isSpare,
     pinsRemaining: null,
+    pinsRemainingRoll2: null,
     spareConverted: isSpare,
     ...opts,
   };

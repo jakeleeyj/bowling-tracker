@@ -288,6 +288,8 @@ export function useSessionState() {
               isStrike: f.is_strike as boolean,
               isSpare: f.is_spare as boolean,
               pinsRemaining: f.pins_remaining as number[] | null,
+              pinsRemainingRoll2:
+                (f.pins_remaining_roll2 as number[] | null) ?? null,
               spareConverted: f.spare_converted as boolean,
             }),
           );
@@ -499,6 +501,7 @@ export function useSessionState() {
         isStrike: true,
         isSpare: false,
         pinsRemaining: null,
+        pinsRemainingRoll2: null,
         spareConverted: false,
       };
       const newFrames = upsertFrame(frames, frame);
@@ -521,6 +524,7 @@ export function useSessionState() {
         ...existingFrame,
         roll2: remaining,
         isSpare: true,
+        pinsRemainingRoll2: [],
         spareConverted: true,
       };
       const newFrames = frames.map((f) =>
@@ -546,6 +550,7 @@ export function useSessionState() {
           isStrike: false,
           isSpare: false,
           pinsRemaining: getAllPins(),
+          pinsRemainingRoll2: null,
           spareConverted: false,
         };
         setFrames(upsertFrame(frames, frame));
@@ -560,6 +565,9 @@ export function useSessionState() {
           ...existingFrame,
           roll2: 0,
           isSpare: false,
+          pinsRemainingRoll2: existingFrame.pinsRemaining
+            ? [...existingFrame.pinsRemaining]
+            : null,
           spareConverted: false,
         };
         const newFrames = frames.map((f) =>
@@ -597,6 +605,7 @@ export function useSessionState() {
           isStrike: false,
           isSpare: false,
           pinsRemaining: [...standingPins],
+          pinsRemainingRoll2: null,
           spareConverted: false,
         };
         setFrames(upsertFrame(frames, frame));
@@ -617,6 +626,7 @@ export function useSessionState() {
           ...existingFrame,
           roll2: roll2Pins,
           isSpare,
+          pinsRemainingRoll2: isSpare ? [] : [...standingPins],
           spareConverted: isSpare,
         };
         const newFrames = frames.map((f) =>
@@ -660,6 +670,7 @@ export function useSessionState() {
         isStrike,
         isSpare: false,
         pinsRemaining: isStrike ? null : [...standingPins],
+        pinsRemainingRoll2: null,
         spareConverted: false,
       };
       setFrames(upsertFrame(frames, frame));
@@ -680,6 +691,7 @@ export function useSessionState() {
         isSpare,
         spareConverted: isSpare,
         pinsRemaining: roll2Remaining ?? existing.pinsRemaining,
+        pinsRemainingRoll2: isSpare ? [] : roll2Remaining,
       };
       const newFrames = frames.map((f) =>
         f.frameNumber === 10 ? updatedFrame : f,
@@ -930,6 +942,7 @@ export function useSessionState() {
           is_strike: f.isStrike,
           is_spare: f.isSpare,
           pins_remaining: f.pinsRemaining,
+          pins_remaining_roll2: f.pinsRemainingRoll2,
           spare_converted: f.spareConverted,
           frame_score: frameScores[fi] ?? 0,
         }));

@@ -47,6 +47,7 @@ interface HistoryFrame {
   is_spare: boolean;
   frame_score: number;
   pins_remaining: number[] | null;
+  pins_remaining_roll2: number[] | null;
 }
 
 interface HistoryGame {

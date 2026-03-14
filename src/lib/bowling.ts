@@ -8,6 +8,7 @@ export interface FrameData {
   isStrike: boolean;
   isSpare: boolean;
   pinsRemaining: number[] | null;
+  pinsRemainingRoll2: number[] | null;
   spareConverted: boolean;
 }
 

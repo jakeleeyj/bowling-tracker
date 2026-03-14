@@ -121,7 +121,7 @@ export default function FrameScorecard({
                                     ? "font-bold text-red"
                                     : frame.isSpare
                                       ? "font-bold text-gold"
-                                      : "text-text-secondary"
+                                      : "text-text-muted/50"
                                 }
                               >
                                 {formatRoll(frame, 2, i)}

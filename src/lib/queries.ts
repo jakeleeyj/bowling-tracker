@@ -31,6 +31,7 @@ export interface FrameRow {
   is_strike: boolean;
   is_spare: boolean;
   pins_remaining: number[] | null;
+  pins_remaining_roll2: number[] | null;
   spare_converted: boolean;
   frame_score: number;
 }

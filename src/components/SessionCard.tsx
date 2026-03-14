@@ -25,6 +25,7 @@ interface FrameInfo {
   is_spare: boolean;
   frame_score: number;
   pins_remaining: number[] | null;
+  pins_remaining_roll2: number[] | null;
 }
 
 interface SessionGame {
@@ -135,10 +136,12 @@ const MICRO_PINS = [[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]] as const;
 
 function MicroPinDiagram({
   pinsRemaining,
+  pinsRemainingRoll2,
   isStrike,
   isSpare,
 }: {
   pinsRemaining: number[] | null;
+  pinsRemainingRoll2: number[] | null;
   isStrike: boolean;
   isSpare: boolean;
 }) {
@@ -151,25 +154,44 @@ function MicroPinDiagram({
   }
 
   const pins = pinsRemaining ?? [];
+  const pinsAfterRoll2 = pinsRemainingRoll2 ?? null;
 
   return (
     <div className="flex flex-col items-center gap-[1px] py-[2px]">
       {MICRO_PINS.map((row, ri) => (
         <div key={ri} className="flex gap-[1px]">
           {row.map((pin) => {
-            const isLeft = pins.includes(pin);
+            const wasStanding = pins.includes(pin);
+            const stillStanding = pinsAfterRoll2
+              ? pinsAfterRoll2.includes(pin)
+              : null;
+
+            let color = "bg-white/10"; // knocked on roll 1
+            if (wasStanding) {
+              if (isSplit(pins)) {
+                // Split leave
+                color = isSpare
+                  ? "bg-red"
+                  : stillStanding !== null
+                    ? stillStanding
+                      ? "bg-red"
+                      : "bg-red/30"
+                    : "bg-red";
+              } else if (isSpare) {
+                color = "bg-gold";
+              } else if (stillStanding !== null) {
+                // Have roll 2 data: still standing vs knocked on roll 2
+                color = stillStanding ? "bg-blue" : "bg-white/25";
+              } else {
+                // No roll 2 data (old games): dim
+                color = "bg-white/30";
+              }
+            }
+
             return (
               <div
                 key={pin}
-                className={`h-[4px] w-[4px] rounded-full ${
-                  isLeft
-                    ? isSplit(pins)
-                      ? "bg-red"
-                      : isSpare
-                        ? "bg-gold"
-                        : "bg-blue"
-                    : "bg-white/10"
-                }`}
+                className={`h-[4px] w-[4px] rounded-full ${color}`}
               />
             );
           })}
@@ -196,6 +218,7 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
               {frame ? (
                 <MicroPinDiagram
                   pinsRemaining={frame.pins_remaining}
+                  pinsRemainingRoll2={frame.pins_remaining_roll2}
                   isStrike={frame.is_strike}
                   isSpare={frame.is_spare}
                 />
