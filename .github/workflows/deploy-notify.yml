@@ -8,28 +8,26 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Check for notify tag
-        id: check
+      - name: Build notification message
+        id: msg
         env:
           COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
           NOTIFY_LINE=$(echo "$COMMIT_MSG" | grep -i '^notify:' | sed 's/^notify:\s*//' || true)
           if [ -n "$NOTIFY_LINE" ]; then
-            echo "should_notify=true" >> "$GITHUB_OUTPUT"
-            echo "message=$NOTIFY_LINE" >> "$GITHUB_OUTPUT"
+            echo "body=$NOTIFY_LINE" >> "$GITHUB_OUTPUT"
           else
-            echo "should_notify=false" >> "$GITHUB_OUTPUT"
+            FIRST_LINE=$(echo "$COMMIT_MSG" | head -1)
+            echo "body=$FIRST_LINE" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Wait for Vercel deploy
-        if: steps.check.outputs.should_notify == 'true'
         run: sleep 90
 
       - name: Send push notification
-        if: steps.check.outputs.should_notify == 'true'
         env:
           DEPLOY_SECRET: ${{ secrets.DEPLOY_NOTIFY_SECRET }}
-          NOTIFY_MSG: ${{ steps.check.outputs.message }}
+          NOTIFY_MSG: ${{ steps.msg.outputs.body }}
         run: |
           curl -s -X POST \
             "https://bowling-tracker-omega.vercel.app/api/push/deploy-notify" \

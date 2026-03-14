@@ -83,7 +83,7 @@ export default function VenueCombobox({
           value={open ? filter || value : value}
           onChange={(e) => handleInputChange(e.target.value)}
           onFocus={handleFocus}
-          className="w-full rounded-lg border border-border bg-surface-light py-2.5 pl-9 pr-4 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+          className="w-full rounded-lg border border-border bg-surface-light py-2.5 pl-9 pr-4 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
         />
       </div>
 
