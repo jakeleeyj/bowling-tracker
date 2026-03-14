@@ -16,68 +16,68 @@ export interface RankTier {
 }
 
 // Tier ranges (MMR values, base 180):
-// Iron: <140 avg, Bronze: 140-160, Silver: 160-190, Gold: 190-215
-// Platinum: 215-235, Diamond: 235-255, Master: 255-270, Grandmaster: 270+
+// Iron: <100 avg, Bronze: 100-130, Silver: 130-160, Gold: 160-180
+// Platinum: 180-200, Diamond: 200-220, Master: 220-240, Grandmaster: 240+
 const TIERS = [
   {
     name: "Iron",
     min: -Infinity,
-    max: -40,
+    max: -80,
     color: "text-gray-400",
     bgColor: "bg-gray-400/10",
     borderColor: "border-gray-400/30",
   },
   {
     name: "Bronze",
-    min: -40,
-    max: -20,
+    min: -80,
+    max: -50,
     color: "text-amber-700",
     bgColor: "bg-amber-700/10",
     borderColor: "border-amber-700/30",
   },
   {
     name: "Silver",
-    min: -20,
-    max: 10,
+    min: -50,
+    max: -20,
     color: "text-gray-300",
     bgColor: "bg-gray-300/10",
     borderColor: "border-gray-300/30",
   },
   {
     name: "Gold",
-    min: 10,
-    max: 35,
+    min: -20,
+    max: 0,
     color: "text-gold",
     bgColor: "bg-gold/10",
     borderColor: "border-gold/30",
   },
   {
     name: "Platinum",
-    min: 35,
-    max: 55,
+    min: 0,
+    max: 20,
     color: "text-cyan-400",
     bgColor: "bg-cyan-400/10",
     borderColor: "border-cyan-400/30",
   },
   {
     name: "Diamond",
-    min: 55,
-    max: 75,
+    min: 20,
+    max: 40,
     color: "text-blue",
     bgColor: "bg-blue/10",
     borderColor: "border-blue/30",
   },
   {
     name: "Master",
-    min: 75,
-    max: 90,
+    min: 40,
+    max: 60,
     color: "text-purple",
     bgColor: "bg-purple/10",
     borderColor: "border-purple/30",
   },
   {
     name: "Grandmaster",
-    min: 90,
+    min: 60,
     max: Infinity,
     color: "text-red",
     bgColor: "bg-red/10",
