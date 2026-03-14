@@ -8,6 +8,7 @@ import type {
 } from "@/lib/queries";
 import SessionCard from "@/components/SessionCard";
 import Avatar from "@/components/Avatar";
+import NotificationPrompt from "@/components/NotificationPrompt";
 import {
   calculateMMR,
   getRank,
@@ -138,6 +139,9 @@ export default async function DashboardPage() {
         </div>
         <Avatar name={displayName} avatarUrl={profile?.avatar_url} size="md" />
       </div>
+
+      {/* Notification prompt — shows once for new users */}
+      <NotificationPrompt />
 
       {/* Quick Stats */}
       <div className="mb-5 flex gap-2">
