@@ -3,9 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
-import { Star, Check, ChevronDown, Pencil, Trash2 } from "lucide-react";
+import {
+  Star,
+  Check,
+  ChevronDown,
+  Pencil,
+  Trash2,
+  BarChart3,
+} from "lucide-react";
 import { useToast } from "@/components/Toast";
 import Avatar from "@/components/Avatar";
+import { isSplit } from "@/lib/bowling";
 
 interface FrameInfo {
   frame_number: number;
@@ -270,6 +278,184 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
   );
 }
 
+function SessionStats({
+  games,
+  show,
+  onToggle,
+}: {
+  games: SessionGame[];
+  show: boolean;
+  onToggle: () => void;
+}) {
+  // Only show if we have detailed frame data
+  const allFrames = games.flatMap((g) => g.frames ?? []);
+  if (allFrames.length === 0) return null;
+
+  const totalFrames = allFrames.length;
+  const strikes = allFrames.filter((f) => f.is_strike).length;
+  const spares = allFrames.filter((f) => f.is_spare).length;
+  const opens = totalFrames - strikes - spares;
+
+  const strikeRate = Math.round((strikes / totalFrames) * 100);
+  const spareRate = Math.round((spares / totalFrames) * 100);
+  const openRate = Math.round((opens / totalFrames) * 100);
+
+  // Spare conversion: non-strike frames where spare was converted
+  const spareOpportunities = allFrames.filter((f) => !f.is_strike);
+  const spareConversionRate =
+    spareOpportunities.length > 0
+      ? Math.round((spares / spareOpportunities.length) * 100)
+      : 0;
+
+  // Leaves breakdown
+  const leaves = allFrames
+    .filter(
+      (f) => !f.is_strike && f.pins_remaining && f.pins_remaining.length > 0,
+    )
+    .map((f) => ({
+      pins: f.pins_remaining!.sort((a, b) => a - b),
+      converted: f.is_spare,
+    }));
+
+  // Group by pin combo
+  const leaveMap = new Map<
+    string,
+    { pins: number[]; total: number; converted: number }
+  >();
+  for (const l of leaves) {
+    const key = l.pins.join("-");
+    const existing = leaveMap.get(key) ?? {
+      pins: l.pins,
+      total: 0,
+      converted: 0,
+    };
+    existing.total++;
+    if (l.converted) existing.converted++;
+    leaveMap.set(key, existing);
+  }
+  const sortedLeaves = [...leaveMap.values()].sort((a, b) => b.total - a.total);
+
+  // Categorize
+  const singlePinLeaves = sortedLeaves.filter((l) => l.pins.length === 1);
+  const splitLeaves = sortedLeaves.filter(
+    (l) => l.pins.length >= 2 && isSplit(l.pins),
+  );
+  const multiPinLeaves = sortedLeaves.filter(
+    (l) => l.pins.length >= 2 && !isSplit(l.pins),
+  );
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-surface-light/50 py-2 text-[11px] font-semibold text-text-muted active:bg-surface-light"
+      >
+        <BarChart3 size={12} />
+        {show ? "Hide Stats" : "View Stats"}
+      </button>
+
+      {show && (
+        <div className="animate-slide-down mt-2">
+          {/* Rate cards */}
+          <div className="mb-2 grid grid-cols-4 gap-1.5">
+            <div className="rounded-lg bg-black/20 p-2 text-center">
+              <div className="text-sm font-extrabold text-green">
+                {strikeRate}%
+              </div>
+              <div className="text-[9px] text-text-muted">Strike</div>
+            </div>
+            <div className="rounded-lg bg-black/20 p-2 text-center">
+              <div className="text-sm font-extrabold text-gold">
+                {spareRate}%
+              </div>
+              <div className="text-[9px] text-text-muted">Spare</div>
+            </div>
+            <div className="rounded-lg bg-black/20 p-2 text-center">
+              <div className="text-sm font-extrabold text-blue">
+                {spareConversionRate}%
+              </div>
+              <div className="text-[9px] text-text-muted">Conv.</div>
+            </div>
+            <div className="rounded-lg bg-black/20 p-2 text-center">
+              <div className="text-sm font-extrabold text-red">{openRate}%</div>
+              <div className="text-[9px] text-text-muted">Open</div>
+            </div>
+          </div>
+
+          {/* Leaves */}
+          {sortedLeaves.length > 0 && (
+            <div className="rounded-lg bg-black/20 p-2">
+              <p className="mb-1.5 text-[10px] font-semibold text-text-muted">
+                Leaves
+              </p>
+              {singlePinLeaves.length > 0 && (
+                <LeaveGroup
+                  label="Single Pin"
+                  color="text-green"
+                  leaves={singlePinLeaves}
+                />
+              )}
+              {multiPinLeaves.length > 0 && (
+                <LeaveGroup
+                  label="Multi Pin"
+                  color="text-gold"
+                  leaves={multiPinLeaves}
+                />
+              )}
+              {splitLeaves.length > 0 && (
+                <LeaveGroup
+                  label="Splits"
+                  color="text-red"
+                  leaves={splitLeaves}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LeaveGroup({
+  label,
+  color,
+  leaves,
+}: {
+  label: string;
+  color: string;
+  leaves: { pins: number[]; total: number; converted: number }[];
+}) {
+  return (
+    <div className="mb-1.5 last:mb-0">
+      <p className={`mb-0.5 text-[9px] font-semibold ${color}`}>{label}</p>
+      <div className="flex flex-wrap gap-1">
+        {leaves.map((l) => {
+          const rate = Math.round((l.converted / l.total) * 100);
+          return (
+            <div
+              key={l.pins.join("-")}
+              className="flex items-center gap-1 rounded bg-white/[0.04] px-1.5 py-0.5"
+            >
+              <span className="text-[10px] font-semibold">
+                {l.pins.join("-")}
+              </span>
+              <span className="text-[9px] text-text-muted">
+                {l.converted}/{l.total}
+              </span>
+              <span
+                className={`text-[9px] font-semibold ${rate >= 50 ? "text-green" : "text-red"}`}
+              >
+                {rate}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function SessionCard({
   sessionId,
   name,
@@ -288,6 +474,7 @@ export default function SessionCard({
   rankColor,
 }: SessionCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [editingMeta, setEditingMeta] = useState(false);
   const [editVenue, setEditVenue] = useState(venue ?? "");
@@ -484,6 +671,13 @@ export default function SessionCard({
               );
             })}
           </div>
+          {/* Session Stats */}
+          <SessionStats
+            games={games}
+            show={showStats}
+            onToggle={() => setShowStats(!showStats)}
+          />
+
           {isOwn && (
             <div className="mt-2 flex flex-col gap-2">
               {editingMeta ? (

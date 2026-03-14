@@ -555,25 +555,9 @@ function LogPage() {
     }
     setFrames(newFrames);
     setCurrentFrame(frameNumber);
-
-    // Load existing pin state so user can adjust (frame stays in array until new input replaces it)
-    const tappedFrame = newFrames.find((f) => f.frameNumber === frameNumber);
-    if (tappedFrame && tappedFrame.roll1 !== null) {
-      if (tappedFrame.isStrike) {
-        setCurrentRoll(1);
-        setStandingPins([]);
-      } else {
-        const remaining =
-          tappedFrame.pinsRemaining && tappedFrame.pinsRemaining.length > 0
-            ? tappedFrame.pinsRemaining
-            : Array.from({ length: 10 - tappedFrame.roll1 }, (_, i) => 10 - i);
-        setCurrentRoll(2);
-        setStandingPins(remaining);
-      }
-    } else {
-      setCurrentRoll(1);
-      setStandingPins([]);
-    }
+    // Always start from roll 1 — old frame data stays until new input replaces it via upsertFrame
+    setCurrentRoll(1);
+    setStandingPins([]);
   }
 
   function startSession() {
