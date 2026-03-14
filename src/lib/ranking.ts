@@ -4,6 +4,7 @@
 
 const BASE_SCORE = 180;
 const DECAY_FACTOR = 0.93;
+export const CALIBRATION_GAMES = 3;
 
 export interface RankTier {
   name: string;

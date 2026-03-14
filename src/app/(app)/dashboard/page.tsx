@@ -12,6 +12,7 @@ import {
   getRank,
   formatMMR,
   getEventWeight,
+  CALIBRATION_GAMES,
 } from "@/lib/ranking";
 
 const AVATAR_GRADIENTS = [
@@ -94,8 +95,9 @@ export default async function DashboardPage() {
       | null;
   };
 
-  // Compute per-user rank
+  // Compute per-user rank and game count
   const userRanks: Record<string, ReturnType<typeof getRank>> = {};
+  const userGameCounts: Record<string, number> = {};
   if (allGamesForRank) {
     const byUser: Record<string, { scores: number[]; weights: number[] }> = {};
     allGamesForRank.forEach((g) => {
@@ -107,6 +109,7 @@ export default async function DashboardPage() {
     });
     for (const [uid, d] of Object.entries(byUser)) {
       userRanks[uid] = getRank(calculateMMR(d.scores, d.weights));
+      userGameCounts[uid] = d.scores.length;
     }
   }
 
@@ -186,7 +189,7 @@ export default async function DashboardPage() {
       {totalGames > 0 && (
         <Link
           href="/leaderboard"
-          className={`glass mb-5 flex items-center gap-3 border p-3 ${rank.borderColor} active:scale-[0.98]`}
+          className={`glass mb-5 flex items-center gap-3 border p-3 ${totalGames >= CALIBRATION_GAMES ? rank.borderColor : "border-border/30"} active:scale-[0.98]`}
         >
           <div className={`flex h-10 w-10 items-center justify-center`}>
             <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
@@ -197,7 +200,11 @@ export default async function DashboardPage() {
                 stroke="currentColor"
                 strokeWidth={1.5}
                 strokeLinejoin="round"
-                className={rank.color}
+                className={
+                  totalGames >= CALIBRATION_GAMES
+                    ? rank.color
+                    : "text-text-muted"
+                }
               />
               <path
                 d="M12 7l3 5-3 5-3-5z"
@@ -205,16 +212,36 @@ export default async function DashboardPage() {
                 fillOpacity={0.4}
                 stroke="currentColor"
                 strokeWidth={0.75}
-                className={rank.color}
+                className={
+                  totalGames >= CALIBRATION_GAMES
+                    ? rank.color
+                    : "text-text-muted"
+                }
               />
             </svg>
           </div>
           <div className="flex-1">
-            <span className={`text-sm font-extrabold ${rank.color}`}>
-              {rank.name}
-              {rank.division ? ` ${rank.division}` : ""}
-            </span>
-            <p className="text-[10px] text-text-muted">{formatMMR(mmr)} MMR</p>
+            {totalGames >= CALIBRATION_GAMES ? (
+              <>
+                <span className={`text-sm font-extrabold ${rank.color}`}>
+                  {rank.name}
+                  {rank.division ? ` ${rank.division}` : ""}
+                </span>
+                <p className="text-[10px] text-text-muted">
+                  {formatMMR(mmr)} MMR
+                </p>
+              </>
+            ) : (
+              <>
+                <span className="text-sm font-extrabold text-text-muted">
+                  Calibrating
+                </span>
+                <p className="text-[10px] text-text-muted">
+                  {CALIBRATION_GAMES - totalGames} more game
+                  {CALIBRATION_GAMES - totalGames !== 1 ? "s" : ""} to rank
+                </p>
+              </>
+            )}
           </div>
           <span className="text-[10px] text-text-muted">
             View Ranked &rsaquo;
@@ -288,14 +315,21 @@ export default async function DashboardPage() {
               avatarGradient={getAvatarGradient(realName)}
               isOwn={isOwnSession}
               mmrChange={
-                isOwnSession ? sessionMmrChange[session.id] : undefined
+                isOwnSession && totalGames >= CALIBRATION_GAMES
+                  ? sessionMmrChange[session.id]
+                  : undefined
               }
               rankLabel={
-                userRanks[session.user_id]
+                userRanks[session.user_id] &&
+                (userGameCounts[session.user_id] ?? 0) >= CALIBRATION_GAMES
                   ? `${userRanks[session.user_id].name}${userRanks[session.user_id].division ? ` ${userRanks[session.user_id].division}` : ""}`
                   : undefined
               }
-              rankColor={userRanks[session.user_id]?.color}
+              rankColor={
+                (userGameCounts[session.user_id] ?? 0) >= CALIBRATION_GAMES
+                  ? userRanks[session.user_id]?.color
+                  : undefined
+              }
             />
           );
         })}

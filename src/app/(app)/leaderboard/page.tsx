@@ -9,6 +9,7 @@ import {
   getDivisionProgress,
   formatMMR,
   getEventWeight,
+  CALIBRATION_GAMES,
 } from "@/lib/ranking";
 
 const AVATAR_GRADIENTS = [
@@ -136,10 +137,16 @@ export default async function LeaderboardPage() {
         games: totalGames,
         trend,
         isCurrentUser: profile.id === user?.id,
+        isCalibrating: totalGames < CALIBRATION_GAMES,
       };
     })
     .filter(Boolean)
-    .sort((a, b) => b!.mmr - a!.mmr);
+    .sort((a, b) => {
+      // Calibrating users go to the bottom
+      if (a!.isCalibrating && !b!.isCalibrating) return 1;
+      if (!a!.isCalibrating && b!.isCalibrating) return -1;
+      return b!.mmr - a!.mmr;
+    });
 
   // Find current user's entry
   const currentUserEntry = rankings.find((e) => e?.isCurrentUser);
@@ -154,49 +161,97 @@ export default async function LeaderboardPage() {
       {/* Current user's rank card */}
       {currentUserEntry && (
         <div
-          className={`glass mb-5 overflow-hidden border ${currentUserEntry.rank.borderColor}`}
+          className={`glass mb-5 overflow-hidden border ${currentUserEntry.isCalibrating ? "border-border/30" : currentUserEntry.rank.borderColor}`}
         >
           <div className="flex items-center gap-3 p-4">
-            <RankEmblem tierName={currentUserEntry.rank.name} size="lg" />
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`text-lg font-extrabold ${currentUserEntry.rank.color}`}
-                >
-                  {currentUserEntry.rank.name}
-                  {currentUserEntry.rank.division &&
-                    ` ${currentUserEntry.rank.division}`}
-                </span>
-                {currentUserEntry.trend === "up" && (
-                  <ChevronUp size={16} className="text-green" />
-                )}
-                {currentUserEntry.trend === "down" && (
-                  <ChevronDown size={16} className="text-red" />
-                )}
+            {currentUserEntry.isCalibrating ? (
+              <div className="flex h-12 w-12 items-center justify-center text-text-muted">
+                <svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z"
+                    fill="currentColor"
+                    fillOpacity={0.1}
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </div>
-              <p className="text-[11px] text-text-muted">
-                {formatMMR(currentUserEntry.mmr)} MMR &bull; avg{" "}
-                {currentUserEntry.avg} &bull; {currentUserEntry.games} games
-              </p>
+            ) : (
+              <RankEmblem tierName={currentUserEntry.rank.name} size="lg" />
+            )}
+            <div className="flex-1">
+              {currentUserEntry.isCalibrating ? (
+                <>
+                  <span className="text-lg font-extrabold text-text-muted">
+                    Calibrating
+                  </span>
+                  <p className="text-[11px] text-text-muted">
+                    {CALIBRATION_GAMES - currentUserEntry.games} more game
+                    {CALIBRATION_GAMES - currentUserEntry.games !== 1
+                      ? "s"
+                      : ""}{" "}
+                    to set your rank
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-lg font-extrabold ${currentUserEntry.rank.color}`}
+                    >
+                      {currentUserEntry.rank.name}
+                      {currentUserEntry.rank.division &&
+                        ` ${currentUserEntry.rank.division}`}
+                    </span>
+                    {currentUserEntry.trend === "up" && (
+                      <ChevronUp size={16} className="text-green" />
+                    )}
+                    {currentUserEntry.trend === "down" && (
+                      <ChevronDown size={16} className="text-red" />
+                    )}
+                  </div>
+                  <p className="text-[11px] text-text-muted">
+                    {formatMMR(currentUserEntry.mmr)} MMR &bull; avg{" "}
+                    {currentUserEntry.avg} &bull; {currentUserEntry.games} games
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
           {/* Division progress bar */}
-          <div className="px-4 pb-3">
-            <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
-              <div
-                className={`h-full rounded-full ${currentUserEntry.rank.bgColor.replace("/10", "")} transition-all`}
-                style={{ width: `${currentUserEntry.progress}%` }}
-              />
+          {!currentUserEntry.isCalibrating && (
+            <div className="px-4 pb-3">
+              <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
+                <div
+                  className={`h-full rounded-full ${currentUserEntry.rank.bgColor.replace("/10", "")} transition-all`}
+                  style={{ width: `${currentUserEntry.progress}%` }}
+                />
+              </div>
+              <div className="mt-1 flex justify-between text-[9px] text-text-muted">
+                <span>
+                  {currentUserEntry.rank.name}{" "}
+                  {currentUserEntry.rank.division ?? ""}
+                </span>
+                <span>{currentUserEntry.progress}%</span>
+              </div>
             </div>
-            <div className="mt-1 flex justify-between text-[9px] text-text-muted">
-              <span>
-                {currentUserEntry.rank.name}{" "}
-                {currentUserEntry.rank.division ?? ""}
-              </span>
-              <span>{currentUserEntry.progress}%</span>
+          )}
+          {currentUserEntry.isCalibrating && (
+            <div className="px-4 pb-3">
+              <div className="flex gap-1.5">
+                {Array.from({ length: CALIBRATION_GAMES }, (_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 flex-1 rounded-full ${
+                      i < currentUserEntry.games ? "bg-blue" : "bg-white/5"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -217,16 +272,33 @@ export default async function LeaderboardPage() {
               <div
                 key={entry.id}
                 className={`glass flex items-center gap-2.5 p-2.5 ${
-                  entry.isCurrentUser ? `border ${entry.rank.borderColor}` : ""
+                  entry.isCurrentUser && !entry.isCalibrating
+                    ? `border ${entry.rank.borderColor}`
+                    : ""
                 }`}
               >
                 {/* Position */}
                 <span className="w-5 text-center text-xs font-bold text-text-muted">
-                  {position}
+                  {entry.isCalibrating ? "-" : position}
                 </span>
 
                 {/* Rank emblem */}
-                <RankEmblem tierName={entry.rank.name} size="sm" />
+                {entry.isCalibrating ? (
+                  <div className="flex h-7 w-7 items-center justify-center text-text-muted">
+                    <svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z"
+                        fill="currentColor"
+                        fillOpacity={0.1}
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                ) : (
+                  <RankEmblem tierName={entry.rank.name} size="sm" />
+                )}
 
                 {/* Avatar */}
                 <div
@@ -241,32 +313,51 @@ export default async function LeaderboardPage() {
                     {entry.isCurrentUser ? "You" : entry.name}
                   </p>
                   <p className="text-[10px] text-text-muted">
-                    <span className={entry.rank.color}>
-                      {entry.rank.name}
-                      {entry.rank.division && ` ${entry.rank.division}`}
-                    </span>
-                    {" \u2022 "}
-                    {entry.games} games
+                    {entry.isCalibrating ? (
+                      <span className="text-text-muted">
+                        Calibrating &bull; {entry.games} games
+                      </span>
+                    ) : (
+                      <>
+                        <span className={entry.rank.color}>
+                          {entry.rank.name}
+                          {entry.rank.division && ` ${entry.rank.division}`}
+                        </span>
+                        {" \u2022 "}
+                        {entry.games} games
+                      </>
+                    )}
                   </p>
                 </div>
 
                 {/* MMR + trend */}
                 <div className="flex items-center gap-1">
-                  {entry.trend === "up" && (
-                    <ChevronUp size={12} className="text-green" />
-                  )}
-                  {entry.trend === "down" && (
-                    <ChevronDown size={12} className="text-red" />
-                  )}
-                  {entry.trend === "stable" && (
-                    <Minus size={10} className="text-text-muted" />
-                  )}
-                  <div className="text-right">
-                    <div className="text-sm font-extrabold text-text-primary">
-                      {formatMMR(entry.mmr)}
+                  {entry.isCalibrating ? (
+                    <div className="text-right">
+                      <div className="text-sm font-extrabold text-text-muted">
+                        --
+                      </div>
+                      <div className="text-[9px] text-text-muted">MMR</div>
                     </div>
-                    <div className="text-[9px] text-text-muted">MMR</div>
-                  </div>
+                  ) : (
+                    <>
+                      {entry.trend === "up" && (
+                        <ChevronUp size={12} className="text-green" />
+                      )}
+                      {entry.trend === "down" && (
+                        <ChevronDown size={12} className="text-red" />
+                      )}
+                      {entry.trend === "stable" && (
+                        <Minus size={10} className="text-text-muted" />
+                      )}
+                      <div className="text-right">
+                        <div className="text-sm font-extrabold text-text-primary">
+                          {formatMMR(entry.mmr)}
+                        </div>
+                        <div className="text-[9px] text-text-muted">MMR</div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             );

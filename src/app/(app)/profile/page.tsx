@@ -22,6 +22,7 @@ import {
   getRank,
   formatMMR,
   getEventWeight,
+  CALIBRATION_GAMES,
 } from "@/lib/ranking";
 import SessionCard from "@/components/SessionCard";
 import {
@@ -408,7 +409,7 @@ export default function ProfilePage() {
       {/* Rank Card */}
       {rank && (achievementStats?.totalGames ?? 0) > 0 && (
         <div
-          className={`glass mb-5 flex items-center gap-3 border p-3 ${rank.borderColor}`}
+          className={`glass mb-5 flex items-center gap-3 border p-3 ${(achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES ? rank.borderColor : "border-border/30"}`}
         >
           <div className="flex h-10 w-10 items-center justify-center">
             <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
@@ -419,7 +420,11 @@ export default function ProfilePage() {
                 stroke="currentColor"
                 strokeWidth={1.5}
                 strokeLinejoin="round"
-                className={rank.color}
+                className={
+                  (achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES
+                    ? rank.color
+                    : "text-text-muted"
+                }
               />
               <path
                 d="M12 7l3 5-3 5-3-5z"
@@ -427,16 +432,40 @@ export default function ProfilePage() {
                 fillOpacity={0.4}
                 stroke="currentColor"
                 strokeWidth={0.75}
-                className={rank.color}
+                className={
+                  (achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES
+                    ? rank.color
+                    : "text-text-muted"
+                }
               />
             </svg>
           </div>
           <div className="flex-1">
-            <span className={`text-sm font-extrabold ${rank.color}`}>
-              {rank.name}
-              {rank.division ? ` ${rank.division}` : ""}
-            </span>
-            <p className="text-[10px] text-text-muted">{formatMMR(mmr)} MMR</p>
+            {(achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES ? (
+              <>
+                <span className={`text-sm font-extrabold ${rank.color}`}>
+                  {rank.name}
+                  {rank.division ? ` ${rank.division}` : ""}
+                </span>
+                <p className="text-[10px] text-text-muted">
+                  {formatMMR(mmr)} MMR
+                </p>
+              </>
+            ) : (
+              <>
+                <span className="text-sm font-extrabold text-text-muted">
+                  Calibrating
+                </span>
+                <p className="text-[10px] text-text-muted">
+                  {CALIBRATION_GAMES - (achievementStats?.totalGames ?? 0)} more
+                  game
+                  {CALIBRATION_GAMES - (achievementStats?.totalGames ?? 0) !== 1
+                    ? "s"
+                    : ""}{" "}
+                  to rank
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -486,7 +515,11 @@ export default function ProfilePage() {
                 games={sessionGames}
                 avatarGradient={getAvatarGradient(displayName || "You")}
                 isOwn
-                mmrChange={sessionMmrChanges[session.id]}
+                mmrChange={
+                  (achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES
+                    ? sessionMmrChanges[session.id]
+                    : undefined
+                }
               />
             );
           })}
