@@ -64,24 +64,25 @@ function TrendChart({
 }) {
   if (values.length === 0) return null;
 
-  const padding = { top: 12, right: 16, bottom: 24, left: 48 };
-  const width = 320;
-  const height = 160;
+  const width = 360;
+  const height = 180;
+  const padding = { top: 20, right: 20, bottom: 28, left: 36 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
   const rawMin = Math.min(...values);
   const rawMax = Math.max(...values);
-  const yMin = Math.floor(Math.min(rawMin, avg) / 10) * 10;
-  const yMax = Math.ceil(Math.max(rawMax, avg) / 10) * 10;
+  // Add buffer so points don't sit on edges
+  const yMin = Math.floor(Math.min(rawMin, avg) / 10) * 10 - 5;
+  const yMax = Math.ceil(Math.max(rawMax, avg) / 10) * 10 + 5;
   const yRange = yMax - yMin || 1;
 
-  const yStep = Math.max(10, Math.ceil(yRange / 4 / 10) * 10);
+  // 3-4 ticks max to avoid clutter
+  const yStep = Math.max(10, Math.ceil(yRange / 3 / 10) * 10);
   const yTicks: number[] = [];
-  for (let v = yMin; v <= yMax; v += yStep) {
+  for (let v = Math.ceil(yMin / yStep) * yStep; v <= yMax; v += yStep) {
     yTicks.push(v);
   }
-  if (!yTicks.includes(yMax)) yTicks.push(yMax);
 
   const toX = (i: number) =>
     padding.left +
@@ -93,6 +94,7 @@ function TrendChart({
   const linePath = `M${points.join("L")}`;
   const avgY = toY(avg);
 
+  // X labels: first, middle, last
   const xLabels: { i: number; label: string }[] = [];
   if (values.length <= 6) {
     values.forEach((_, i) => xLabels.push({ i, label: `${i + 1}` }));
@@ -100,14 +102,17 @@ function TrendChart({
     xLabels.push({ i: 0, label: "1" });
     const mid = Math.floor(values.length / 2);
     xLabels.push({ i: mid, label: `${mid + 1}` });
-    xLabels.push({
-      i: values.length - 1,
-      label: `${values.length}`,
-    });
+    xLabels.push({ i: values.length - 1, label: `${values.length}` });
   }
+
+  // Only show value labels if points are spaced enough (>25px apart)
+  const showValueLabels =
+    values.length <= 10 &&
+    (values.length <= 1 || chartW / (values.length - 1) > 25);
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="w-full">
+      {/* Grid lines + Y labels */}
       {yTicks.map((v) => (
         <g key={v}>
           <line
@@ -119,7 +124,7 @@ function TrendChart({
             strokeWidth={0.5}
           />
           <text
-            x={padding.left - 4}
+            x={padding.left - 6}
             y={toY(v)}
             textAnchor="end"
             dominantBaseline="middle"
@@ -132,6 +137,7 @@ function TrendChart({
         </g>
       ))}
 
+      {/* Avg dashed line */}
       <line
         x1={padding.left}
         y1={avgY}
@@ -140,9 +146,20 @@ function TrendChart({
         stroke={color}
         strokeWidth={0.75}
         strokeDasharray="4 3"
-        opacity={0.5}
+        opacity={0.4}
       />
+      <text
+        x={padding.left + 2}
+        y={avgY - 5}
+        fontSize={7}
+        fill={color}
+        opacity={0.7}
+      >
+        avg {avg}
+        {suffix}
+      </text>
 
+      {/* Line */}
       <path
         d={linePath}
         fill="none"
@@ -152,6 +169,7 @@ function TrendChart({
         strokeLinecap="round"
       />
 
+      {/* Data points */}
       {values.map((s, i) => (
         <g key={i}>
           <circle
@@ -162,10 +180,10 @@ function TrendChart({
             stroke={s >= avg ? color : "#64748b"}
             strokeWidth={1}
           />
-          {values.length <= 10 && (
+          {showValueLabels && (
             <text
               x={toX(i)}
-              y={toY(s) - 7}
+              y={toY(s) - 8}
               textAnchor="middle"
               fontSize={7}
               fontWeight="bold"
@@ -178,11 +196,12 @@ function TrendChart({
         </g>
       ))}
 
+      {/* X labels */}
       {xLabels.map(({ i, label }) => (
         <text
           key={i}
           x={toX(i)}
-          y={height - 4}
+          y={height - 6}
           textAnchor="middle"
           fontSize={8}
           fill="#64748b"
@@ -190,17 +209,6 @@ function TrendChart({
           {label}
         </text>
       ))}
-
-      <text
-        x={width - padding.right}
-        y={avgY - 4}
-        textAnchor="end"
-        fontSize={7}
-        fill={color}
-      >
-        avg {avg}
-        {suffix}
-      </text>
     </svg>
   );
 }
