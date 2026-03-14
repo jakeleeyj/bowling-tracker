@@ -116,6 +116,7 @@ function LogPage() {
       setHasUnsaved={session.setHasUnsaved}
       setGames={session.setGames}
       discardSession={session.discardSession}
+      getGameTabScore={session.getGameTabScore}
     />
   );
 }

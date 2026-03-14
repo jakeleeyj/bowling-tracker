@@ -63,6 +63,7 @@ interface GameEntryProps {
   setHasUnsaved: (v: boolean) => void;
   setGames?: (games: GameData[]) => void;
   discardSession: () => void;
+  getGameTabScore: (index: number) => { score: number; inProgress: boolean };
 }
 
 export default function GameEntry(props: GameEntryProps) {
@@ -142,6 +143,7 @@ export default function GameEntry(props: GameEntryProps) {
           {Array.from({ length: gameCount }, (_, i) => {
             const isActive = i === currentGameIndex;
             const isDone = games[i] !== undefined;
+            const tab = props.getGameTabScore(i);
             return (
               <button
                 key={i}
@@ -151,13 +153,16 @@ export default function GameEntry(props: GameEntryProps) {
                     ? "bg-blue text-white"
                     : isDone
                       ? "bg-green/15 text-green"
-                      : "bg-surface-light text-text-muted"
+                      : tab.inProgress
+                        ? "bg-blue/15 text-blue"
+                        : "bg-surface-light text-text-muted"
                 }`}
               >
                 G{i + 1}
-                {isDone && !isActive && (
+                {!isActive && tab.score > 0 && (
                   <span className="ml-1 text-[10px]">
-                    {games[i].totalScore}
+                    {tab.score}
+                    {tab.inProgress && "*"}
                   </span>
                 )}
               </button>

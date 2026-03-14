@@ -61,12 +61,13 @@ export default async function DashboardPage() {
     sessionUserIds.length > 0
       ? await supabase
           .from("games")
-          .select("user_id, total_score, sessions(event_label)")
+          .select("id, user_id, total_score, sessions(event_label)")
           .in("user_id", sessionUserIds)
           .order("created_at", { ascending: false })
       : { data: null };
   const allGamesForRank = feedGamesData as
     | {
+        id: string;
         user_id: string;
         total_score: number;
         sessions: { event_label: string | null } | null;
@@ -120,20 +121,52 @@ export default async function DashboardPage() {
     else if (olderAvg - recentAvg > 5) trend = "down";
   }
 
-  // Compute per-session LP change for all users shown in the feed
+  // Compute per-session LP change using real LP calculation
   const sessionLpChange: Record<string, number> = {};
-  if (sessions) {
+  if (sessions && allGamesForRank) {
+    // Build per-user scores/weights from allGamesForRank
+    const userScoresMap: Record<
+      string,
+      { scores: number[]; weights: number[] }
+    > = {};
+    allGamesForRank.forEach((g) => {
+      if (!userScoresMap[g.user_id])
+        userScoresMap[g.user_id] = { scores: [], weights: [] };
+      userScoresMap[g.user_id].scores.push(g.total_score);
+      userScoresMap[g.user_id].weights.push(
+        getEventWeight(g.sessions?.event_label ?? null),
+      );
+    });
+
     for (const session of sessions) {
       const userId = session.user_id;
-      // Only show LP change for ranked users (past calibration)
       if ((userGameCounts[userId] ?? 0) < CALIBRATION_GAMES) continue;
 
-      const eventW = getEventWeight(session.event_label);
-      let gain = 0;
-      for (const game of session.games) {
-        gain += Math.round((game.total_score - 180) * eventW);
-      }
-      sessionLpChange[session.id] = gain;
+      const userData = userScoresMap[userId];
+      if (!userData) continue;
+
+      // LP with all games
+      const fullLp = calculateLP(userData.scores, userData.weights);
+
+      // LP without this session's games
+      const sessionGameIds = new Set(
+        session.games.map((g: { id: string }) => g.id),
+      );
+      const scoresWithout: number[] = [];
+      const weightsWithout: number[] = [];
+      // Games are newest-first; filter out this session's games
+      allGamesForRank.forEach((g) => {
+        if (g.user_id === userId && !sessionGameIds.has(g.id)) {
+          scoresWithout.push(g.total_score);
+          weightsWithout.push(getEventWeight(g.sessions?.event_label ?? null));
+        }
+      });
+      const lpWithout =
+        scoresWithout.length > 0
+          ? calculateLP(scoresWithout, weightsWithout)
+          : 0;
+
+      sessionLpChange[session.id] = fullLp - lpWithout;
     }
   }
 

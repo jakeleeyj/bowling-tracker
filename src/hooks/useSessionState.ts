@@ -166,7 +166,15 @@ export function useSessionState() {
       setEventLabel(data.eventLabel ?? "");
       setGameCount(data.gameCount ?? 4);
       setCurrentGameIndex(data.currentGameIndex ?? 0);
-      setGames(data.games ?? []);
+      // JSON.stringify turns undefined array slots to null — restore properly
+      const rawGames = data.games ?? [];
+      const restoredGames: GameData[] = [];
+      for (let i = 0; i < rawGames.length; i++) {
+        if (rawGames[i]) {
+          restoredGames[i] = rawGames[i];
+        }
+      }
+      setGames(restoredGames);
       setEntryMode(data.entryMode ?? "detailed");
       setQuickScore(data.quickScore ?? "");
       setFrames(data.frames ?? []);
@@ -1189,6 +1197,30 @@ export function useSessionState() {
   const showStrikeButton =
     isFreshRack && (currentRoll === 1 || currentFrame === 10);
 
+  // Tab info: score or in-progress indicator for each game
+  function getGameTabScore(index: number): {
+    score: number;
+    inProgress: boolean;
+  } {
+    if (games[index] !== undefined) {
+      return { score: games[index].totalScore, inProgress: false };
+    }
+    if (index === currentGameIndex && frames.length > 0) {
+      return { score: currentScore, inProgress: true };
+    }
+    const saved = editorStatesRef.current.get(index);
+    if (saved && saved.frames.length > 0) {
+      const savedScores = calculateFrameScores(
+        [...saved.frames].sort((a, b) => a.frameNumber - b.frameNumber),
+      );
+      return {
+        score: savedScores[savedScores.length - 1] ?? 0,
+        inProgress: true,
+      };
+    }
+    return { score: 0, inProgress: false };
+  }
+
   return {
     // Navigation
     router,
@@ -1278,6 +1310,9 @@ export function useSessionState() {
     availablePins,
     isFreshRack,
     showStrikeButton,
+
+    // Tab info
+    getGameTabScore,
 
     // Unsaved guard
     setHasUnsaved,

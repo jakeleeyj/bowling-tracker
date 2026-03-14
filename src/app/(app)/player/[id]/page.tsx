@@ -128,6 +128,16 @@ export default async function PlayerPage({
         </div>
         <div className="glass flex-1 p-3 text-center">
           <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            LP
+          </div>
+          <div
+            className={`text-2xl font-extrabold ${isCalibrating ? "text-text-muted" : rank.color}`}
+          >
+            {isCalibrating ? "--" : formatLP(lp)}
+          </div>
+        </div>
+        <div className="glass flex-1 p-3 text-center">
+          <div className="text-[10px] uppercase tracking-wide text-text-muted">
             Games
           </div>
           <div className="text-2xl font-extrabold">{totalGames}</div>
