@@ -217,7 +217,17 @@ export default function ProfilePage() {
   }, [supabase]);
 
   async function handleSave() {
+    const trimmed = displayName.trim();
+    if (!trimmed) {
+      toast("Name can't be empty", "error");
+      return;
+    }
+    if (trimmed.length > 20) {
+      toast("Name must be 20 characters or less", "error");
+      return;
+    }
     setSaving(true);
+    setDisplayName(trimmed);
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -226,7 +236,7 @@ export default function ProfilePage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any)
       .from("profiles")
-      .update({ display_name: displayName })
+      .update({ display_name: trimmed })
       .eq("id", user.id);
 
     setSaving(false);
@@ -312,6 +322,7 @@ export default function ProfilePage() {
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
+                  maxLength={20}
                   className="w-full rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none focus:border-blue"
                 />
               </div>

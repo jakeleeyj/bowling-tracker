@@ -1,7 +1,7 @@
 export const revalidate = 300;
 
 import { createClient } from "@/lib/supabase-server";
-import type { GameRow, FrameRow } from "@/lib/queries";
+import type { FrameRow } from "@/lib/queries";
 import {
   Trophy,
   Zap,
@@ -11,83 +11,17 @@ import {
   Crown,
   Award,
 } from "lucide-react";
+import { ACHIEVEMENTS, computeAchievementStats } from "@/lib/achievements";
 
-interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  color: string;
-  check: (stats: Stats) => boolean;
-}
-
-interface Stats {
-  highGame: number;
-  totalGames: number;
-  cleanGames: number;
-  maxConsecutiveStrikes: number;
-  maxConsecutiveSpares: number;
-  has200Game: boolean;
-}
-
-const ACHIEVEMENTS: Achievement[] = [
-  {
-    id: "first-200",
-    name: "200 Club",
-    description: "Score 200+ in a single game",
-    icon: <Trophy size={24} />,
-    color: "text-gold",
-    check: (s) => s.has200Game,
-  },
-  {
-    id: "turkey",
-    name: "Turkey",
-    description: "3 strikes in a row",
-    icon: <Zap size={24} />,
-    color: "text-green",
-    check: (s) => s.maxConsecutiveStrikes >= 3,
-  },
-  {
-    id: "clean-game",
-    name: "Clean Game",
-    description: "No open frames in a game",
-    icon: <Sparkles size={24} />,
-    color: "text-blue",
-    check: (s) => s.cleanGames > 0,
-  },
-  {
-    id: "six-pack",
-    name: "Six Pack",
-    description: "6 strikes in a row",
-    icon: <Flame size={24} />,
-    color: "text-red",
-    check: (s) => s.maxConsecutiveStrikes >= 6,
-  },
-  {
-    id: "perfect",
-    name: "Perfect Game",
-    description: "Score a 300",
-    icon: <Crown size={24} />,
-    color: "text-gold",
-    check: (s) => s.highGame === 300,
-  },
-  {
-    id: "spare-streak",
-    name: "Spare Master",
-    description: "Pick up 5+ consecutive spares",
-    icon: <Target size={24} />,
-    color: "text-purple",
-    check: (s) => s.maxConsecutiveSpares >= 5,
-  },
-  {
-    id: "century",
-    name: "Century Club",
-    description: "Log 100+ games",
-    icon: <Award size={24} />,
-    color: "text-pink",
-    check: (s) => s.totalGames >= 100,
-  },
-];
+const ACHIEVEMENT_ICONS: Record<string, React.ReactNode> = {
+  Trophy: <Trophy size={24} />,
+  Zap: <Zap size={24} />,
+  Sparkles: <Sparkles size={24} />,
+  Flame: <Flame size={24} />,
+  Target: <Target size={24} />,
+  Crown: <Crown size={24} />,
+  Award: <Award size={24} />,
+};
 
 export default async function AchievementsPage() {
   const supabase = await createClient();
@@ -97,68 +31,39 @@ export default async function AchievementsPage() {
 
   const { data: games } = (await supabase
     .from("games")
-    .select("*")
-    .eq("user_id", user?.id ?? "")) as { data: GameRow[] | null };
+    .select("id, total_score, is_clean, strike_count, spare_count, session_id")
+    .eq("user_id", user?.id ?? "")
+    .order("created_at", { ascending: false })) as {
+    data:
+      | {
+          id: string;
+          total_score: number;
+          is_clean: boolean;
+          strike_count: number;
+          spare_count: number;
+          session_id: string;
+        }[]
+      | null;
+  };
 
   const gameIds = games?.map((g) => g.id) ?? [];
   const { data: allFrames } = (await supabase
     .from("frames")
-    .select("*")
+    .select("game_id, is_strike, is_spare, spare_converted, pins_remaining")
     .in("game_id", gameIds.length > 0 ? gameIds : ["none"])
-    .order("frame_number", { ascending: true })) as { data: FrameRow[] | null };
-
-  // Calculate stats
-  const totalGames = games?.length ?? 0;
-  const highGame =
-    totalGames > 0 ? Math.max(...(games?.map((g) => g.total_score) ?? [0])) : 0;
-  const cleanGames = games?.filter((g) => g.is_clean).length ?? 0;
-  const has200Game = games?.some((g) => g.total_score >= 200) ?? false;
-
-  // Consecutive strikes
-  let maxConsecutiveStrikes = 0;
-  let currentStrikes = 0;
-  // Group frames by game
-  const framesByGame: Record<string, typeof allFrames> = {};
-  allFrames?.forEach((f) => {
-    if (!framesByGame[f.game_id]) framesByGame[f.game_id] = [];
-    framesByGame[f.game_id]!.push(f);
-  });
-
-  for (const gFrames of Object.values(framesByGame)) {
-    currentStrikes = 0;
-    for (const f of gFrames ?? []) {
-      if (f.is_strike) {
-        currentStrikes++;
-        maxConsecutiveStrikes = Math.max(maxConsecutiveStrikes, currentStrikes);
-      } else {
-        currentStrikes = 0;
-      }
-    }
-  }
-
-  // Consecutive spares
-  let maxConsecutiveSpares = 0;
-  let currentSpares = 0;
-  for (const gFrames of Object.values(framesByGame)) {
-    currentSpares = 0;
-    for (const f of gFrames ?? []) {
-      if (f.spare_converted) {
-        currentSpares++;
-        maxConsecutiveSpares = Math.max(maxConsecutiveSpares, currentSpares);
-      } else if (!f.is_strike) {
-        currentSpares = 0;
-      }
-    }
-  }
-
-  const stats: Stats = {
-    highGame,
-    totalGames,
-    cleanGames,
-    maxConsecutiveStrikes,
-    maxConsecutiveSpares,
-    has200Game,
+    .order("frame_number", { ascending: true })) as {
+    data:
+      | {
+          game_id: string;
+          is_strike: boolean;
+          is_spare: boolean;
+          spare_converted: boolean;
+          pins_remaining: number[] | null;
+        }[]
+      | null;
   };
+
+  const stats = computeAchievementStats(games ?? [], allFrames ?? [], gameIds);
 
   const earned = ACHIEVEMENTS.filter((a) => a.check(stats));
   const locked = ACHIEVEMENTS.filter((a) => !a.check(stats));
@@ -170,7 +75,7 @@ export default async function AchievementsPage() {
         {earned.length}/{ACHIEVEMENTS.length} unlocked
       </p>
 
-      {totalGames === 0 && (
+      {stats.totalGames === 0 && (
         <div className="glass mb-6 p-4 text-center">
           <p className="text-sm text-text-muted">
             Log your first game to start earning achievements!
@@ -186,7 +91,7 @@ export default async function AchievementsPage() {
           <div className="flex flex-col gap-2">
             {earned.map((a) => (
               <div key={a.id} className="glass flex items-center gap-4 p-4">
-                <div className={a.color}>{a.icon}</div>
+                <div className={a.color}>{ACHIEVEMENT_ICONS[a.iconName]}</div>
                 <div>
                   <p className="text-sm font-bold">{a.name}</p>
                   <p className="text-[11px] text-text-muted">{a.description}</p>
@@ -197,23 +102,29 @@ export default async function AchievementsPage() {
         </div>
       )}
 
-      <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-secondary">
-        Locked
-      </h2>
-      <div className="flex flex-col gap-2">
-        {locked.map((a) => (
-          <div
-            key={a.id}
-            className="glass flex items-center gap-4 p-4 opacity-40"
-          >
-            <div className="text-text-muted">{a.icon}</div>
-            <div>
-              <p className="text-sm font-bold">{a.name}</p>
-              <p className="text-[11px] text-text-muted">{a.description}</p>
-            </div>
+      {locked.length > 0 && (
+        <>
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-secondary">
+            Locked
+          </h2>
+          <div className="flex flex-col gap-2">
+            {locked.map((a) => (
+              <div
+                key={a.id}
+                className="glass flex items-center gap-4 p-4 opacity-40"
+              >
+                <div className="text-text-muted">
+                  {ACHIEVEMENT_ICONS[a.iconName]}
+                </div>
+                <div>
+                  <p className="text-sm font-bold">{a.name}</p>
+                  <p className="text-[11px] text-text-muted">{a.description}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
     </div>
   );
 }
