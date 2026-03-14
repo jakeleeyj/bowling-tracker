@@ -392,6 +392,7 @@ function SessionStats({
                 <LeaveGroup
                   label="Single Pin"
                   color="text-green"
+                  dotColor="bg-green"
                   leaves={singlePinLeaves}
                 />
               )}
@@ -399,6 +400,7 @@ function SessionStats({
                 <LeaveGroup
                   label="Multi Pin"
                   color="text-gold"
+                  dotColor="bg-gold"
                   leaves={multiPinLeaves}
                 />
               )}
@@ -406,6 +408,7 @@ function SessionStats({
                 <LeaveGroup
                   label="Splits"
                   color="text-red"
+                  dotColor="bg-red"
                   leaves={splitLeaves}
                 />
               )}
@@ -417,13 +420,36 @@ function SessionStats({
   );
 }
 
+const LEAVE_PINS = [[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]] as const;
+
+function MiniLeavePin({ pins, color }: { pins: number[]; color: string }) {
+  return (
+    <div className="flex flex-col items-center gap-[1px]">
+      {LEAVE_PINS.map((row, ri) => (
+        <div key={ri} className="flex gap-[1px]">
+          {row.map((pin) => (
+            <div
+              key={pin}
+              className={`h-[3px] w-[3px] rounded-full ${
+                pins.includes(pin) ? color : "bg-white/8"
+              }`}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function LeaveGroup({
   label,
   color,
+  dotColor,
   leaves,
 }: {
   label: string;
   color: string;
+  dotColor: string;
   leaves: { pins: number[]; total: number; converted: number }[];
 }) {
   return (
@@ -437,16 +463,14 @@ function LeaveGroup({
               key={l.pins.join("-")}
               className="flex items-center gap-1 rounded bg-white/[0.04] px-1.5 py-0.5"
             >
+              <MiniLeavePin pins={l.pins} color={dotColor} />
               <span className="text-[10px] font-semibold">
                 {l.pins.join("-")}
-              </span>
-              <span className="text-[9px] text-text-muted">
-                {l.converted}/{l.total}
               </span>
               <span
                 className={`text-[9px] font-semibold ${rate >= 50 ? "text-green" : "text-red"}`}
               >
-                {rate}%
+                {l.converted}/{l.total}
               </span>
             </div>
           );

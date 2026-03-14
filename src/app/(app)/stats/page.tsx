@@ -512,15 +512,28 @@ export default function StatsPage() {
     if (f.spare_converted) leaveLog[key].converted++;
   }
 
+  // Sort by most missed (attempts - converted, descending)
   const singlePinLeaves = Object.values(leaveLog)
     .filter((l) => l.category === "single")
-    .sort((a, b) => b.attempts - a.attempts);
+    .sort((a, b) => b.attempts - b.converted - (a.attempts - a.converted));
   const multiPinLeaves = Object.values(leaveLog)
     .filter((l) => l.category === "multi")
-    .sort((a, b) => b.attempts - a.attempts);
+    .sort((a, b) => b.attempts - b.converted - (a.attempts - a.converted));
   const splitLeaves = Object.values(leaveLog)
     .filter((l) => l.category === "split")
-    .sort((a, b) => b.attempts - a.attempts);
+    .sort((a, b) => b.attempts - b.converted - (a.attempts - a.converted));
+
+  // Practice targets: top 3 most missed leaves (at least 2 attempts)
+  const allLeaves = Object.values(leaveLog)
+    .filter((l) => l.attempts >= 2)
+    .sort((a, b) => {
+      const aMissed = a.attempts - a.converted;
+      const bMissed = b.attempts - b.converted;
+      if (bMissed !== aMissed) return bMissed - aMissed;
+      // Tie-break by conversion rate (lower is worse)
+      return a.converted / a.attempts - b.converted / b.attempts;
+    });
+  const practiceTargets = allLeaves.slice(0, 3);
 
   const filterLabels: Record<Filter, string> = {
     last10: "Last 10",
@@ -700,6 +713,29 @@ export default function StatsPage() {
       ) : (
         /* SPARES TAB */
         <>
+          {/* Practice These */}
+          {practiceTargets.length > 0 && (
+            <div className="glass mb-4 border border-gold/20 p-4">
+              <h3 className="mb-2 text-xs font-bold text-gold">
+                Practice These
+              </h3>
+              <p className="mb-3 text-[10px] text-text-muted">
+                Your most missed leaves — focus here to improve
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {practiceTargets.map((l) => (
+                  <LeaveItem
+                    key={l.pins.join("-")}
+                    pins={l.pins}
+                    attempts={l.attempts}
+                    converted={l.converted}
+                    isSplitLeave={l.category === "split"}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Spare Conversion Trend */}
           {spareConvTrend.length > 1 && (
             <div className="glass mb-4 p-4">
