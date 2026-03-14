@@ -290,7 +290,19 @@ function SessionStats({
 }) {
   // Only show if we have detailed frame data
   const allFrames = games.flatMap((g) => g.frames ?? []);
-  if (allFrames.length === 0) return null;
+  const hasDetailedData = allFrames.length > 0;
+
+  if (!hasDetailedData) {
+    return (
+      <div className="mt-2">
+        <div className="rounded-lg bg-surface-light/50 py-3 text-center">
+          <p className="text-[10px] text-text-muted">
+            Log with detailed entry to see stats
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const totalFrames = allFrames.length;
   const strikes = allFrames.filter((f) => f.is_strike).length;

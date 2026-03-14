@@ -173,7 +173,15 @@ function ResultsScreen({
 
   const [showRankChange, setShowRankChange] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [skipped, setSkipped] = useState(false);
   const mmrDiff = data.newMmr - data.oldMmr;
+
+  function skipAnimations() {
+    if (skipped) return;
+    setSkipped(true);
+    setShowRankChange(true);
+    setShowAchievements(true);
+  }
   const displayRank =
     data.rankChanged && !showRankChange ? data.oldRank : data.newRank;
   const progress = getDivisionProgress(data.newMmr);
@@ -194,7 +202,10 @@ function ResultsScreen({
   }, [data.unlockedAchievements.length, data.rankChanged, wasCalibrating]);
 
   return (
-    <div className="flex min-h-[70vh] flex-col items-center justify-center text-center">
+    <div
+      className="flex min-h-[70vh] flex-col items-center justify-center text-center"
+      onClick={skipAnimations}
+    >
       {/* Rank emblem — scales in */}
       <div className="animate-results-emblem mb-4">
         <RankEmblem
@@ -372,9 +383,17 @@ function ResultsScreen({
         ))}
       </div>
 
+      {/* Tap to skip hint */}
+      {!skipped && (
+        <p className="mb-4 animate-pulse text-[10px] text-text-muted">
+          Tap to skip
+        </p>
+      )}
+
       {/* Continue button */}
       <button
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           window.location.href = "/dashboard";
         }}
         className="w-full max-w-[300px] rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 active:scale-[0.97]"
@@ -389,8 +408,51 @@ export default function LogPageWrapper() {
   return (
     <Suspense
       fallback={
-        <div className="py-20 text-center text-sm text-text-muted">
-          Loading...
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="h-8 w-8 animate-spin">
+            <svg viewBox="0 0 32 32" fill="none">
+              <circle
+                cx="16"
+                cy="16"
+                r="14"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeOpacity="0.15"
+              />
+              <circle
+                cx="16"
+                cy="16"
+                r="14"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeDasharray="60 28"
+                strokeLinecap="round"
+                className="text-blue"
+              />
+              <circle
+                cx="13"
+                cy="11"
+                r="1.5"
+                fill="currentColor"
+                fillOpacity="0.3"
+              />
+              <circle
+                cx="18"
+                cy="11"
+                r="1.5"
+                fill="currentColor"
+                fillOpacity="0.3"
+              />
+              <circle
+                cx="15.5"
+                cy="15"
+                r="1.5"
+                fill="currentColor"
+                fillOpacity="0.3"
+              />
+            </svg>
+          </div>
+          <p className="mt-3 text-sm text-text-muted">Loading...</p>
         </div>
       }
     >

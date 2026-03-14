@@ -1,6 +1,7 @@
 export const revalidate = 300;
 
 import { createClient } from "@/lib/supabase-server";
+import Link from "next/link";
 import { Swords, ChevronUp, ChevronDown, Minus } from "lucide-react";
 import type { ProfileRow, GameRow } from "@/lib/queries";
 import Avatar from "@/components/Avatar";
@@ -273,10 +274,15 @@ export default async function LeaderboardPage() {
             if (!entry) return null;
             const position = index + 1;
 
+            const href = entry.isCurrentUser
+              ? "/profile"
+              : `/player/${entry.id}`;
+
             return (
-              <div
+              <Link
                 key={entry.id}
-                className={`glass flex items-center gap-2.5 p-2.5 ${
+                href={href}
+                className={`glass flex items-center gap-2.5 p-2.5 active:bg-white/[0.03] ${
                   entry.isCurrentUser && !entry.isCalibrating
                     ? `border ${entry.rank.borderColor}`
                     : ""
@@ -366,7 +372,7 @@ export default async function LeaderboardPage() {
                     </>
                   )}
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

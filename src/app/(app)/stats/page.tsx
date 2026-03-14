@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { isSplit } from "@/lib/bowling";
 import ErrorCard from "@/components/ErrorCard";
+import { BowlingSpinner } from "@/components/Skeleton";
 
 interface GameData {
   id: string;
@@ -317,15 +318,10 @@ export default function StatsPage() {
     return (
       <div>
         <h1 className="mb-6 text-xl font-extrabold">My Stats</h1>
-        {/* Score trend skeleton */}
-        <div className="glass mb-4 h-52 animate-pulse" />
-        {/* Stats grid skeleton */}
-        <div className="mb-4 grid grid-cols-2 gap-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="glass h-20 animate-pulse" />
-          ))}
+        <div className="flex flex-col items-center justify-center py-16">
+          <BowlingSpinner />
+          <p className="mt-3 text-sm text-text-muted">Loading stats...</p>
         </div>
-        <div className="glass h-32 animate-pulse" />
       </div>
     );
   }

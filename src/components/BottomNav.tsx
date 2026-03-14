@@ -6,8 +6,8 @@ import { useUnsavedGuard } from "@/components/UnsavedGuard";
 
 const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/log", label: "Log", icon: PlusCircle },
   { href: "/stats", label: "Stats", icon: BarChart3 },
+  { href: "/log", label: "Log", icon: PlusCircle, isCenter: true },
   { href: "/leaderboard", label: "Ranked", icon: Swords },
   { href: "/profile", label: "Me", icon: User },
 ];
@@ -35,18 +35,24 @@ export default function BottomNav() {
               className="group flex flex-1 flex-col items-center gap-0.5 py-2"
             >
               <div
-                className={`flex h-8 w-12 items-center justify-center rounded-full transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue/15 scale-100"
-                    : "scale-90 active:scale-95 active:bg-white/5"
+                className={`flex items-center justify-center rounded-full transition-all duration-200 ${
+                  item.isCenter
+                    ? "h-10 w-10 -mt-3 bg-blue shadow-lg shadow-blue/30"
+                    : isActive
+                      ? "h-8 w-12 bg-blue/15 scale-100"
+                      : "h-8 w-12 scale-90 active:scale-95 active:bg-white/5"
                 }`}
               >
                 <item.icon
-                  size={20}
+                  size={item.isCenter ? 22 : 20}
                   className={`transition-colors duration-200 ${
-                    isActive ? "text-blue" : "text-text-muted"
+                    item.isCenter
+                      ? "text-white"
+                      : isActive
+                        ? "text-blue"
+                        : "text-text-muted"
                   }`}
-                  strokeWidth={isActive ? 2.5 : 1.8}
+                  strokeWidth={item.isCenter ? 2.5 : isActive ? 2.5 : 1.8}
                 />
               </div>
               <span
