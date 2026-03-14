@@ -396,7 +396,7 @@ function ResultsScreen({
           e.stopPropagation();
           window.location.href = "/dashboard";
         }}
-        className="w-full max-w-[300px] rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 active:scale-[0.97]"
+        className="w-full max-w-[300px] rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 active:scale-[0.97]"
       >
         Continue
       </button>
@@ -1452,7 +1452,7 @@ function LogPage() {
 
           <button
             onClick={startSession}
-            className="mt-4 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+            className="mt-4 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
           >
             Start Bowling
           </button>
@@ -1526,7 +1526,7 @@ function LogPage() {
         <button
           onClick={saveSession}
           disabled={saving}
-          className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold shadow-lg shadow-green/25 disabled:opacity-50"
+          className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save Session"}
         </button>
@@ -1671,7 +1671,7 @@ function LogPage() {
             <button
               onClick={updateExistingGame}
               disabled={saving}
-              className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+              className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save Changes"}
             </button>
@@ -1685,7 +1685,7 @@ function LogPage() {
                 return (
                   <button
                     onClick={() => switchToGame(nextIncomplete)}
-                    className="w-full rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+                    className="w-full rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
                   >
                     Next Game (G{nextIncomplete + 1})
                   </button>
@@ -1696,7 +1696,7 @@ function LogPage() {
                   <button
                     onClick={saveSession}
                     disabled={saving}
-                    className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+                    className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
                   >
                     {saving ? "Saving..." : "Save Session"}
                   </button>
@@ -1759,7 +1759,7 @@ function LogPage() {
                   parseInt(quickScore) < 0 ||
                   parseInt(quickScore) > 300
                 }
-                className="rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold shadow-lg shadow-blue/25 disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 disabled:opacity-50"
               >
                 <Check size={18} className="mr-2 inline" />
                 Done
@@ -1934,7 +1934,7 @@ function LogPage() {
                       updateExistingGame();
                     }}
                     disabled={saving}
-                    className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+                    className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
                   >
                     {saving ? "Saving..." : "Save Changes"}
                   </button>

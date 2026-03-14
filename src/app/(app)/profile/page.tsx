@@ -324,7 +324,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold shadow-lg shadow-blue/25 active:scale-[0.97] disabled:opacity-50"
+                className="rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 active:scale-[0.97] disabled:opacity-50"
               >
                 {saved ? "Saved!" : saving ? "Saving..." : "Save Changes"}
               </button>
