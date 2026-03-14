@@ -181,7 +181,7 @@ function MicroPinDiagram({
                 color = "bg-gold";
               } else if (stillStanding !== null) {
                 // Have roll 2 data: still standing vs knocked on roll 2
-                color = stillStanding ? "bg-blue" : "bg-white/25";
+                color = stillStanding ? "bg-blue" : "bg-blue/30";
               } else {
                 // No roll 2 data (old games): dim
                 color = "bg-white/30";

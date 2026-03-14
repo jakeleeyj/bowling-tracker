@@ -1127,6 +1127,7 @@ export function useSessionState() {
         is_strike: f.isStrike,
         is_spare: f.isSpare,
         pins_remaining: f.pinsRemaining,
+        pins_remaining_roll2: f.pinsRemainingRoll2,
         spare_converted: f.spareConverted,
         frame_score: frameScores[fi] ?? 0,
       }));
