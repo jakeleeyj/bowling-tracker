@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { isSplit } from "@/lib/bowling";
+import ErrorCard from "@/components/ErrorCard";
 
 interface GameData {
   id: string;
@@ -262,35 +263,41 @@ export default function StatsPage() {
   const [allGames, setAllGames] = useState<GameData[]>([]);
   const [allFrames, setAllFrames] = useState<FrameData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [filter, setFilter] = useState<Filter>("last10");
   const [tab, setTab] = useState<Tab>("overview");
 
   useEffect(() => {
     async function load() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
 
-      const { data: games } = (await supabase
-        .from("games")
-        .select("*, sessions(session_date)")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: true })) as {
-        data: GameData[] | null;
-      };
+        const { data: games } = (await supabase
+          .from("games")
+          .select("*, sessions(session_date)")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: true })) as {
+          data: GameData[] | null;
+        };
 
-      const gameIds = games?.map((g) => g.id) ?? [];
-      const { data: frames } = (await supabase
-        .from("frames")
-        .select("*")
-        .in("game_id", gameIds.length > 0 ? gameIds : ["none"])) as {
-        data: FrameData[] | null;
-      };
+        const gameIds = games?.map((g) => g.id) ?? [];
+        const { data: frames } = (await supabase
+          .from("frames")
+          .select("*")
+          .in("game_id", gameIds.length > 0 ? gameIds : ["none"])) as {
+          data: FrameData[] | null;
+        };
 
-      setAllGames(games ?? []);
-      setAllFrames(frames ?? []);
-      setLoading(false);
+        setAllGames(games ?? []);
+        setAllFrames(frames ?? []);
+      } catch {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [supabase]);
@@ -299,9 +306,27 @@ export default function StatsPage() {
     return (
       <div>
         <h1 className="mb-6 text-xl font-extrabold">My Stats</h1>
-        <div className="glass p-8 text-center">
-          <p className="text-sm text-text-muted">Loading...</p>
+        {/* Score trend skeleton */}
+        <div className="glass mb-4 h-52 animate-pulse" />
+        {/* Stats grid skeleton */}
+        <div className="mb-4 grid grid-cols-2 gap-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="glass h-20 animate-pulse" />
+          ))}
         </div>
+        <div className="glass h-32 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <h1 className="mb-6 text-xl font-extrabold">My Stats</h1>
+        <ErrorCard
+          message="Failed to load stats"
+          onRetry={() => window.location.reload()}
+        />
       </div>
     );
   }

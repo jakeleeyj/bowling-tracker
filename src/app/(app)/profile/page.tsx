@@ -17,6 +17,7 @@ import {
   Award,
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
+import ErrorCard from "@/components/ErrorCard";
 import {
   calculateMMR,
   getRank,
@@ -25,6 +26,7 @@ import {
   CALIBRATION_GAMES,
 } from "@/lib/ranking";
 import SessionCard from "@/components/SessionCard";
+import NotificationToggle from "@/components/NotificationToggle";
 import {
   ACHIEVEMENTS,
   computeAchievementStats,
@@ -108,102 +110,112 @@ export default function ProfilePage() {
   const [sessionMmrChanges, setSessionMmrChanges] = useState<
     Record<string, number>
   >({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     async function load() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
 
-      setEmail(user.email ?? "");
-      const { data: profile } = (await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("id", user.id)
-        .single()) as { data: { display_name: string } | null };
+        setEmail(user.email ?? "");
+        const { data: profile } = (await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", user.id)
+          .single()) as { data: { display_name: string } | null };
 
-      if (profile) setDisplayName(profile.display_name);
+        if (profile) setDisplayName(profile.display_name);
 
-      // Fetch history with full frame data for SessionCard
-      const { data: sessionData } = (await supabase
-        .from("sessions")
-        .select("*, games(*, frames(*))")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })) as {
-        data: HistorySession[] | null;
-      };
-      if (sessionData) setSessions(sessionData);
+        // Fetch history with full frame data for SessionCard
+        const { data: sessionData } = (await supabase
+          .from("sessions")
+          .select("*, games(*, frames(*))")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })) as {
+          data: HistorySession[] | null;
+        };
+        if (sessionData) setSessions(sessionData);
 
-      // Fetch achievement stats + MMR
-      const { data: games } = (await supabase
-        .from("games")
-        .select(
-          "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
-        )
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })) as {
-        data:
-          | {
-              id: string;
-              total_score: number;
-              is_clean: boolean;
-              strike_count: number;
-              spare_count: number;
-              session_id: string;
-              sessions: { event_label: string | null } | null;
-            }[]
-          | null;
-      };
+        // Fetch achievement stats + MMR
+        const { data: games } = (await supabase
+          .from("games")
+          .select(
+            "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
+          )
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })) as {
+          data:
+            | {
+                id: string;
+                total_score: number;
+                is_clean: boolean;
+                strike_count: number;
+                spare_count: number;
+                session_id: string;
+                sessions: { event_label: string | null } | null;
+              }[]
+            | null;
+        };
 
-      // Calculate MMR (games already ordered newest-first)
-      const scores = games?.map((g) => g.total_score) ?? [];
-      const weights =
-        games?.map((g) => getEventWeight(g.sessions?.event_label ?? null)) ??
-        [];
-      const userMmr = calculateMMR(scores, weights);
-      setMmr(userMmr);
-      setRank(getRank(userMmr));
+        // Calculate MMR (games already ordered newest-first)
+        const scores = games?.map((g) => g.total_score) ?? [];
+        const weights =
+          games?.map((g) => getEventWeight(g.sessions?.event_label ?? null)) ??
+          [];
+        const userMmr = calculateMMR(scores, weights);
+        setMmr(userMmr);
+        setRank(getRank(userMmr));
 
-      // Per-session MMR change
-      const mmrMap: Record<string, number> = {};
-      if (games && games.length > 0) {
-        const sessionGameIndices: Record<string, number[]> = {};
-        games.forEach((g, i) => {
-          if (!sessionGameIndices[g.session_id])
-            sessionGameIndices[g.session_id] = [];
-          sessionGameIndices[g.session_id].push(i);
-        });
-        for (const [sid, indices] of Object.entries(sessionGameIndices)) {
-          const scoresWithout = scores.filter((_, i) => !indices.includes(i));
-          const weightsWithout = weights.filter((_, i) => !indices.includes(i));
-          const mmrWithout =
-            scoresWithout.length > 0
-              ? calculateMMR(scoresWithout, weightsWithout)
-              : 0;
-          mmrMap[sid] = userMmr - mmrWithout;
+        // Per-session MMR change
+        const mmrMap: Record<string, number> = {};
+        if (games && games.length > 0) {
+          const sessionGameIndices: Record<string, number[]> = {};
+          games.forEach((g, i) => {
+            if (!sessionGameIndices[g.session_id])
+              sessionGameIndices[g.session_id] = [];
+            sessionGameIndices[g.session_id].push(i);
+          });
+          for (const [sid, indices] of Object.entries(sessionGameIndices)) {
+            const scoresWithout = scores.filter((_, i) => !indices.includes(i));
+            const weightsWithout = weights.filter(
+              (_, i) => !indices.includes(i),
+            );
+            const mmrWithout =
+              scoresWithout.length > 0
+                ? calculateMMR(scoresWithout, weightsWithout)
+                : 0;
+            mmrMap[sid] = userMmr - mmrWithout;
+          }
         }
+        setSessionMmrChanges(mmrMap);
+
+        const gameIds = games?.map((g) => g.id) ?? [];
+        const { data: frames } = (await supabase
+          .from("frames")
+          .select("game_id, is_strike, spare_converted")
+          .in("game_id", gameIds.length > 0 ? gameIds : ["none"])
+          .order("frame_number", { ascending: true })) as {
+          data:
+            | {
+                game_id: string;
+                is_strike: boolean;
+                spare_converted: boolean;
+              }[]
+            | null;
+        };
+
+        setAchievementStats(
+          computeAchievementStats(games ?? [], frames ?? [], gameIds),
+        );
+      } catch {
+        setError(true);
+      } finally {
+        setLoading(false);
       }
-      setSessionMmrChanges(mmrMap);
-
-      const gameIds = games?.map((g) => g.id) ?? [];
-      const { data: frames } = (await supabase
-        .from("frames")
-        .select("game_id, is_strike, spare_converted")
-        .in("game_id", gameIds.length > 0 ? gameIds : ["none"])
-        .order("frame_number", { ascending: true })) as {
-        data:
-          | {
-              game_id: string;
-              is_strike: boolean;
-              spare_converted: boolean;
-            }[]
-          | null;
-      };
-
-      setAchievementStats(
-        computeAchievementStats(games ?? [], frames ?? [], gameIds),
-      );
     }
     load();
   }, [supabase]);
@@ -239,6 +251,43 @@ export default function ProfilePage() {
   const locked = achievementStats
     ? ACHIEVEMENTS.filter((a) => !a.check(achievementStats))
     : [];
+
+  if (loading) {
+    return (
+      <div>
+        <div className="mb-5 flex items-center justify-between">
+          <div className="h-6 w-12 animate-pulse rounded-lg bg-white/[0.06]" />
+          <div className="h-9 w-9 animate-pulse rounded-full bg-white/[0.06]" />
+        </div>
+        <div className="glass mb-5 h-16 animate-pulse" />
+        <div className="mb-5 flex flex-wrap gap-1.5">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={i}
+              className="h-7 w-24 animate-pulse rounded-full bg-white/[0.06]"
+            />
+          ))}
+        </div>
+        <div className="flex flex-col gap-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="glass h-24 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <h1 className="mb-5 text-xl font-extrabold">Me</h1>
+        <ErrorCard
+          message="Failed to load profile"
+          onRetry={() => window.location.reload()}
+        />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -345,6 +394,8 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+
+          <NotificationToggle />
 
           <button
             onClick={handleLogout}

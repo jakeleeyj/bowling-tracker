@@ -1158,6 +1158,17 @@ function LogPage() {
       newAchievementStats,
     );
 
+    // Send push notification to other users (fire and forget)
+    fetch("/api/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: "Spare Me?",
+        body: `Someone just bowled! Avg: ${sessionAvg} across ${games.length} game${games.length !== 1 ? "s" : ""}`,
+        url: "/dashboard",
+      }),
+    }).catch(() => {});
+
     setSaving(false);
     setHasUnsaved(false);
     const gamesBefore = oldScores.length;
