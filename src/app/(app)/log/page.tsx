@@ -471,6 +471,7 @@ function LogPage() {
   const [step, setStep] = useState<Step>("setup");
   const [venue, setVenue] = useState("");
   const [eventLabel, setEventLabel] = useState("");
+  const [pastVenues, setPastVenues] = useState<string[]>([]);
   const [gameCount, setGameCount] = useState(4);
 
   const [currentGameIndex, setCurrentGameIndex] = useState(0);
@@ -585,6 +586,32 @@ function LogPage() {
     }
     loadGameForEdit();
   }, [searchParams, supabase]);
+
+  // Fetch past venues for quick selection
+  useEffect(() => {
+    async function loadVenues() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any)
+        .from("sessions")
+        .select("venue")
+        .eq("user_id", user.id)
+        .not("venue", "is", null)
+        .order("created_at", { ascending: false });
+      if (data) {
+        const unique = [
+          ...new Set(
+            (data as { venue: string }[]).map((d) => d.venue).filter(Boolean),
+          ),
+        ];
+        setPastVenues(unique);
+      }
+    }
+    loadVenues();
+  }, [supabase]);
 
   function saveHistory() {
     setHistory((prev) => [
@@ -1397,12 +1424,54 @@ function LogPage() {
             <label className="mb-1 block text-xs text-text-muted">
               Venue (optional)
             </label>
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {[
+                "Planet Bowl",
+                "SuperBowl - Toa Payoh",
+                "SuperBowl - Mt Faber",
+                "Westwood Bowl",
+                "Sonic Bowl - Punggol",
+                ...pastVenues.filter(
+                  (v) =>
+                    ![
+                      "Planet Bowl",
+                      "SuperBowl - Toa Payoh",
+                      "SuperBowl - Mt Faber",
+                      "Westwood Bowl",
+                      "Sonic Bowl - Punggol",
+                    ].includes(v),
+                ),
+              ].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setVenue(venue === v ? "" : v)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                    venue === v
+                      ? "bg-blue text-white"
+                      : "bg-surface-light text-text-secondary"
+                  }`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
             <input
               type="text"
-              placeholder="e.g. Orchid Bowl"
-              value={venue}
+              placeholder="Or type a venue..."
+              value={
+                [
+                  "Planet Bowl",
+                  "SuperBowl - Toa Payoh",
+                  "SuperBowl - Mt Faber",
+                  "Westwood Bowl",
+                  "Sonic Bowl - Punggol",
+                  ...pastVenues,
+                ].includes(venue)
+                  ? ""
+                  : venue
+              }
               onChange={(e) => setVenue(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+              className="w-full rounded-lg border border-border bg-surface-light px-4 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
             />
           </div>
 
@@ -1410,7 +1479,7 @@ function LogPage() {
             <label className="mb-1 block text-xs text-text-muted">
               Event (optional)
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {EVENT_LABELS.map((label) => (
                 <button
                   key={label}
