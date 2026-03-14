@@ -43,9 +43,9 @@ export default function BottomNav() {
       </button>
 
       {/* SVG background with notch cutout */}
-      <div className="absolute inset-0 -top-3.5 overflow-visible pointer-events-none">
+      <div className="absolute inset-0 -top-7 overflow-visible pointer-events-none">
         <svg
-          viewBox="0 0 480 80"
+          viewBox="0 -20 480 100"
           preserveAspectRatio="xMidYMin slice"
           className="h-full w-full"
           xmlns="http://www.w3.org/2000/svg"
