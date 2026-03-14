@@ -33,4 +33,4 @@ jobs:
             "https://bowling-tracker-omega.vercel.app/api/push/deploy-notify" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $DEPLOY_SECRET" \
-            -d "$(jq -n --arg t "Spare Me? just got better" --arg b "$NOTIFY_MSG" '{title: $t, body: $b}')"
+            -d "$(jq -n --arg t "What's New" --arg b "$NOTIFY_MSG" '{title: $t, body: $b}')"
