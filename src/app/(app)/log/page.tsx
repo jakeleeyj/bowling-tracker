@@ -1086,6 +1086,15 @@ function LogPage() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Get display name for notifications
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: profileData } = await (supabase as any)
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .single();
+    const playerName = profileData?.display_name ?? "Someone";
+
     // Snapshot LP + achievements before save
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existingGames } = await (supabase as any)
@@ -1241,12 +1250,16 @@ function LogPage() {
     );
 
     // Send push notification to other users (fire and forget)
+    const notifTitle = isNewPB ? "New PB!" : "Spare Me?";
+    const notifBody = isNewPB
+      ? `${playerName} just hit ${sessionHigh} — a new personal best!`
+      : `${playerName} just bowled! Avg: ${sessionAvg} across ${games.length} game${games.length !== 1 ? "s" : ""}`;
     fetch("/api/push/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        title: "Spare Me?",
-        body: `Someone just bowled! Avg: ${sessionAvg} across ${games.length} game${games.length !== 1 ? "s" : ""}`,
+        title: notifTitle,
+        body: notifBody,
         url: "/dashboard",
       }),
     }).catch(() => {});

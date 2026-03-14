@@ -2,13 +2,7 @@ export const revalidate = 300;
 
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
-import {
-  Swords,
-  ChevronUp,
-  ChevronDown,
-  Minus,
-  ChevronRight,
-} from "lucide-react";
+import { Swords, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import RankInfoModal from "@/components/RankInfoModal";
 import type { ProfileRow, GameRow } from "@/lib/queries";
 import Avatar from "@/components/Avatar";
@@ -240,7 +234,7 @@ export default async function LeaderboardPage() {
             <div className="px-4 pb-3">
               <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
                 <div
-                  className={`h-full rounded-full ${currentUserEntry.rank.bgColor.replace("/10", "")} transition-all`}
+                  className="h-full rounded-full bg-gradient-to-r from-blue to-green transition-all"
                   style={{ width: `${currentUserEntry.progress}%` }}
                 />
               </div>
@@ -374,9 +368,7 @@ export default async function LeaderboardPage() {
                       {entry.trend === "down" && (
                         <ChevronDown size={12} className="text-red" />
                       )}
-                      {entry.trend === "stable" && (
-                        <Minus size={10} className="text-text-muted" />
-                      )}
+                      {entry.trend === "stable" && null}
                       <div className="text-right">
                         <div className="text-sm font-extrabold text-text-primary">
                           {formatLP(entry.mmr)}
