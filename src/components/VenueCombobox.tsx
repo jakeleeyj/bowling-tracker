@@ -7,6 +7,7 @@ const PRESET_VENUES = [
   "Planet Bowl",
   "SuperBowl - Toa Payoh",
   "SuperBowl - Mt Faber",
+  "SuperBowl - Khatib",
   "Westwood Bowl",
   "Sonic Bowl - Punggol",
 ];
