@@ -51,7 +51,7 @@ export default function BottomNav() {
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
-            d="M0 14 L192 14 C206 14,210 13,214 4 A32 32 0 0 1 266 4 C270 13,274 14,288 14 L480 14 L480 80 L0 80 Z"
+            d="M0 14 L178 14 C196 14,200 12,206 4 A38 38 0 0 1 274 4 C280 12,284 14,302 14 L480 14 L480 80 L0 80 Z"
             fill="rgba(15,23,41,0.92)"
             stroke="rgba(255,255,255,0.06)"
             strokeWidth="1"
