@@ -53,8 +53,13 @@ export default async function HistoryPage() {
                 <div>
                   <p className="text-sm font-bold">
                     {new Date(session.session_date).toLocaleDateString(
-                      "en-US",
-                      { weekday: "short", month: "short", day: "numeric" },
+                      "en-SG",
+                      {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        timeZone: "Asia/Singapore",
+                      },
                     )}
                   </p>
                   <p className="text-[10px] text-text-muted">

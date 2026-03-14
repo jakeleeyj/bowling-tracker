@@ -715,8 +715,14 @@ export default function StatsPage() {
             </div>
           </div>
         </>
+      ) : /* SPARES TAB */
+      spareOpportunities.length === 0 ? (
+        <div className="glass p-8 text-center">
+          <p className="text-sm text-text-muted">
+            Log games with detailed entry to see spare stats.
+          </p>
+        </div>
       ) : (
-        /* SPARES TAB */
         <>
           {/* Practice These */}
           {practiceTargets.length > 0 && (

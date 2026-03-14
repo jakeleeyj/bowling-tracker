@@ -274,7 +274,8 @@ export default function ProfilePage() {
         <h1 className="text-xl font-extrabold">Me</h1>
         <button
           onClick={() => setShowSettings(!showSettings)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-light active:scale-90"
+          aria-label={showSettings ? "Close settings" : "Open settings"}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-light transition-transform active:scale-90"
         >
           {showSettings ? (
             <X size={18} className="text-text-secondary" />
@@ -520,11 +521,12 @@ export default function ProfilePage() {
                 : 0;
 
             const createdAt = new Date(session.created_at);
-            const dateLabel = createdAt.toLocaleDateString("en-US", {
+            const dateLabel = createdAt.toLocaleDateString("en-SG", {
               month: "short",
               day: "numeric",
               hour: "numeric",
               minute: "2-digit",
+              timeZone: "Asia/Singapore",
             });
 
             return (

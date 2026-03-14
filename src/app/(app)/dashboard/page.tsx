@@ -265,11 +265,12 @@ export default async function DashboardPage() {
               : 0;
 
           const createdAt = new Date(session.created_at);
-          const dateLabel = createdAt.toLocaleDateString("en-US", {
+          const dateLabel = createdAt.toLocaleDateString("en-SG", {
             month: "short",
             day: "numeric",
             hour: "numeric",
             minute: "2-digit",
+            timeZone: "Asia/Singapore",
           });
 
           return (

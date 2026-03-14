@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback } from "react";
-import { Check, X, AlertTriangle } from "lucide-react";
+import { Check, X, Info } from "lucide-react";
 
 type ToastType = "success" | "error" | "info";
 
@@ -53,7 +53,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           >
             {t.type === "success" && <Check size={16} strokeWidth={3} />}
             {t.type === "error" && <X size={16} strokeWidth={3} />}
-            {t.type === "info" && <AlertTriangle size={16} />}
+            {t.type === "info" && <Info size={16} />}
             {t.message}
           </div>
         ))}

@@ -32,6 +32,7 @@ export default function BottomNav() {
       {/* Floating circle — above the notch */}
       <button
         onClick={() => handleNav("/log")}
+        aria-label="Log a session"
         className="absolute left-1/2 -top-6 z-20 -translate-x-1/2"
       >
         <div

@@ -58,10 +58,11 @@ export default async function GameDetailPage({
             Game {game.game_number} &mdash; {game.total_score}
           </h1>
           <p className="text-[10px] text-text-muted">
-            {new Date(session.session_date).toLocaleDateString("en-US", {
+            {new Date(session.session_date).toLocaleDateString("en-SG", {
               weekday: "short",
               month: "short",
               day: "numeric",
+              timeZone: "Asia/Singapore",
             })}
             {session.venue && ` \u2022 ${session.venue}`}
           </p>
