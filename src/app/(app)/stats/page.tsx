@@ -65,8 +65,8 @@ function TrendChart({
   if (values.length === 0) return null;
 
   const width = 360;
-  const height = 180;
-  const padding = { top: 20, right: 20, bottom: 28, left: 36 };
+  const height = 160;
+  const padding = { top: 20, right: 12, bottom: 12, left: 12 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
@@ -76,13 +76,6 @@ function TrendChart({
   const yMin = Math.floor(Math.min(rawMin, avg) / 10) * 10 - 5;
   const yMax = Math.ceil(Math.max(rawMax, avg) / 10) * 10 + 5;
   const yRange = yMax - yMin || 1;
-
-  // 3-4 ticks max to avoid clutter
-  const yStep = Math.max(10, Math.ceil(yRange / 3 / 10) * 10);
-  const yTicks: number[] = [];
-  for (let v = Math.ceil(yMin / yStep) * yStep; v <= yMax; v += yStep) {
-    yTicks.push(v);
-  }
 
   const toX = (i: number) =>
     padding.left +
@@ -94,17 +87,6 @@ function TrendChart({
   const linePath = `M${points.join("L")}`;
   const avgY = toY(avg);
 
-  // X labels: first, middle, last
-  const xLabels: { i: number; label: string }[] = [];
-  if (values.length <= 6) {
-    values.forEach((_, i) => xLabels.push({ i, label: `${i + 1}` }));
-  } else {
-    xLabels.push({ i: 0, label: "1" });
-    const mid = Math.floor(values.length / 2);
-    xLabels.push({ i: mid, label: `${mid + 1}` });
-    xLabels.push({ i: values.length - 1, label: `${values.length}` });
-  }
-
   // Only show value labels if points are spaced enough (>25px apart)
   const showValueLabels =
     values.length <= 10 &&
@@ -112,29 +94,17 @@ function TrendChart({
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="w-full">
-      {/* Grid lines + Y labels */}
-      {yTicks.map((v) => (
-        <g key={v}>
-          <line
-            x1={padding.left}
-            y1={toY(v)}
-            x2={width - padding.right}
-            y2={toY(v)}
-            stroke="rgba(255,255,255,0.06)"
-            strokeWidth={0.5}
-          />
-          <text
-            x={padding.left - 6}
-            y={toY(v)}
-            textAnchor="end"
-            dominantBaseline="middle"
-            fontSize={8}
-            fill="#64748b"
-          >
-            {v}
-            {suffix}
-          </text>
-        </g>
+      {/* Subtle grid lines */}
+      {[0.25, 0.5, 0.75].map((pct) => (
+        <line
+          key={pct}
+          x1={padding.left}
+          y1={padding.top + chartH * (1 - pct)}
+          x2={width - padding.right}
+          y2={padding.top + chartH * (1 - pct)}
+          stroke="rgba(255,255,255,0.06)"
+          strokeWidth={0.5}
+        />
       ))}
 
       {/* Avg dashed line */}
@@ -194,20 +164,6 @@ function TrendChart({
             </text>
           )}
         </g>
-      ))}
-
-      {/* X labels */}
-      {xLabels.map(({ i, label }) => (
-        <text
-          key={i}
-          x={toX(i)}
-          y={height - 6}
-          textAnchor="middle"
-          fontSize={8}
-          fill="#64748b"
-        >
-          {label}
-        </text>
       ))}
     </svg>
   );
