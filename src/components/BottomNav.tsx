@@ -28,12 +28,12 @@ export default function BottomNav() {
   const isLogActive = pathname.startsWith("/log");
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px] overflow-visible">
-      {/* Floating circle — above the notch */}
+    <>
+      {/* Floating circle — fixed to viewport so iOS doesn't clip it */}
       <button
         onClick={() => handleNav("/log")}
         aria-label="Log a session"
-        className="absolute left-1/2 -top-6 z-20 -translate-x-1/2"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom)+3.25rem)] left-1/2 z-[60] -translate-x-1/2"
       >
         <div
           className={`flex h-[52px] w-[52px] items-center justify-center rounded-full bg-gradient-to-br from-blue to-blue-dark shadow-[0_4px_20px_rgba(59,130,246,0.4),0_0_40px_rgba(59,130,246,0.15)] transition-transform duration-150 active:scale-95 ${isLogActive ? "ring-2 ring-white/20" : ""}`}
@@ -42,99 +42,101 @@ export default function BottomNav() {
         </div>
       </button>
 
-      {/* SVG background with notch cutout */}
-      <div className="absolute inset-0 -top-3.5 overflow-visible pointer-events-none">
-        <svg
-          viewBox="0 0 480 80"
-          preserveAspectRatio="xMidYMin slice"
-          className="h-full w-full"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M0 14 L192 14 C206 14,210 13,214 4 A32 32 0 0 1 266 4 C270 13,274 14,288 14 L480 14 L480 80 L0 80 Z"
-            fill="rgba(15,23,41,0.92)"
-            stroke="rgba(255,255,255,0.06)"
-            strokeWidth="1"
-          />
-        </svg>
-      </div>
-
-      {/* Nav items row — all 5 labels aligned */}
-      <div className="relative z-[2] flex pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        {leftItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
-          return (
-            <button
-              key={item.href}
-              onClick={() => handleNav(item.href)}
-              className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
-            >
-              <div
-                className={`flex h-8 w-12 items-center justify-center rounded-full transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue/15"
-                    : "scale-90 active:scale-95 active:bg-white/5"
-                }`}
-              >
-                <item.icon
-                  size={20}
-                  className={`transition-colors duration-200 ${isActive ? "text-blue" : "text-text-muted"}`}
-                  strokeWidth={isActive ? 2.5 : 1.8}
-                />
-              </div>
-              <span
-                className={`text-[10px] transition-colors duration-200 ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
-              >
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
-
-        {/* Center — "Log" label aligned with others, circle floats above */}
-        <button
-          onClick={() => handleNav("/log")}
-          className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
-        >
-          {/* Invisible spacer matching the icon area height */}
-          <div className="h-8" />
-          <span
-            className={`text-[10px] transition-colors duration-200 ${isLogActive ? "font-semibold text-blue" : "text-text-muted"}`}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px]">
+        {/* SVG background with notch cutout */}
+        <div className="absolute inset-0 -top-3.5 overflow-visible pointer-events-none">
+          <svg
+            viewBox="0 0 480 80"
+            preserveAspectRatio="xMidYMin slice"
+            className="h-full w-full"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            Log
-          </span>
-        </button>
+            <path
+              d="M0 14 L192 14 C206 14,210 13,214 4 A32 32 0 0 1 266 4 C270 13,274 14,288 14 L480 14 L480 80 L0 80 Z"
+              fill="rgba(15,23,41,0.92)"
+              stroke="rgba(255,255,255,0.06)"
+              strokeWidth="1"
+            />
+          </svg>
+        </div>
 
-        {rightItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
-          return (
-            <button
-              key={item.href}
-              onClick={() => handleNav(item.href)}
-              className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
+        {/* Nav items row — all 5 labels aligned */}
+        <div className="relative z-[2] flex pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          {leftItems.map((item) => {
+            const isActive = pathname.startsWith(item.href);
+            return (
+              <button
+                key={item.href}
+                onClick={() => handleNav(item.href)}
+                className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
+              >
+                <div
+                  className={`flex h-8 w-12 items-center justify-center rounded-full transition-all duration-200 ${
+                    isActive
+                      ? "bg-blue/15"
+                      : "scale-90 active:scale-95 active:bg-white/5"
+                  }`}
+                >
+                  <item.icon
+                    size={20}
+                    className={`transition-colors duration-200 ${isActive ? "text-blue" : "text-text-muted"}`}
+                    strokeWidth={isActive ? 2.5 : 1.8}
+                  />
+                </div>
+                <span
+                  className={`text-[10px] transition-colors duration-200 ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
+                >
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* Center — "Log" label aligned with others, circle floats above */}
+          <button
+            onClick={() => handleNav("/log")}
+            className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
+          >
+            {/* Invisible spacer matching the icon area height */}
+            <div className="h-8" />
+            <span
+              className={`text-[10px] transition-colors duration-200 ${isLogActive ? "font-semibold text-blue" : "text-text-muted"}`}
             >
-              <div
-                className={`flex h-8 w-12 items-center justify-center rounded-full transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue/15"
-                    : "scale-90 active:scale-95 active:bg-white/5"
-                }`}
+              Log
+            </span>
+          </button>
+
+          {rightItems.map((item) => {
+            const isActive = pathname.startsWith(item.href);
+            return (
+              <button
+                key={item.href}
+                onClick={() => handleNav(item.href)}
+                className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
               >
-                <item.icon
-                  size={20}
-                  className={`transition-colors duration-200 ${isActive ? "text-blue" : "text-text-muted"}`}
-                  strokeWidth={isActive ? 2.5 : 1.8}
-                />
-              </div>
-              <span
-                className={`text-[10px] transition-colors duration-200 ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
-              >
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
+                <div
+                  className={`flex h-8 w-12 items-center justify-center rounded-full transition-all duration-200 ${
+                    isActive
+                      ? "bg-blue/15"
+                      : "scale-90 active:scale-95 active:bg-white/5"
+                  }`}
+                >
+                  <item.icon
+                    size={20}
+                    className={`transition-colors duration-200 ${isActive ? "text-blue" : "text-text-muted"}`}
+                    strokeWidth={isActive ? 2.5 : 1.8}
+                  />
+                </div>
+                <span
+                  className={`text-[10px] transition-colors duration-200 ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
+                >
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </>
   );
 }
