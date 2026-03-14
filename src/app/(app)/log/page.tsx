@@ -923,22 +923,26 @@ function LogPage() {
     const existing = frames.find((f) => f.frameNumber === 10);
 
     if (!existing) {
+      // Roll 1 of 10th frame
+      const isStrike = pins === 10;
       const frame: FrameData = {
         frameNumber: 10,
         roll1: pins,
         roll2: null,
         roll3: null,
-        isStrike: pins === 10,
+        isStrike,
         isSpare: false,
-        pinsRemaining: pins === 10 ? null : [...standingPins],
+        pinsRemaining: isStrike ? null : [...standingPins],
         spareConverted: false,
       };
       setFrames(upsertFrame(frames, frame));
       setCurrentRoll(2);
-      if (pins === 10) {
-        setStandingPins([]);
+      // After a strike, reset to fresh rack for roll 2
+      if (isStrike) {
+        setStandingPins(getAllPins());
       }
     } else if (existing.roll2 === null) {
+      // Roll 2 of 10th frame
       const isSpare = !existing.isStrike && existing.roll1 + pins === 10;
       const updatedFrame: FrameData = {
         ...existing,
@@ -951,21 +955,22 @@ function LogPage() {
       );
 
       if (existing.isStrike || isSpare) {
+        // Gets a 3rd roll — reset to fresh rack
         setFrames(newFrames);
         setCurrentRoll(3);
-        if (pins === 10 || isSpare) {
-          setStandingPins([]);
-        }
+        setStandingPins(getAllPins());
       } else {
+        // No 3rd roll — game over
         setFrames(newFrames);
         if (editMode) {
           setCurrentRoll(1);
-          setStandingPins([]);
+          setStandingPins(getAllPins());
         } else {
           completeCurrentGame(newFrames);
         }
       }
     } else {
+      // Roll 3 of 10th frame
       const updatedFrame: FrameData = {
         ...existing,
         roll3: pins,
@@ -976,7 +981,7 @@ function LogPage() {
       setFrames(newFrames);
       if (editMode) {
         setCurrentRoll(1);
-        setStandingPins([]);
+        setStandingPins(getAllPins());
       } else {
         completeCurrentGame(newFrames);
       }
@@ -1046,7 +1051,14 @@ function LogPage() {
       totalScore: total,
     });
 
-    // Stay on current game so user can review/edit
+    // Auto-advance to next incomplete game if available
+    const nextIncomplete = Array.from({ length: gameCount }, (_, i) => i).find(
+      (i) => i !== currentGameIndex && !newGames[i],
+    );
+    if (nextIncomplete !== undefined) {
+      switchToGame(nextIncomplete);
+    }
+    // Otherwise stay on current game for review
   }
 
   function completeQuickGame() {
@@ -1710,25 +1722,11 @@ function LogPage() {
         <div className="flex flex-col gap-3">
           {games[currentGameIndex].entryType === "detailed" &&
           games[currentGameIndex].frames.length > 0 ? (
-            <>
-              <FrameScorecard
-                frames={games[currentGameIndex].frames}
-                currentFrame={0}
-                currentRoll={1}
-              />
-              <FramePinDetail
-                frames={games[currentGameIndex].frames.map((f) => ({
-                  frame_number: f.frameNumber,
-                  roll_1: f.roll1,
-                  roll_2: f.roll2,
-                  roll_3: f.roll3,
-                  is_strike: f.isStrike,
-                  is_spare: f.isSpare,
-                  pins_remaining: f.pinsRemaining,
-                  spare_converted: f.spareConverted,
-                }))}
-              />
-            </>
+            <FrameScorecard
+              frames={games[currentGameIndex].frames}
+              currentFrame={0}
+              currentRoll={1}
+            />
           ) : null}
 
           <div className="glass p-4 text-center">
@@ -1736,15 +1734,12 @@ function LogPage() {
             <div className="text-3xl font-extrabold text-text-primary">
               {games[currentGameIndex].totalScore}
             </div>
-            {games[currentGameIndex].entryType === "detailed" && (
-              <div className="mt-1 text-[11px] text-text-muted">
-                {countStrikes(games[currentGameIndex].frames)}X{" "}
-                {countSpares(games[currentGameIndex].frames)}/{" "}
-                {isCleanGame(games[currentGameIndex].frames) && (
-                  <span className="font-semibold text-green">CLEAN</span>
-                )}
-              </div>
-            )}
+            {games[currentGameIndex].entryType === "detailed" &&
+              isCleanGame(games[currentGameIndex].frames) && (
+                <div className="mt-1 text-[11px] font-semibold text-green">
+                  CLEAN
+                </div>
+              )}
           </div>
 
           <div className="flex gap-2">

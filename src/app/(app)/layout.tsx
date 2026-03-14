@@ -7,12 +7,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <UnsavedGuardProvider>
       <ToastProvider>
-        <div className="glow-blue glow-purple min-h-dvh overflow-hidden">
+        <div className="glow-blue glow-purple min-h-dvh overflow-x-hidden">
           <main className="relative z-10 mx-auto max-w-[480px] px-4 pb-32 pt-6">
             <PullToRefresh>{children}</PullToRefresh>
           </main>
-          <BottomNav />
         </div>
+        <BottomNav />
       </ToastProvider>
     </UnsavedGuardProvider>
   );

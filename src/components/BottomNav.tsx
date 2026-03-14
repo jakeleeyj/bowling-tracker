@@ -28,7 +28,7 @@ export default function BottomNav() {
   const isLogActive = pathname.startsWith("/log");
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px] overflow-visible">
       {/* Floating circle — above the notch */}
       <button
         onClick={() => handleNav("/log")}
