@@ -50,8 +50,18 @@ function getFramesForGames(
   return allFrames.filter((f) => ids.has(f.game_id));
 }
 
-function ScoreTrendChart({ scores, avg }: { scores: number[]; avg: number }) {
-  if (scores.length === 0) return null;
+function TrendChart({
+  values,
+  avg,
+  color = "#3b82f6",
+  suffix = "",
+}: {
+  values: number[];
+  avg: number;
+  color?: string;
+  suffix?: string;
+}) {
+  if (values.length === 0) return null;
 
   const padding = { top: 12, right: 8, bottom: 24, left: 32 };
   const width = 320;
@@ -59,14 +69,12 @@ function ScoreTrendChart({ scores, avg }: { scores: number[]; avg: number }) {
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
-  const rawMin = Math.min(...scores);
-  const rawMax = Math.max(...scores);
-  // Round to nearest 10 for clean gridlines
+  const rawMin = Math.min(...values);
+  const rawMax = Math.max(...values);
   const yMin = Math.floor(Math.min(rawMin, avg) / 10) * 10;
   const yMax = Math.ceil(Math.max(rawMax, avg) / 10) * 10;
   const yRange = yMax - yMin || 1;
 
-  // Generate ~4 Y-axis gridlines
   const yStep = Math.max(10, Math.ceil(yRange / 4 / 10) * 10);
   const yTicks: number[] = [];
   for (let v = yMin; v <= yMax; v += yStep) {
@@ -76,34 +84,29 @@ function ScoreTrendChart({ scores, avg }: { scores: number[]; avg: number }) {
 
   const toX = (i: number) =>
     padding.left +
-    (scores.length === 1 ? chartW / 2 : (i / (scores.length - 1)) * chartW);
+    (values.length === 1 ? chartW / 2 : (i / (values.length - 1)) * chartW);
   const toY = (v: number) =>
     padding.top + chartH - ((v - yMin) / yRange) * chartH;
 
-  // Build SVG path
-  const points = scores.map((s, i) => `${toX(i)},${toY(s)}`);
+  const points = values.map((s, i) => `${toX(i)},${toY(s)}`);
   const linePath = `M${points.join("L")}`;
-
-  // Average line Y
   const avgY = toY(avg);
 
-  // X-axis labels: show first, last, and middle
   const xLabels: { i: number; label: string }[] = [];
-  if (scores.length <= 6) {
-    scores.forEach((_, i) => xLabels.push({ i, label: `${i + 1}` }));
+  if (values.length <= 6) {
+    values.forEach((_, i) => xLabels.push({ i, label: `${i + 1}` }));
   } else {
     xLabels.push({ i: 0, label: "1" });
-    const mid = Math.floor(scores.length / 2);
+    const mid = Math.floor(values.length / 2);
     xLabels.push({ i: mid, label: `${mid + 1}` });
     xLabels.push({
-      i: scores.length - 1,
-      label: `${scores.length}`,
+      i: values.length - 1,
+      label: `${values.length}`,
     });
   }
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="w-full">
-      {/* Y gridlines + labels */}
       {yTicks.map((v) => (
         <g key={v}>
           <line
@@ -123,45 +126,42 @@ function ScoreTrendChart({ scores, avg }: { scores: number[]; avg: number }) {
             fill="#64748b"
           >
             {v}
+            {suffix}
           </text>
         </g>
       ))}
 
-      {/* Average line */}
       <line
         x1={padding.left}
         y1={avgY}
         x2={width - padding.right}
         y2={avgY}
-        stroke="#3b82f6"
+        stroke={color}
         strokeWidth={0.75}
         strokeDasharray="4 3"
         opacity={0.5}
       />
 
-      {/* Line */}
       <path
         d={linePath}
         fill="none"
-        stroke="#3b82f6"
+        stroke={color}
         strokeWidth={1.5}
         strokeLinejoin="round"
         strokeLinecap="round"
       />
 
-      {/* Dots */}
-      {scores.map((s, i) => (
+      {values.map((s, i) => (
         <g key={i}>
           <circle
             cx={toX(i)}
             cy={toY(s)}
             r={3}
-            fill={s >= avg ? "#3b82f6" : "#334155"}
-            stroke={s >= avg ? "#3b82f6" : "#64748b"}
+            fill={s >= avg ? color : "#334155"}
+            stroke={s >= avg ? color : "#64748b"}
             strokeWidth={1}
           />
-          {/* Score label on dot for small datasets */}
-          {scores.length <= 10 && (
+          {values.length <= 10 && (
             <text
               x={toX(i)}
               y={toY(s) - 7}
@@ -171,12 +171,12 @@ function ScoreTrendChart({ scores, avg }: { scores: number[]; avg: number }) {
               fill="#e2e8f0"
             >
               {s}
+              {suffix}
             </text>
           )}
         </g>
       ))}
 
-      {/* X-axis labels */}
       {xLabels.map(({ i, label }) => (
         <text
           key={i}
@@ -190,15 +190,15 @@ function ScoreTrendChart({ scores, avg }: { scores: number[]; avg: number }) {
         </text>
       ))}
 
-      {/* Avg label */}
       <text
         x={width - padding.right}
         y={avgY - 4}
         textAnchor="end"
         fontSize={7}
-        fill="#3b82f6"
+        fill={color}
       >
         avg {avg}
+        {suffix}
       </text>
     </svg>
   );
@@ -496,8 +496,6 @@ export default function StatsPage() {
     })
     .filter((v): v is number => v !== null);
 
-  const spareChartMax = 100;
-
   // Spare leave log — group by leave pattern, categorized
   const leaveLog: Record<
     string,
@@ -641,7 +639,7 @@ export default function StatsPage() {
             <h3 className="mb-2 text-xs font-bold text-text-secondary">
               Score Trend
             </h3>
-            <ScoreTrendChart scores={scores} avg={avg} />
+            <TrendChart values={scores} avg={avg} />
           </div>
 
           {/* Strike & Spare rates */}
@@ -750,31 +748,15 @@ export default function StatsPage() {
           {/* Spare Conversion Trend */}
           {spareConvTrend.length > 1 && (
             <div className="glass mb-4 p-4">
-              <h3 className="mb-3 text-xs font-bold text-text-secondary">
+              <h3 className="mb-2 text-xs font-bold text-text-secondary">
                 Spare Conversion Trend
               </h3>
-              <div className="flex h-32 items-end gap-[2px]">
-                {spareConvTrend.map((pct, i) => {
-                  const height = (pct / spareChartMax) * 100;
-                  return (
-                    <div
-                      key={i}
-                      className="relative flex h-full flex-1 items-end"
-                    >
-                      <div
-                        className={`w-full rounded-t ${pct >= spareRate ? "bg-gold" : "bg-surface-light"}`}
-                        style={{ height: `${Math.max(height, 4)}%` }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mt-1 flex items-center justify-end gap-1">
-                <div className="h-px w-3 bg-gold" />
-                <span className="text-[9px] text-text-muted">
-                  avg {spareRate}%
-                </span>
-              </div>
+              <TrendChart
+                values={spareConvTrend}
+                avg={spareRate}
+                color="#f59e0b"
+                suffix="%"
+              />
             </div>
           )}
 
