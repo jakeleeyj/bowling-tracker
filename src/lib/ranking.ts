@@ -1,9 +1,10 @@
 // MMR Ranking System
 // Base score: 180. MMR = weighted average of (score - 180).
-// Recent games weighted more heavily using exponential decay (0.93^index).
+// Recent games weighted more heavily using exponential decay (0.97^index).
+// 0.97 keeps ~50 games relevant and prevents single bad games from causing big swings.
 
 const BASE_SCORE = 180;
-const DECAY_FACTOR = 0.93;
+const DECAY_FACTOR = 0.97;
 export const CALIBRATION_GAMES = 3;
 
 export interface RankTier {
@@ -16,28 +17,28 @@ export interface RankTier {
 }
 
 // Tier ranges (MMR values, base 180):
-// Iron: <100 avg, Bronze: 100-130, Silver: 130-160, Gold: 160-180
-// Platinum: 180-200, Diamond: 200-220, Master: 220-240, Grandmaster: 240+
+// Iron: <120 avg, Bronze: 120-140, Silver: 140-160, Gold: 160-175
+// Platinum: 175-190, Diamond: 190-205, Master: 205-220, Grandmaster: 220+
 const TIERS = [
   {
     name: "Iron",
     min: -Infinity,
-    max: -80,
+    max: -60,
     color: "text-gray-400",
     bgColor: "bg-gray-400/10",
     borderColor: "border-gray-400/30",
   },
   {
     name: "Bronze",
-    min: -80,
-    max: -50,
+    min: -60,
+    max: -40,
     color: "text-amber-700",
     bgColor: "bg-amber-700/10",
     borderColor: "border-amber-700/30",
   },
   {
     name: "Silver",
-    min: -50,
+    min: -40,
     max: -20,
     color: "text-gray-300",
     bgColor: "bg-gray-300/10",
@@ -46,38 +47,38 @@ const TIERS = [
   {
     name: "Gold",
     min: -20,
-    max: 0,
+    max: -5,
     color: "text-gold",
     bgColor: "bg-gold/10",
     borderColor: "border-gold/30",
   },
   {
     name: "Platinum",
-    min: 0,
-    max: 20,
+    min: -5,
+    max: 10,
     color: "text-cyan-400",
     bgColor: "bg-cyan-400/10",
     borderColor: "border-cyan-400/30",
   },
   {
     name: "Diamond",
-    min: 20,
-    max: 40,
+    min: 10,
+    max: 25,
     color: "text-blue",
     bgColor: "bg-blue/10",
     borderColor: "border-blue/30",
   },
   {
     name: "Master",
-    min: 40,
-    max: 60,
+    min: 25,
+    max: 40,
     color: "text-purple",
     bgColor: "bg-purple/10",
     borderColor: "border-purple/30",
   },
   {
     name: "Grandmaster",
-    min: 60,
+    min: 40,
     max: Infinity,
     color: "text-red",
     bgColor: "bg-red/10",

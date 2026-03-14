@@ -4,14 +4,14 @@ import { useState } from "react";
 import { Info, X } from "lucide-react";
 
 const RANK_TABLE = [
-  { name: "Iron", avg: "< 100", color: "text-gray-400" },
-  { name: "Bronze", avg: "100–130", color: "text-amber-600" },
-  { name: "Silver", avg: "130–160", color: "text-gray-300" },
-  { name: "Gold", avg: "160–180", color: "text-gold" },
-  { name: "Platinum", avg: "180–200", color: "text-cyan-400" },
-  { name: "Diamond", avg: "200–220", color: "text-blue" },
-  { name: "Master", avg: "220–240", color: "text-purple" },
-  { name: "Grandmaster", avg: "240+", color: "text-red" },
+  { name: "Iron", avg: "< 120", color: "text-gray-400" },
+  { name: "Bronze", avg: "120–140", color: "text-amber-600" },
+  { name: "Silver", avg: "140–160", color: "text-gray-300" },
+  { name: "Gold", avg: "160–175", color: "text-gold" },
+  { name: "Platinum", avg: "175–190", color: "text-cyan-400" },
+  { name: "Diamond", avg: "190–205", color: "text-blue" },
+  { name: "Master", avg: "205–220", color: "text-purple" },
+  { name: "Grandmaster", avg: "220+", color: "text-red" },
 ];
 
 export default function RankInfoModal() {

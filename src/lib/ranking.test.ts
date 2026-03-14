@@ -57,42 +57,46 @@ describe("calculateMMR", () => {
 
 describe("getRank", () => {
   it("returns Iron for very low MMR", () => {
-    expect(getRank(-90).name).toBe("Iron");
+    expect(getRank(-70).name).toBe("Iron");
   });
 
-  it("returns Bronze for -80 to -50 range", () => {
-    expect(getRank(-60).name).toBe("Bronze");
+  it("returns Bronze for -60 to -40 range", () => {
+    expect(getRank(-50).name).toBe("Bronze");
   });
 
-  it("returns Silver for -50 to -20 range", () => {
+  it("returns Silver for -40 to -20 range", () => {
     expect(getRank(-30).name).toBe("Silver");
   });
 
-  it("returns Gold for -20 to 0 range", () => {
-    expect(getRank(-10).name).toBe("Gold");
+  it("returns Gold for -20 to -5 range", () => {
+    expect(getRank(-12).name).toBe("Gold");
   });
 
-  it("returns Platinum for 0 to 20 range", () => {
-    expect(getRank(10).name).toBe("Platinum");
+  it("returns Platinum for -5 to 10 range", () => {
+    expect(getRank(5).name).toBe("Platinum");
   });
 
-  it("returns Diamond for 20 to 40 range", () => {
-    expect(getRank(30).name).toBe("Diamond");
+  it("returns Diamond for 10 to 25 range", () => {
+    expect(getRank(15).name).toBe("Diamond");
+  });
+
+  it("returns Master for 25 to 40 range", () => {
+    expect(getRank(30).name).toBe("Master");
   });
 
   it("returns Grandmaster for very high MMR", () => {
-    expect(getRank(70).name).toBe("Grandmaster");
+    expect(getRank(50).name).toBe("Grandmaster");
   });
 
   it("includes division for non-Master tiers", () => {
-    const rank = getRank(-10);
+    const rank = getRank(-12);
     expect(rank.division).toBeDefined();
     expect(["I", "II", "III", "IV"]).toContain(rank.division);
   });
 
   it("excludes division for Master and Grandmaster", () => {
+    expect(getRank(30).division).toBeUndefined();
     expect(getRank(50).division).toBeUndefined();
-    expect(getRank(70).division).toBeUndefined();
   });
 
   it("includes color properties", () => {
@@ -112,7 +116,7 @@ describe("getDivisionProgress", () => {
 
   it("returns a value between 0 and 100", () => {
     // Test across several MMR values
-    for (const mmr of [-90, -60, -30, 0, 10, 30, 50, 70]) {
+    for (const mmr of [-70, -50, -30, -12, 5, 15, 30, 50]) {
       const p = getDivisionProgress(mmr);
       expect(p).toBeGreaterThanOrEqual(0);
       expect(p).toBeLessThanOrEqual(100);
