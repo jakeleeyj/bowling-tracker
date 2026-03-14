@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { BowlingSpinner } from "@/components/Skeleton";
@@ -35,6 +35,8 @@ import {
   computeAchievementStats,
   type AchievementStats,
 } from "@/lib/achievements";
+
+const SESSIONS_PER_PAGE = 20;
 
 interface HistoryFrame {
   frame_number: number;
@@ -98,6 +100,8 @@ export default function ProfilePage() {
     Record<string, number>
   >({});
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreSessions, setHasMoreSessions] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -127,10 +131,14 @@ export default function ProfilePage() {
           .from("sessions")
           .select("*, games(*, frames(*))")
           .eq("user_id", user.id)
-          .order("created_at", { ascending: false })) as {
+          .order("created_at", { ascending: false })
+          .limit(SESSIONS_PER_PAGE)) as {
           data: HistorySession[] | null;
         };
-        if (sessionData) setSessions(sessionData);
+        if (sessionData) {
+          setSessions(sessionData);
+          setHasMoreSessions(sessionData.length === SESSIONS_PER_PAGE);
+        }
 
         // Fetch achievement stats + LP
         const { data: games } = (await supabase
@@ -250,6 +258,55 @@ export default function ProfilePage() {
     router.push("/login");
     router.refresh();
   }
+
+  const loadingMoreRef = useRef(false);
+
+  const loadMoreSessions = useCallback(async () => {
+    if (loadingMoreRef.current) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setLoadingMore(false);
+      loadingMoreRef.current = false;
+      return;
+    }
+
+    const { data: moreSessions } = (await supabase
+      .from("sessions")
+      .select("*, games(*, frames(*))")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .range(sessions.length, sessions.length + SESSIONS_PER_PAGE - 1)) as {
+      data: HistorySession[] | null;
+    };
+
+    if (moreSessions) {
+      setSessions((prev) => [...prev, ...moreSessions]);
+      setHasMoreSessions(moreSessions.length === SESSIONS_PER_PAGE);
+    } else {
+      setHasMoreSessions(false);
+    }
+    setLoadingMore(false);
+    loadingMoreRef.current = false;
+  }, [supabase, sessions.length]);
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!hasMoreSessions) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMoreSessions();
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMoreSessions, loadMoreSessions]);
 
   const earned = achievementStats
     ? ACHIEVEMENTS.filter((a) => a.check(achievementStats))
@@ -566,6 +623,14 @@ export default function ProfilePage() {
               />
             );
           })}
+
+          {hasMoreSessions && (
+            <div ref={sentinelRef} className="flex justify-center py-4">
+              {loadingMore && (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue border-t-transparent" />
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ import type {
   SessionWithGamesFramesAndProfile,
 } from "@/lib/queries";
 import Avatar from "@/components/Avatar";
-import SessionCard from "@/components/SessionCard";
+import PlayerSessions from "@/components/PlayerSessions";
 import {
   calculateLP,
   getRank,
@@ -37,7 +37,7 @@ export default async function PlayerPage({
       .select("*, profiles(*), games(*, frames(*))")
       .eq("user_id", id)
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(20),
   ]);
 
   const profile = profileResult.data as ProfileRow | null;
@@ -136,51 +136,13 @@ export default async function PlayerPage({
 
       {/* Recent sessions */}
       <h2 className="mb-3 text-sm font-bold">Recent Sessions</h2>
-      {!sessions || sessions.length === 0 ? (
-        <div className="glass p-8 text-center">
-          <p className="text-sm text-text-muted">No sessions yet.</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {sessions.map((session) => {
-            const sessionGames = [...session.games].sort(
-              (a, b) => a.game_number - b.game_number,
-            );
-            const sessionAvg =
-              sessionGames.length > 0
-                ? Math.round(
-                    sessionGames.reduce((s, g) => s + g.total_score, 0) /
-                      sessionGames.length,
-                  )
-                : 0;
-            const createdAt = new Date(session.created_at);
-            const dateLabel = createdAt.toLocaleDateString("en-SG", {
-              month: "short",
-              day: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-              timeZone: "Asia/Singapore",
-            });
-
-            return (
-              <SessionCard
-                key={session.id}
-                sessionId={session.id}
-                name={profile.display_name}
-                realName={profile.display_name}
-                dateLabel={dateLabel}
-                avg={sessionAvg}
-                totalPins={session.total_pins}
-                venue={session.venue}
-                eventLabel={session.event_label}
-                games={sessionGames}
-                avatarUrl={profile.avatar_url}
-                isOwn={false}
-              />
-            );
-          })}
-        </div>
-      )}
+      <PlayerSessions
+        playerId={id}
+        playerName={profile.display_name}
+        avatarUrl={profile.avatar_url}
+        initialSessions={sessions ?? []}
+        initialHasMore={(sessions?.length ?? 0) === 20}
+      />
     </div>
   );
 }

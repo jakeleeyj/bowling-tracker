@@ -40,7 +40,7 @@ export default function DeleteSessionButton({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).from("sessions").delete().eq("id", sessionId);
 
-    router.push("/history");
+    router.push("/profile");
     router.refresh();
   }
 
