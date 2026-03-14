@@ -1,106 +1,115 @@
 import { describe, it, expect } from "vitest";
 import {
-  calculateMMR,
+  calculateLP,
   getRank,
   getDivisionProgress,
-  formatMMR,
+  formatLP,
   getEventWeight,
   EVENT_WEIGHTS,
   CALIBRATION_GAMES,
 } from "./ranking";
 
-describe("calculateMMR", () => {
+describe("calculateLP", () => {
   it("returns 0 for empty scores", () => {
-    expect(calculateMMR([])).toBe(0);
+    expect(calculateLP([])).toBe(0);
   });
 
-  it("returns 0 for a single game of 180 (base score)", () => {
-    expect(calculateMMR([180])).toBe(0);
+  it("returns starting LP (1200) for a single calibration game of 170 (base)", () => {
+    // 170 = base, so 0 gain, but starting LP is 1200
+    expect(calculateLP([170])).toBe(1200);
   });
 
-  it("returns positive MMR for above-average scores", () => {
-    expect(calculateMMR([220])).toBe(40);
+  it("gains LP for above-base scores", () => {
+    // Single calibration game of 200: (200-170) * 3 = +90
+    expect(calculateLP([200])).toBe(1290);
   });
 
-  it("returns negative MMR for below-average scores", () => {
-    expect(calculateMMR([140])).toBe(-40);
+  it("loses LP for below-base scores", () => {
+    // Single calibration game of 140: (140-170) * 3 = -90
+    expect(calculateLP([140])).toBe(1110);
   });
 
-  it("weights recent games more heavily", () => {
-    // Recent 220 followed by old 140 — should be positive
-    const recentHigh = calculateMMR([220, 140]);
-    // Recent 140 followed by old 220 — should be negative-ish
-    const recentLow = calculateMMR([140, 220]);
-    expect(recentHigh).toBeGreaterThan(recentLow);
+  it("calibration games earn 3x LP", () => {
+    // 3 calibration games of 190: (190-170) * 3 * 3 = +180
+    expect(calculateLP([190, 190, 190])).toBe(1380);
+  });
+
+  it("normal games earn 1x LP after calibration", () => {
+    // 3 cal games of 170 (0 gain) + 1 normal game of 190 (+20)
+    expect(calculateLP([190, 170, 170, 170])).toBe(1220);
+  });
+
+  it("LP accumulates over many games", () => {
+    // 3 cal + 7 normal, all 190
+    // Cal: 3 * (20 * 3) = 180
+    // Normal: 7 * 20 = 140
+    // Total: 1200 + 180 + 140 = 1520
+    const scores = Array.from({ length: 10 }, () => 190);
+    expect(calculateLP(scores)).toBe(1520);
   });
 
   it("applies event weights", () => {
-    const noWeight = calculateMMR([220], [1.0]);
-    const tournament = calculateMMR([220], [1.5]);
-    // Both are single game, so weight doesn't change the ratio
-    // (score - 180) * weight / weight = same
-    expect(noWeight).toBe(tournament);
-
-    // But with mixed games, tournament weight matters more
-    const mixed = calculateMMR([220, 140], [1.5, 1.0]);
-    const mixedNoWeight = calculateMMR([220, 140], [1.0, 1.0]);
-    // Tournament 220 weighted higher should increase MMR
-    expect(mixed).toBeGreaterThan(mixedNoWeight);
+    // 1 cal game of 190, tournament (1.5x): (20 * 1.5 * 3) = 90
+    const tournament = calculateLP([190], [1.5]);
+    // 1 cal game of 190, casual (1.0x): (20 * 1.0 * 3) = 60
+    const casual = calculateLP([190], [1.0]);
+    expect(tournament).toBeGreaterThan(casual);
   });
 
-  it("handles many games with decay", () => {
-    const scores = Array.from({ length: 20 }, () => 200);
-    const mmr = calculateMMR(scores);
-    expect(mmr).toBe(20); // All 200s → deviation of +20 from 180
+  it("LP floor is 0", () => {
+    // Many terrible games should not go below 0
+    const scores = Array.from({ length: 50 }, () => 80);
+    expect(calculateLP(scores)).toBe(0);
   });
 });
 
 describe("getRank", () => {
-  it("returns Iron for very low MMR", () => {
-    expect(getRank(-70).name).toBe("Iron");
+  it("returns Iron for low LP", () => {
+    expect(getRank(500).name).toBe("Iron");
   });
 
-  it("returns Bronze for -60 to -40 range", () => {
-    expect(getRank(-50).name).toBe("Bronze");
+  it("returns Bronze for 1000-1200 range", () => {
+    expect(getRank(1100).name).toBe("Bronze");
   });
 
-  it("returns Silver for -40 to -20 range", () => {
-    expect(getRank(-30).name).toBe("Silver");
+  it("returns Silver for 1200-1400 range", () => {
+    expect(getRank(1300).name).toBe("Silver");
   });
 
-  it("returns Gold for -20 to -5 range", () => {
-    expect(getRank(-12).name).toBe("Gold");
+  it("returns Gold for 1400-1600 range", () => {
+    expect(getRank(1500).name).toBe("Gold");
   });
 
-  it("returns Platinum for -5 to 10 range", () => {
-    expect(getRank(5).name).toBe("Platinum");
+  it("returns Platinum for 1600-1800 range", () => {
+    expect(getRank(1700).name).toBe("Platinum");
   });
 
-  it("returns Diamond for 10 to 25 range", () => {
-    expect(getRank(15).name).toBe("Diamond");
+  it("returns Emerald for 1800-2000 range", () => {
+    expect(getRank(1900).name).toBe("Emerald");
   });
 
-  it("returns Master for 25 to 40 range", () => {
-    expect(getRank(30).name).toBe("Master");
+  it("returns Diamond for 2000-2200 range", () => {
+    expect(getRank(2100).name).toBe("Diamond");
   });
 
-  it("returns Grandmaster for very high MMR", () => {
-    expect(getRank(50).name).toBe("Grandmaster");
+  it("returns Challenger for very high LP", () => {
+    expect(getRank(3000).name).toBe("Challenger");
   });
 
-  it("includes division for non-Master tiers", () => {
-    const rank = getRank(-12);
+  it("includes division for tiered ranks", () => {
+    const rank = getRank(1500);
     expect(rank.division).toBeDefined();
     expect(["I", "II", "III", "IV"]).toContain(rank.division);
   });
 
-  it("excludes division for Master and Grandmaster", () => {
-    expect(getRank(30).division).toBeUndefined();
-    expect(getRank(50).division).toBeUndefined();
+  it("excludes division for Master, Grandmaster, Challenger", () => {
+    expect(getRank(2300).division).toBeUndefined();
+    expect(getRank(2500).division).toBeUndefined();
+    expect(getRank(3000).division).toBeUndefined();
   });
 
   it("includes color properties", () => {
-    const rank = getRank(10);
+    const rank = getRank(1500);
     expect(rank.color).toBeTruthy();
     expect(rank.bgColor).toBeTruthy();
     expect(rank.borderColor).toBeTruthy();
@@ -109,32 +118,31 @@ describe("getRank", () => {
 
 describe("getDivisionProgress", () => {
   it("returns 0-100 range", () => {
-    const progress = getDivisionProgress(0);
+    const progress = getDivisionProgress(1300);
     expect(progress).toBeGreaterThanOrEqual(0);
     expect(progress).toBeLessThanOrEqual(100);
   });
 
-  it("returns a value between 0 and 100", () => {
-    // Test across several MMR values
-    for (const mmr of [-70, -50, -30, -12, 5, 15, 30, 50]) {
-      const p = getDivisionProgress(mmr);
+  it("returns a value between 0 and 100 for various LP values", () => {
+    for (const lp of [500, 1100, 1300, 1500, 1700, 1900, 2100, 2300, 3000]) {
+      const p = getDivisionProgress(lp);
       expect(p).toBeGreaterThanOrEqual(0);
       expect(p).toBeLessThanOrEqual(100);
     }
   });
 });
 
-describe("formatMMR", () => {
-  it("adds + prefix for positive", () => {
-    expect(formatMMR(25)).toBe("+25");
+describe("formatLP", () => {
+  it("formats with commas", () => {
+    expect(formatLP(1200)).toBe("1,200");
   });
 
-  it("shows negative as-is", () => {
-    expect(formatMMR(-10)).toBe("-10");
+  it("formats large numbers", () => {
+    expect(formatLP(2600)).toBe("2,600");
   });
 
-  it("shows zero without prefix", () => {
-    expect(formatMMR(0)).toBe("0");
+  it("formats zero", () => {
+    expect(formatLP(0)).toBe("0");
   });
 });
 
@@ -157,7 +165,7 @@ describe("getEventWeight", () => {
 });
 
 describe("CALIBRATION_GAMES", () => {
-  it("is a positive number", () => {
-    expect(CALIBRATION_GAMES).toBeGreaterThan(0);
+  it("is 3", () => {
+    expect(CALIBRATION_GAMES).toBe(3);
   });
 });

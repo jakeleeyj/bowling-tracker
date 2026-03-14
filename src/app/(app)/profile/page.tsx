@@ -20,9 +20,9 @@ import {
 import { useToast } from "@/components/Toast";
 import ErrorCard from "@/components/ErrorCard";
 import {
-  calculateMMR,
+  calculateLP,
   getRank,
-  formatMMR,
+  formatLP,
   getEventWeight,
   CALIBRATION_GAMES,
 } from "@/lib/ranking";
@@ -92,9 +92,9 @@ export default function ProfilePage() {
   const [sessions, setSessions] = useState<HistorySession[]>([]);
   const [achievementStats, setAchievementStats] =
     useState<AchievementStats | null>(null);
-  const [mmr, setMmr] = useState(0);
+  const [lp, setLp] = useState(0);
   const [rank, setRank] = useState<ReturnType<typeof getRank> | null>(null);
-  const [sessionMmrChanges, setSessionMmrChanges] = useState<
+  const [sessionLpChanges, setSessionLpChanges] = useState<
     Record<string, number>
   >({});
   const [loading, setLoading] = useState(true);
@@ -132,7 +132,7 @@ export default function ProfilePage() {
         };
         if (sessionData) setSessions(sessionData);
 
-        // Fetch achievement stats + MMR
+        // Fetch achievement stats + LP
         const { data: games } = (await supabase
           .from("games")
           .select(
@@ -153,17 +153,17 @@ export default function ProfilePage() {
             | null;
         };
 
-        // Calculate MMR (games already ordered newest-first)
+        // Calculate LP (games already ordered newest-first)
         const scores = games?.map((g) => g.total_score) ?? [];
         const weights =
           games?.map((g) => getEventWeight(g.sessions?.event_label ?? null)) ??
           [];
-        const userMmr = calculateMMR(scores, weights);
-        setMmr(userMmr);
-        setRank(getRank(userMmr));
+        const userLp = calculateLP(scores, weights);
+        setLp(userLp);
+        setRank(getRank(userLp));
 
-        // Per-session MMR change
-        const mmrMap: Record<string, number> = {};
+        // Per-session LP change
+        const lpMap: Record<string, number> = {};
         if (games && games.length > 0) {
           const sessionGameIndices: Record<string, number[]> = {};
           games.forEach((g, i) => {
@@ -176,14 +176,14 @@ export default function ProfilePage() {
             const weightsWithout = weights.filter(
               (_, i) => !indices.includes(i),
             );
-            const mmrWithout =
+            const lpWithout =
               scoresWithout.length > 0
-                ? calculateMMR(scoresWithout, weightsWithout)
+                ? calculateLP(scoresWithout, weightsWithout)
                 : 0;
-            mmrMap[sid] = userMmr - mmrWithout;
+            lpMap[sid] = userLp - lpWithout;
           }
         }
-        setSessionMmrChanges(mmrMap);
+        setSessionLpChanges(lpMap);
 
         const gameIds = games?.map((g) => g.id) ?? [];
         const { data: frames } = (await supabase
@@ -436,9 +436,7 @@ export default function ProfilePage() {
                   {rank.name}
                   {rank.division ? ` ${rank.division}` : ""}
                 </span>
-                <p className="text-[10px] text-text-muted">
-                  {formatMMR(mmr)} MMR
-                </p>
+                <p className="text-[10px] text-text-muted">{formatLP(lp)} LP</p>
               </>
             ) : (
               <>
@@ -543,9 +541,9 @@ export default function ProfilePage() {
                 games={sessionGames}
                 avatarUrl={avatarUrl}
                 isOwn
-                mmrChange={
+                lpChange={
                   (achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES
-                    ? sessionMmrChanges[session.id]
+                    ? sessionLpChanges[session.id]
                     : undefined
                 }
               />

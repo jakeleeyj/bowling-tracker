@@ -1,10 +1,12 @@
-// MMR Ranking System
-// Base score: 180. MMR = weighted average of (score - 180).
-// Recent games weighted more heavily using exponential decay (0.97^index).
-// 0.97 keeps ~50 games relevant and prevents single bad games from causing big swings.
+// LP Ranking System (League Points, like LoL)
+// Each game earns LP = (score - 170) × event_weight
+// Calibration games (first 3) earn 3× LP to set your starting rank
+// LP accumulates over time, floor at 0
+// Starting LP: 1200 (Silver baseline)
 
-const BASE_SCORE = 180;
-const DECAY_FACTOR = 0.97;
+const LP_BASE_SCORE = 170;
+const STARTING_LP = 1200;
+const CALIBRATION_MULTIPLIER = 3;
 export const CALIBRATION_GAMES = 3;
 
 export interface RankTier {
@@ -13,76 +15,93 @@ export interface RankTier {
   color: string;
   bgColor: string;
   borderColor: string;
-  icon: string; // emoji-free, we'll use SVG in the component
+  icon: string;
 }
 
-// Tier ranges (MMR values, base 180):
-// Iron: <120 avg, Bronze: 120-140, Silver: 140-160, Gold: 160-175
-// Platinum: 175-190, Diamond: 190-205, Master: 205-220, Grandmaster: 220+
+// Tier ranges (LP thresholds, 200 LP per tier):
+// Iron: 0-1000, Bronze: 1000-1200, Silver: 1200-1400, Gold: 1400-1600
+// Platinum: 1600-1800, Emerald: 1800-2000, Diamond: 2000-2200
+// Master: 2200-2400, Grandmaster: 2400-2600, Challenger: 2600+
 const TIERS = [
   {
     name: "Iron",
-    min: -Infinity,
-    max: -60,
+    min: 0,
+    max: 1000,
     color: "text-gray-400",
     bgColor: "bg-gray-400/10",
     borderColor: "border-gray-400/30",
   },
   {
     name: "Bronze",
-    min: -60,
-    max: -40,
-    color: "text-amber-700",
-    bgColor: "bg-amber-700/10",
-    borderColor: "border-amber-700/30",
+    min: 1000,
+    max: 1200,
+    color: "text-amber-600",
+    bgColor: "bg-amber-600/10",
+    borderColor: "border-amber-600/30",
   },
   {
     name: "Silver",
-    min: -40,
-    max: -20,
+    min: 1200,
+    max: 1400,
     color: "text-gray-300",
     bgColor: "bg-gray-300/10",
     borderColor: "border-gray-300/30",
   },
   {
     name: "Gold",
-    min: -20,
-    max: -5,
+    min: 1400,
+    max: 1600,
     color: "text-gold",
     bgColor: "bg-gold/10",
     borderColor: "border-gold/30",
   },
   {
     name: "Platinum",
-    min: -5,
-    max: 10,
+    min: 1600,
+    max: 1800,
     color: "text-cyan-400",
     bgColor: "bg-cyan-400/10",
     borderColor: "border-cyan-400/30",
   },
   {
+    name: "Emerald",
+    min: 1800,
+    max: 2000,
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-400/10",
+    borderColor: "border-emerald-400/30",
+  },
+  {
     name: "Diamond",
-    min: 10,
-    max: 25,
+    min: 2000,
+    max: 2200,
     color: "text-blue",
     bgColor: "bg-blue/10",
     borderColor: "border-blue/30",
   },
   {
     name: "Master",
-    min: 25,
-    max: 40,
+    min: 2200,
+    max: 2400,
     color: "text-purple",
     bgColor: "bg-purple/10",
     borderColor: "border-purple/30",
   },
   {
     name: "Grandmaster",
-    min: 40,
-    max: Infinity,
+    min: 2400,
+    max: 2600,
     color: "text-red",
     bgColor: "bg-red/10",
     borderColor: "border-red/30",
+  },
+  {
+    name: "Challenger",
+    min: 2600,
+    max: Infinity,
+    color: "text-rose-400",
+    bgColor: "bg-rose-400/10",
+    borderColor: "border-rose-400/30",
   },
 ] as const;
 
@@ -111,32 +130,40 @@ export function getEventWeight(eventLabel: string | null): number {
   return EVENT_WEIGHTS[eventLabel] ?? 1.0;
 }
 
-export function calculateMMR(
-  scores: number[],
-  eventWeights?: number[],
-): number {
+// Calculate cumulative LP from all games
+// scores should be newest-first (as returned by Supabase order desc)
+export function calculateLP(scores: number[], eventWeights?: number[]): number {
   if (scores.length === 0) return 0;
 
-  // Scores should be newest-first
-  let weightedSum = 0;
-  let totalWeight = 0;
+  let lp = STARTING_LP;
+  const totalGames = scores.length;
 
-  for (let i = 0; i < scores.length; i++) {
-    const decay = Math.pow(DECAY_FACTOR, i);
+  // Process oldest-first (reverse the newest-first array)
+  for (let i = scores.length - 1; i >= 0; i--) {
+    const chronologicalIndex = totalGames - 1 - i;
     const eventW = eventWeights?.[i] ?? 1.0;
-    const weight = decay * eventW;
-    weightedSum += (scores[i] - BASE_SCORE) * weight;
-    totalWeight += weight;
+    const isCal = chronologicalIndex < CALIBRATION_GAMES;
+    const multiplier = isCal ? CALIBRATION_MULTIPLIER : 1;
+    const gain = Math.round((scores[i] - LP_BASE_SCORE) * eventW * multiplier);
+    lp += gain;
   }
 
-  return Math.round(weightedSum / totalWeight);
+  return Math.max(0, lp);
 }
 
-export function getRank(mmr: number): RankTier {
-  const tier = TIERS.find((t) => mmr >= t.min && mmr < t.max) ?? TIERS[0];
+// Keep calculateMMR as alias for backward compat during transition
+export const calculateMMR = calculateLP;
 
-  // Master and Grandmaster have no divisions
-  if (tier.name === "Master" || tier.name === "Grandmaster") {
+export function getRank(lp: number): RankTier {
+  const tier =
+    TIERS.find((t) => lp >= t.min && lp < t.max) ?? TIERS[TIERS.length - 1];
+
+  // Master, Grandmaster, Challenger have no divisions
+  if (
+    tier.name === "Master" ||
+    tier.name === "Grandmaster" ||
+    tier.name === "Challenger"
+  ) {
     return {
       name: tier.name,
       color: tier.color,
@@ -148,7 +175,7 @@ export function getRank(mmr: number): RankTier {
 
   // Calculate division within tier
   const range = tier.max - tier.min;
-  const position = mmr - tier.min;
+  const position = lp - tier.min;
   const divIndex = Math.min(Math.floor((position / range) * 4), 3);
   const division = DIVISIONS[divIndex];
 
@@ -163,43 +190,30 @@ export function getRank(mmr: number): RankTier {
 }
 
 // Progress within current division (0-100%)
-export function getDivisionProgress(mmr: number): number {
-  const tier = TIERS.find((t) => mmr >= t.min && mmr < t.max) ?? TIERS[0];
+export function getDivisionProgress(lp: number): number {
+  const tier =
+    TIERS.find((t) => lp >= t.min && lp < t.max) ?? TIERS[TIERS.length - 1];
 
-  if (
-    tier.name === "Master" ||
-    tier.name === "Grandmaster" ||
-    tier.min === -Infinity
-  ) {
-    // Tiers with infinite bounds: show progress within a fixed range
-    const range =
-      tier.max === Infinity
-        ? 20
-        : tier.min === -Infinity
-          ? 20
-          : tier.max - tier.min;
-    const anchor = tier.min === -Infinity ? tier.max - range : tier.min;
-    const position = Math.max(0, mmr - anchor);
-    return Math.min(Math.round((position / range) * 100), 100);
+  // Challenger has no cap — show progress within 200 LP chunks
+  if (tier.name === "Challenger") {
+    const position = (lp - tier.min) % 200;
+    return Math.round((position / 200) * 100);
   }
 
   const range = tier.max - tier.min;
   const divSize = range / 4;
-  const position = mmr - tier.min;
+  const position = lp - tier.min;
   const withinDiv = position % divSize;
   return Math.min(Math.round((withinDiv / divSize) * 100), 100);
 }
 
-// For display: MMR as a signed string
-export function formatMMR(mmr: number): string {
-  if (mmr > 0) return `+${mmr}`;
-  return mmr.toString();
+// For display: LP as comma-formatted number
+export function formatLP(lp: number): string {
+  return lp.toLocaleString();
 }
 
-// Get the equivalent average score for an MMR
-export function mmrToAverage(mmr: number): number {
-  return BASE_SCORE + mmr;
-}
+// Keep old name working
+export const formatMMR = formatLP;
 
 // All tier names for reference
 export const TIER_NAMES = TIERS.map((t) => t.name);

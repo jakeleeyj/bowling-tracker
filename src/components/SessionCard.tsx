@@ -51,7 +51,7 @@ interface SessionCardProps {
   avatarGradient?: string;
   avatarUrl?: string | null;
   isOwn?: boolean;
-  mmrChange?: number;
+  lpChange?: number;
   rankLabel?: string;
   rankColor?: string;
 }
@@ -506,7 +506,7 @@ export default function SessionCard({
   avatarGradient,
   avatarUrl,
   isOwn = false,
-  mmrChange,
+  lpChange,
   rankLabel,
   rankColor,
 }: SessionCardProps) {
@@ -597,12 +597,12 @@ export default function SessionCard({
             <div className="text-lg font-extrabold leading-tight">
               {totalPins}
             </div>
-            {mmrChange !== undefined && (
+            {lpChange !== undefined && (
               <div
-                className={`text-[10px] font-semibold leading-tight ${mmrChange > 0 ? "text-green" : mmrChange < 0 ? "text-red" : "text-text-muted"}`}
+                className={`text-[10px] font-semibold leading-tight ${lpChange > 0 ? "text-green" : lpChange < 0 ? "text-red" : "text-text-muted"}`}
               >
-                {mmrChange > 0 ? "+" : ""}
-                {mmrChange} MMR
+                {lpChange > 0 ? "+" : ""}
+                {lpChange} LP
               </div>
             )}
           </div>

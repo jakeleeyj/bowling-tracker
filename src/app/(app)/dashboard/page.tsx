@@ -10,9 +10,9 @@ import SessionCard from "@/components/SessionCard";
 import Avatar from "@/components/Avatar";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import {
-  calculateMMR,
+  calculateLP,
   getRank,
-  formatMMR,
+  formatLP,
   getEventWeight,
   CALIBRATION_GAMES,
 } from "@/lib/ranking";
@@ -91,7 +91,7 @@ export default async function DashboardPage() {
       );
     });
     for (const [uid, d] of Object.entries(byUser)) {
-      userRanks[uid] = getRank(calculateMMR(d.scores, d.weights));
+      userRanks[uid] = getRank(calculateLP(d.scores, d.weights));
       userGameCounts[uid] = d.scores.length;
     }
   }
@@ -100,11 +100,11 @@ export default async function DashboardPage() {
   const eventWeights =
     userGames?.map((g) => getEventWeight(g.sessions?.event_label ?? null)) ??
     [];
-  const mmr = calculateMMR(scores, eventWeights);
-  const rank = getRank(mmr);
+  const lp = calculateLP(scores, eventWeights);
+  const rank = getRank(lp);
 
-  // Compute per-session MMR change for current user
-  const sessionMmrChange: Record<string, number> = {};
+  // Compute per-session LP change for current user
+  const sessionLpChange: Record<string, number> = {};
   if (userGames && userGames.length > 0) {
     const sessionGameIndices: Record<string, number[]> = {};
     userGames.forEach((g, i) => {
@@ -114,16 +114,16 @@ export default async function DashboardPage() {
     });
 
     for (const [sessionId, indices] of Object.entries(sessionGameIndices)) {
-      const mmrWith = calculateMMR(scores, eventWeights);
+      const lpWith = calculateLP(scores, eventWeights);
       const scoresWithout = scores.filter((_, i) => !indices.includes(i));
       const weightsWithout = eventWeights.filter(
         (_, i) => !indices.includes(i),
       );
-      const mmrWithout =
+      const lpWithout =
         scoresWithout.length > 0
-          ? calculateMMR(scoresWithout, weightsWithout)
+          ? calculateLP(scoresWithout, weightsWithout)
           : 0;
-      sessionMmrChange[sessionId] = mmrWith - mmrWithout;
+      sessionLpChange[sessionId] = lpWith - lpWithout;
     }
   }
 
@@ -208,9 +208,7 @@ export default async function DashboardPage() {
                   {rank.name}
                   {rank.division ? ` ${rank.division}` : ""}
                 </span>
-                <p className="text-[10px] text-text-muted">
-                  {formatMMR(mmr)} MMR
-                </p>
+                <p className="text-[10px] text-text-muted">{formatLP(lp)} LP</p>
               </>
             ) : (
               <>
@@ -295,9 +293,9 @@ export default async function DashboardPage() {
               games={sessionGames}
               avatarUrl={sessionProfile?.avatar_url}
               isOwn={isOwnSession}
-              mmrChange={
+              lpChange={
                 isOwnSession && totalGames >= CALIBRATION_GAMES
-                  ? sessionMmrChange[session.id]
+                  ? sessionLpChange[session.id]
                   : undefined
               }
               rankLabel={

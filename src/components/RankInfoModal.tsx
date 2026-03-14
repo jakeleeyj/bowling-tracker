@@ -4,14 +4,16 @@ import { useState } from "react";
 import { Info, X } from "lucide-react";
 
 const RANK_TABLE = [
-  { name: "Iron", avg: "< 120", color: "text-gray-400" },
-  { name: "Bronze", avg: "120–140", color: "text-amber-600" },
-  { name: "Silver", avg: "140–160", color: "text-gray-300" },
-  { name: "Gold", avg: "160–175", color: "text-gold" },
-  { name: "Platinum", avg: "175–190", color: "text-cyan-400" },
-  { name: "Diamond", avg: "190–205", color: "text-blue" },
-  { name: "Master", avg: "205–220", color: "text-purple" },
-  { name: "Grandmaster", avg: "220+", color: "text-red" },
+  { name: "Iron", lp: "0–1,000", color: "text-gray-400" },
+  { name: "Bronze", lp: "1,000–1,200", color: "text-amber-600" },
+  { name: "Silver", lp: "1,200–1,400", color: "text-gray-300" },
+  { name: "Gold", lp: "1,400–1,600", color: "text-gold" },
+  { name: "Platinum", lp: "1,600–1,800", color: "text-cyan-400" },
+  { name: "Emerald", lp: "1,800–2,000", color: "text-emerald-400" },
+  { name: "Diamond", lp: "2,000–2,200", color: "text-blue" },
+  { name: "Master", lp: "2,200–2,400", color: "text-purple" },
+  { name: "Grandmaster", lp: "2,400–2,600", color: "text-red" },
+  { name: "Challenger", lp: "2,600+", color: "text-rose-400" },
 ];
 
 export default function RankInfoModal() {
@@ -32,15 +34,12 @@ export default function RankInfoModal() {
           className="fixed inset-0 z-[100] flex items-center justify-center p-4"
           onClick={() => setOpen(false)}
         >
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm" />
 
-          {/* Modal */}
           <div
             className="glass-strong relative z-10 w-full max-w-[400px] max-h-[80vh] overflow-y-auto rounded-2xl p-5"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-base font-extrabold text-text-primary">
                 How Ranking Works
@@ -53,29 +52,25 @@ export default function RankInfoModal() {
               </button>
             </div>
 
-            {/* Explainer */}
             <div className="mb-4 space-y-2.5 text-[12px] leading-relaxed text-text-secondary">
               <p>
-                Your <span className="font-bold text-text-primary">MMR</span> is
-                based on your bowling scores relative to a 180 baseline. Recent
-                games are weighted more heavily than older ones, so your rank
-                reflects current form.
+                You earn <span className="font-bold text-text-primary">LP</span>{" "}
+                (League Points) each game based on your score. Games above 170
+                earn LP, games below 170 lose LP. Your LP accumulates over time.
               </p>
               <p>
-                Competitive sessions count more:{" "}
-                <span className="text-text-primary">Tournament</span> games have
-                the highest weight, followed by{" "}
-                <span className="text-text-primary">League</span>, then{" "}
-                <span className="text-text-primary">Casual</span>.
+                Your first{" "}
+                <span className="font-bold text-text-primary">3 games</span> are
+                calibration matches worth 3x LP to set your starting rank.
               </p>
               <p>
-                You need{" "}
-                <span className="font-bold text-text-primary">3 games</span> to
-                finish calibration and receive your initial rank.
+                Competitive sessions earn more:{" "}
+                <span className="text-text-primary">Tournament</span> (1.5x),{" "}
+                <span className="text-text-primary">League</span> (1.25x),{" "}
+                <span className="text-text-primary">Casual</span> (1x).
               </p>
             </div>
 
-            {/* Tier table */}
             <h3 className="mb-2 text-[11px] font-bold uppercase tracking-wide text-text-muted">
               Rank Tiers
             </h3>
@@ -88,15 +83,14 @@ export default function RankInfoModal() {
                   <span className={`text-[12px] font-bold ${r.color}`}>
                     {r.name}
                   </span>
-                  <span className="text-[11px] text-text-muted">
-                    ~{r.avg} avg
-                  </span>
+                  <span className="text-[11px] text-text-muted">{r.lp} LP</span>
                 </div>
               ))}
             </div>
 
             <p className="mt-3 text-[10px] text-text-muted">
-              Each tier (except Master & Grandmaster) has 4 divisions: IV to I
+              Iron through Diamond have 4 divisions (IV to I). Master,
+              Grandmaster, and Challenger have no divisions.
             </p>
           </div>
         </div>

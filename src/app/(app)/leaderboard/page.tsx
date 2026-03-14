@@ -13,10 +13,10 @@ import RankInfoModal from "@/components/RankInfoModal";
 import type { ProfileRow, GameRow } from "@/lib/queries";
 import Avatar from "@/components/Avatar";
 import {
-  calculateMMR,
+  calculateLP,
   getRank,
   getDivisionProgress,
-  formatMMR,
+  formatLP,
   getEventWeight,
   CALIBRATION_GAMES,
 } from "@/lib/ranking";
@@ -41,6 +41,8 @@ function RankEmblem({
     Diamond: { fill: "#3b82f6", stroke: "#2563eb" },
     Master: { fill: "#8b5cf6", stroke: "#7c3aed" },
     Grandmaster: { fill: "#ef4444", stroke: "#dc2626" },
+    Emerald: { fill: "#34d399", stroke: "#10b981" },
+    Challenger: { fill: "#fb7185", stroke: "#f43f5e" },
   };
 
   const colors = tierColors[tierName] ?? tierColors.Iron;
@@ -117,22 +119,19 @@ export default async function LeaderboardPage() {
       const weights = userGames.map((g) =>
         getEventWeight(g.sessions?.event_label ?? null),
       );
-      const mmr = calculateMMR(scores, weights);
+      const mmr = calculateLP(scores, weights);
       const rank = getRank(mmr);
       const progress = getDivisionProgress(mmr);
       const avg = Math.round(scores.reduce((s, v) => s + v, 0) / scores.length);
       const high = Math.max(...scores);
 
-      // Recent trend: compare last 5 games MMR vs previous 5
+      // Recent trend: compare last 5 games avg LP gain vs overall avg LP gain
       let trend: "up" | "down" | "stable" = "stable";
       if (scores.length >= 10) {
-        const recentMMR = calculateMMR(scores.slice(0, 5), weights.slice(0, 5));
-        const olderMMR = calculateMMR(
-          scores.slice(5, 10),
-          weights.slice(5, 10),
-        );
-        if (recentMMR - olderMMR > 3) trend = "up";
-        else if (olderMMR - recentMMR > 3) trend = "down";
+        const recentAvg = scores.slice(0, 5).reduce((s, v) => s + v, 0) / 5;
+        const olderAvg = scores.slice(5, 10).reduce((s, v) => s + v, 0) / 5;
+        if (recentAvg - olderAvg > 5) trend = "up";
+        else if (olderAvg - recentAvg > 5) trend = "down";
       }
 
       return {
@@ -228,7 +227,7 @@ export default async function LeaderboardPage() {
                     )}
                   </div>
                   <p className="text-[11px] text-text-muted">
-                    {formatMMR(currentUserEntry.mmr)} MMR &bull; avg{" "}
+                    {formatLP(currentUserEntry.mmr)} LP &bull; avg{" "}
                     {currentUserEntry.avg} &bull; {currentUserEntry.games} games
                   </p>
                 </>
@@ -358,14 +357,14 @@ export default async function LeaderboardPage() {
                   </p>
                 </div>
 
-                {/* MMR + trend */}
+                {/* LP + trend */}
                 <div className="flex items-center gap-1 shrink-0">
                   {entry.isCalibrating ? (
                     <div className="text-right">
                       <div className="text-sm font-extrabold text-text-muted">
                         --
                       </div>
-                      <div className="text-[9px] text-text-muted">MMR</div>
+                      <div className="text-[9px] text-text-muted">LP</div>
                     </div>
                   ) : (
                     <>
@@ -380,9 +379,9 @@ export default async function LeaderboardPage() {
                       )}
                       <div className="text-right">
                         <div className="text-sm font-extrabold text-text-primary">
-                          {formatMMR(entry.mmr)}
+                          {formatLP(entry.mmr)}
                         </div>
-                        <div className="text-[9px] text-text-muted">MMR</div>
+                        <div className="text-[9px] text-text-muted">LP</div>
                       </div>
                     </>
                   )}

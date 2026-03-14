@@ -32,7 +32,7 @@ import {
 import { useToast } from "@/components/Toast";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
 import {
-  calculateMMR,
+  calculateLP,
   getRank,
   getDivisionProgress,
   getEventWeight,
@@ -151,8 +151,8 @@ function ResultsScreen({
   data,
 }: {
   data: {
-    oldMmr: number;
-    newMmr: number;
+    oldLp: number;
+    newLp: number;
     oldRank: RankTier;
     newRank: RankTier;
     sessionAvg: number;
@@ -174,7 +174,7 @@ function ResultsScreen({
   const [showRankChange, setShowRankChange] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [skipped, setSkipped] = useState(false);
-  const mmrDiff = data.newMmr - data.oldMmr;
+  const lpDiff = data.newLp - data.oldLp;
 
   function skipAnimations() {
     if (skipped) return;
@@ -184,7 +184,7 @@ function ResultsScreen({
   }
   const displayRank =
     data.rankChanged && !showRankChange ? data.oldRank : data.newRank;
-  const progress = getDivisionProgress(data.newMmr);
+  const progress = getDivisionProgress(data.newLp);
 
   useEffect(() => {
     if (data.rankChanged && !wasCalibrating) {
@@ -268,8 +268,8 @@ function ResultsScreen({
           </div>
           <div className="animate-results-fade mb-6 mt-3">
             <div className="text-4xl font-extrabold tabular-nums text-text-primary">
-              <AnimatedCounter from={0} to={data.newMmr} />
-              <span className="text-lg text-text-muted"> MMR</span>
+              <AnimatedCounter from={0} to={data.newLp} />
+              <span className="text-lg text-text-muted"> LP</span>
             </div>
           </div>
         </>
@@ -305,7 +305,7 @@ function ResultsScreen({
             <div className="h-1.5 overflow-hidden rounded-full bg-surface-light">
               <div
                 className={`h-full rounded-full transition-all duration-1000 ${
-                  mmrDiff >= 0
+                  lpDiff >= 0
                     ? "bg-gradient-to-r from-blue to-green"
                     : "bg-gradient-to-r from-red to-gold"
                 }`}
@@ -318,17 +318,17 @@ function ResultsScreen({
             </div>
           </div>
 
-          {/* MMR counter */}
+          {/* LP counter */}
           <div className="animate-results-fade mb-6 mt-3">
             <div className="text-4xl font-extrabold tabular-nums text-text-primary">
-              <AnimatedCounter from={data.oldMmr} to={data.newMmr} />
-              <span className="text-lg text-text-muted"> MMR</span>
+              <AnimatedCounter from={data.oldLp} to={data.newLp} />
+              <span className="text-lg text-text-muted"> LP</span>
             </div>
             <div
-              className={`mt-1 text-sm font-semibold ${mmrDiff > 0 ? "text-green" : mmrDiff < 0 ? "text-red" : "text-text-muted"}`}
+              className={`mt-1 text-sm font-semibold ${lpDiff > 0 ? "text-green" : lpDiff < 0 ? "text-red" : "text-text-muted"}`}
             >
-              {mmrDiff > 0 ? "+" : ""}
-              {mmrDiff} MMR
+              {lpDiff > 0 ? "+" : ""}
+              {lpDiff} LP
             </div>
           </div>
         </>
@@ -495,8 +495,8 @@ function LogPage() {
 
   // Results screen state
   const [resultsData, setResultsData] = useState<{
-    oldMmr: number;
-    newMmr: number;
+    oldLp: number;
+    newLp: number;
     oldRank: RankTier;
     newRank: RankTier;
     sessionAvg: number;
@@ -1047,7 +1047,7 @@ function LogPage() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Snapshot MMR + achievements before save
+    // Snapshot LP + achievements before save
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existingGames } = await (supabase as any)
       .from("games")
@@ -1079,8 +1079,8 @@ function LogPage() {
         (g: { sessions: { event_label: string | null } | null }) =>
           getEventWeight(g.sessions?.event_label ?? null),
       ) ?? [];
-    const oldMmr = calculateMMR(oldScores, oldWeights);
-    const oldRank = getRank(oldMmr);
+    const oldLp = calculateLP(oldScores, oldWeights);
+    const oldRank = getRank(oldLp);
 
     const totalPins = games.reduce((sum, g) => sum + g.totalScore, 0);
 
@@ -1151,12 +1151,12 @@ function LogPage() {
       }
     }
 
-    // Calculate new MMR after save
+    // Calculate new LP after save
     const newEventWeight = getEventWeight(eventLabel || null);
     const newScores = [...games.map((g) => g.totalScore), ...oldScores];
     const newWeights = [...games.map(() => newEventWeight), ...oldWeights];
-    const newMmr = calculateMMR(newScores, newWeights);
-    const newRank = getRank(newMmr);
+    const newLp = calculateLP(newScores, newWeights);
+    const newRank = getRank(newLp);
 
     const gameScores = games.map((g) => g.totalScore);
     const sessionAvg = Math.round(
@@ -1167,8 +1167,8 @@ function LogPage() {
     const rankChanged =
       newRank.name !== oldRank.name ||
       (newRank.division ?? "") !== (oldRank.division ?? "");
-    const isRankUp = rankChanged && newMmr > oldMmr;
-    const isRankDown = rankChanged && newMmr < oldMmr;
+    const isRankUp = rankChanged && newLp > oldLp;
+    const isRankDown = rankChanged && newLp < oldLp;
 
     // Detect newly unlocked achievements
     const sessionId = (session as Record<string, string>).id;
@@ -1215,8 +1215,8 @@ function LogPage() {
     const gamesBefore = oldScores.length;
     const totalGamesAfter = gamesBefore + games.length;
     setResultsData({
-      oldMmr,
-      newMmr,
+      oldLp,
+      newLp,
       oldRank,
       newRank,
       sessionAvg,

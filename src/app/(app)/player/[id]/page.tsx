@@ -10,9 +10,9 @@ import type {
 import Avatar from "@/components/Avatar";
 import SessionCard from "@/components/SessionCard";
 import {
-  calculateMMR,
+  calculateLP,
   getRank,
-  formatMMR,
+  formatLP,
   getEventWeight,
   CALIBRATION_GAMES,
 } from "@/lib/ranking";
@@ -75,8 +75,8 @@ export default async function PlayerPage({
       ? Math.round(scores.reduce((a, b) => a + b, 0) / totalGames)
       : 0;
   const high = totalGames > 0 ? Math.max(...scores) : 0;
-  const mmr = calculateMMR(scores, weights);
-  const rank = getRank(mmr);
+  const lp = calculateLP(scores, weights);
+  const rank = getRank(lp);
   const isCalibrating = totalGames < CALIBRATION_GAMES;
 
   return (
@@ -106,7 +106,7 @@ export default async function PlayerPage({
             <p className={`text-sm font-semibold ${rank.color}`}>
               {rank.name}
               {rank.division ? ` ${rank.division}` : ""}{" "}
-              <span className="text-text-muted">{formatMMR(mmr)} MMR</span>
+              <span className="text-text-muted">{formatLP(lp)} LP</span>
             </p>
           )}
         </div>
