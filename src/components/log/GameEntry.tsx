@@ -178,90 +178,97 @@ export default function GameEntry(props: GameEntryProps) {
       )}
 
       {/* Completed game view */}
-      {currentGameComplete ? (
-        <div className="flex flex-col gap-3">
-          {games[currentGameIndex].entryType === "detailed" &&
-          games[currentGameIndex].frames.length > 0 ? (
-            <FrameScorecard
-              frames={games[currentGameIndex].frames}
-              currentFrame={0}
-              currentRoll={1}
-            />
-          ) : null}
+      {currentGameComplete && games[currentGameIndex] ? (
+        (() => {
+          const completedGame = games[currentGameIndex];
+          return (
+            <div className="flex flex-col gap-3">
+              {completedGame.entryType === "detailed" &&
+              completedGame.frames.length > 0 ? (
+                <FrameScorecard
+                  frames={completedGame.frames}
+                  currentFrame={0}
+                  currentRoll={1}
+                />
+              ) : null}
 
-          <div className="glass p-4 text-center">
-            <div className="text-xs text-text-muted">Final Score</div>
-            <div className="text-3xl font-extrabold text-text-primary">
-              {games[currentGameIndex].totalScore}
-            </div>
-            {games[currentGameIndex].entryType === "detailed" &&
-              isCleanGame(games[currentGameIndex].frames) && (
-                <div className="mt-1 text-[11px] font-semibold text-green">
-                  CLEAN
+              <div className="glass p-4 text-center">
+                <div className="text-xs text-text-muted">Final Score</div>
+                <div className="text-3xl font-extrabold text-text-primary">
+                  {completedGame.totalScore}
                 </div>
+                {completedGame.entryType === "detailed" &&
+                  isCleanGame(completedGame.frames) && (
+                    <div className="mt-1 text-[11px] font-semibold text-green">
+                      CLEAN
+                    </div>
+                  )}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={editCurrentGame}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-surface-light py-3.5 text-sm font-bold text-text-secondary active:bg-surface-light/80"
+                >
+                  <Pencil size={16} />
+                  Edit
+                </button>
+                <button
+                  onClick={() => {
+                    if (
+                      !confirm("Delete this game? You'll need to re-enter it.")
+                    )
+                      return;
+                    deleteCurrentGame();
+                  }}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red/10 py-3.5 text-sm font-bold text-red active:bg-red/20"
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+              </div>
+
+              {editMode ? (
+                <button
+                  onClick={updateExistingGame}
+                  disabled={saving}
+                  className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+              ) : (
+                (() => {
+                  const nextIncomplete = Array.from(
+                    { length: gameCount },
+                    (_, i) => i,
+                  ).find((i) => i !== currentGameIndex && !games[i]);
+                  if (nextIncomplete !== undefined) {
+                    return (
+                      <button
+                        onClick={() => switchToGame(nextIncomplete)}
+                        className="w-full rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+                      >
+                        Next Game (G{nextIncomplete + 1})
+                      </button>
+                    );
+                  }
+                  if (games.filter(Boolean).length === gameCount) {
+                    return (
+                      <button
+                        onClick={saveSession}
+                        disabled={saving}
+                        className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+                      >
+                        {saving ? "Saving..." : "Save Session"}
+                      </button>
+                    );
+                  }
+                  return null;
+                })()
               )}
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={editCurrentGame}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-surface-light py-3.5 text-sm font-bold text-text-secondary active:bg-surface-light/80"
-            >
-              <Pencil size={16} />
-              Edit
-            </button>
-            <button
-              onClick={() => {
-                if (!confirm("Delete this game? You'll need to re-enter it."))
-                  return;
-                deleteCurrentGame();
-              }}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red/10 py-3.5 text-sm font-bold text-red active:bg-red/20"
-            >
-              <Trash2 size={16} />
-              Delete
-            </button>
-          </div>
-
-          {editMode ? (
-            <button
-              onClick={updateExistingGame}
-              disabled={saving}
-              className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
-            >
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
-          ) : (
-            (() => {
-              const nextIncomplete = Array.from(
-                { length: gameCount },
-                (_, i) => i,
-              ).find((i) => i !== currentGameIndex && !games[i]);
-              if (nextIncomplete !== undefined) {
-                return (
-                  <button
-                    onClick={() => switchToGame(nextIncomplete)}
-                    className="w-full rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
-                  >
-                    Next Game (G{nextIncomplete + 1})
-                  </button>
-                );
-              }
-              if (games.filter(Boolean).length === gameCount) {
-                return (
-                  <button
-                    onClick={saveSession}
-                    disabled={saving}
-                    className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
-                  >
-                    {saving ? "Saving..." : "Save Session"}
-                  </button>
-                );
-              }
-              return null;
-            })()
-          )}
-        </div>
+            </div>
+          );
+        })()
       ) : (
         <>
           {/* Mode toggle */}

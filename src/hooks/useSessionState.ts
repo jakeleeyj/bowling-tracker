@@ -677,7 +677,11 @@ export function useSessionState() {
         roll3: null,
         isStrike,
         isSpare: false,
-        pinsRemaining: isStrike ? null : [...standingPins],
+        pinsRemaining: isStrike
+          ? null
+          : standingPins.length > 0
+            ? [...standingPins]
+            : getAllPins(),
         pinsRemainingRoll2: null,
         spareConverted: false,
       };
@@ -690,16 +694,22 @@ export function useSessionState() {
     } else if (existing.roll2 === null) {
       // Roll 2 of 10th frame
       const isSpare = !existing.isStrike && existing.roll1 + pins === 10;
-      // Store remaining pins after roll 2 for roll 3 reference
-      const roll2Remaining =
-        existing.isStrike && pins < 10 ? [...standingPins] : null;
+      // Store remaining pins after roll 2
+      const roll2Pins =
+        standingPins.length > 0
+          ? [...standingPins]
+          : pins === 10
+            ? []
+            : getAllPins();
       const updatedFrame: FrameData = {
         ...existing,
         roll2: pins,
         isSpare,
         spareConverted: isSpare,
-        pinsRemaining: roll2Remaining ?? existing.pinsRemaining,
-        pinsRemainingRoll2: isSpare ? [] : roll2Remaining,
+        // For strike+non-strike, update pinsRemaining with roll 2 state for getAvailablePins
+        pinsRemaining:
+          existing.isStrike && pins < 10 ? roll2Pins : existing.pinsRemaining,
+        pinsRemainingRoll2: isSpare ? [] : pins === 10 ? null : roll2Pins,
       };
       const newFrames = frames.map((f) =>
         f.frameNumber === 10 ? updatedFrame : f,
