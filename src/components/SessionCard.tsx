@@ -4,7 +4,6 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import {
-  Star,
   Check,
   ChevronDown,
   Pencil,
@@ -705,23 +704,11 @@ export default function SessionCard({
               key={game.id}
               className={`w-14 rounded-md bg-black/30 py-[5px] text-center ${isHigh ? "border border-gold/35" : isClean ? "border border-green/35" : "border border-transparent"}`}
             >
-              <div className="flex items-center justify-center gap-1">
-                <span
-                  className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : ""}`}
-                >
-                  {game.total_score}
-                </span>
-                {isHigh && (
-                  <Star size={9} className="shrink-0 fill-gold text-gold" />
-                )}
-                {isClean && !isHigh && (
-                  <Check
-                    size={9}
-                    className="shrink-0 text-green"
-                    strokeWidth={3}
-                  />
-                )}
-              </div>
+              <span
+                className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : ""}`}
+              >
+                {game.total_score}
+              </span>
             </div>
           );
         })}
