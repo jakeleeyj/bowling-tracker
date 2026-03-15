@@ -374,7 +374,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           height: "1920px",
           background:
             "linear-gradient(165deg, #0a0e1a 0%, #0f1729 40%, #0a0e1a 100%)",
-          borderRadius: "40px",
+          borderRadius: "0px",
           padding: s.padding,
           display: "flex",
           flexDirection: "column",
