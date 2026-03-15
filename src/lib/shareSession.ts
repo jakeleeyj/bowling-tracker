@@ -3,7 +3,7 @@ import { toPng } from "html-to-image";
 export async function shareSession(cardElement: HTMLElement): Promise<void> {
   const dataUrl = await toPng(cardElement, {
     width: 1080,
-    height: cardElement.scrollHeight,
+    height: 1920,
     pixelRatio: 2,
   });
 
