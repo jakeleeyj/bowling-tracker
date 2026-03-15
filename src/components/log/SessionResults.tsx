@@ -294,9 +294,9 @@ export default function SessionResults({ data }: { data: ResultsData }) {
         </div>
       </div>
 
-      <div className="mb-8 flex justify-center gap-2">
+      <div className="mb-8 flex flex-wrap justify-center gap-2 w-full max-w-[300px]">
         {data.gameScores.map((score: number, i: number) => (
-          <div key={i} className="glass w-14 p-2 text-center">
+          <div key={i} className="glass min-w-[48px] flex-1 p-2 text-center">
             <div className="text-[9px] text-text-muted">G{i + 1}</div>
             <div className="text-sm font-bold text-text-primary">{score}</div>
           </div>
