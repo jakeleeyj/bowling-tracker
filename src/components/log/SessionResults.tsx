@@ -22,7 +22,7 @@ import type { AchievementDef } from "@/lib/achievements";
 function AnimatedCounter({
   from,
   to,
-  duration = 1200,
+  duration = 2500,
 }: {
   from: number;
   to: number;
@@ -219,7 +219,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
           <div className="animate-results-fade mb-1 w-full max-w-[200px]">
             <div className="h-1.5 overflow-hidden rounded-full bg-surface-light">
               <div
-                className={`h-full rounded-full transition-all duration-1000 ${
+                className={`h-full rounded-full transition-all duration-[2500ms] ${
                   lpDiff >= 0
                     ? "bg-gradient-to-r from-blue to-green"
                     : "bg-gradient-to-r from-red to-gold"
@@ -302,12 +302,6 @@ export default function SessionResults({ data }: { data: ResultsData }) {
           </div>
         ))}
       </div>
-
-      {!skipped && (
-        <p className="mb-4 animate-pulse text-[10px] text-text-muted">
-          Tap to skip
-        </p>
-      )}
 
       <button
         onClick={(e) => {
