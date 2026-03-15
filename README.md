@@ -62,6 +62,9 @@ A mobile-first bowling score tracker PWA. Track scores frame-by-frame, analyze s
 - **Vercel** — hosting with auto-deploy
 - **GitHub Actions** — deploy notifications on push
 
+<details>
+<summary>Getting Started (Developer Setup)</summary>
+
 ## Getting Started
 
 ### 1. Clone and install
@@ -109,7 +112,10 @@ Open [localhost:3000](http://localhost:3000) — works best on mobile or a narro
 3. Add all environment variables listed above
 4. Deploy — every push to `main` auto-deploys and sends push notifications
 
-## Project Structure
+</details>
+
+<details>
+<summary>Project Structure</summary>
 
 ```
 src/
@@ -154,6 +160,8 @@ supabase/
   workflows/
     deploy-notify.yml   # Push notification on deploy
 ```
+
+</details>
 
 ## Roadmap
 
