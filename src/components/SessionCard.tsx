@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import {
@@ -10,11 +10,14 @@ import {
   Pencil,
   Trash2,
   BarChart3,
+  Share2,
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import Avatar from "@/components/Avatar";
 import { isSplit } from "@/lib/bowling";
 import { EVENT_LABELS } from "@/lib/ranking";
+import ShareCard from "@/components/ShareCard";
+import { shareSession } from "@/lib/shareSession";
 
 interface FrameInfo {
   frame_number: number;
@@ -550,6 +553,8 @@ export default function SessionCard({
   const [expanded, setExpanded] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const shareCardRef = useRef<HTMLDivElement>(null);
   const [editingMeta, setEditingMeta] = useState(false);
   const [editVenue, setEditVenue] = useState(venue ?? "");
   const [editEvent, setEditEvent] = useState(eventLabel ?? "");
@@ -558,6 +563,26 @@ export default function SessionCard({
   const { toast } = useToast();
   const highGame =
     games.length > 0 ? Math.max(...games.map((g) => g.total_score)) : 0;
+
+  const [showShareOverlay, setShowShareOverlay] = useState(false);
+
+  async function handleShare() {
+    setShowShareOverlay(true);
+  }
+
+  async function handleCaptureAndShare() {
+    if (!shareCardRef.current || sharing) return;
+    setSharing(true);
+    try {
+      // Small delay to ensure the overlay is fully rendered
+      await new Promise((r) => setTimeout(r, 100));
+      await shareSession(shareCardRef.current);
+    } catch {
+      toast("Failed to share", "error");
+    }
+    setSharing(false);
+    setShowShareOverlay(false);
+  }
 
   async function handleSaveMeta() {
     setSavingMeta(true);
@@ -825,6 +850,14 @@ export default function SessionCard({
                 </button>
               )}
               <button
+                onClick={handleShare}
+                disabled={sharing}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue/10 py-2 text-[11px] font-semibold text-blue active:bg-blue/20 disabled:opacity-50"
+              >
+                <Share2 size={12} />
+                {sharing ? "Generating..." : "Share Scorecard"}
+              </button>
+              <button
                 onClick={handleDeleteSession}
                 disabled={deleting}
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-red/10 py-2 text-[11px] font-semibold text-red active:bg-red/20 disabled:opacity-50"
@@ -834,6 +867,83 @@ export default function SessionCard({
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Share overlay */}
+      {showShareOverlay && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background: "rgba(0,0,0,0.95)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            padding: "12px",
+            paddingTop: "calc(20px + env(safe-area-inset-top))",
+            paddingBottom: "calc(140px + env(safe-area-inset-bottom))",
+          }}
+        >
+          {/* Card preview — scrollable */}
+          <div
+            style={{
+              flex: 1,
+              width: "100%",
+              overflow: "auto",
+              borderRadius: "16px",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                zoom: 0.28,
+                transformOrigin: "top center",
+                flexShrink: 0,
+              }}
+            >
+              <ShareCard
+                ref={shareCardRef}
+                playerName={realName}
+                venue={venue}
+                dateLabel={dateLabel}
+                totalPins={totalPins}
+                games={games.map((g) => ({
+                  game_number: g.game_number,
+                  total_score: g.total_score,
+                  is_clean: g.is_clean,
+                  strike_count: g.strike_count,
+                  spare_count: g.spare_count,
+                  frames: g.frames,
+                }))}
+              />
+            </div>
+          </div>
+          {/* Buttons at bottom */}
+          <div
+            style={{
+              display: "flex",
+              gap: "12px",
+              marginTop: "12px",
+              flexShrink: 0,
+            }}
+          >
+            <button
+              onClick={handleCaptureAndShare}
+              disabled={sharing}
+              className="rounded-xl bg-gradient-to-r from-blue to-blue-dark px-8 py-3 text-sm font-bold text-white active:scale-95 disabled:opacity-50"
+            >
+              {sharing ? "Generating..." : "Share"}
+            </button>
+            <button
+              onClick={() => setShowShareOverlay(false)}
+              className="rounded-xl border border-border px-8 py-3 text-sm font-semibold text-text-secondary active:scale-95"
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>
