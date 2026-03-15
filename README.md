@@ -169,6 +169,5 @@ supabase/
 - [ ] Head-to-head player comparison
 - [ ] Export game history (CSV/PDF)
 - [ ] Capacitor wrapper for App Store / Play Store
-- [ ] In-app purchase for premium features
 - [ ] League/group management
 - [ ] Seasonal rank resets
