@@ -8,23 +8,44 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout current and previous
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check version change
+        id: version
+        run: |
+          CURRENT=$(jq -r '.version' package.json)
+          PREVIOUS=$(git show HEAD~1:package.json 2>/dev/null | jq -r '.version' 2>/dev/null || echo "")
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          if [ "$CURRENT" != "$PREVIOUS" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build notification message
+        if: steps.version.outputs.changed == 'true'
         id: msg
         env:
           COMMIT_MSG: ${{ github.event.head_commit.message }}
+          VERSION: ${{ steps.version.outputs.current }}
         run: |
           NOTIFY_LINE=$(echo "$COMMIT_MSG" | grep -i '^notify:' | sed 's/^notify:\s*//' || true)
           if [ -n "$NOTIFY_LINE" ]; then
-            echo "body=$NOTIFY_LINE" >> "$GITHUB_OUTPUT"
+            echo "body=v$VERSION — $NOTIFY_LINE" >> "$GITHUB_OUTPUT"
           else
             FIRST_LINE=$(echo "$COMMIT_MSG" | head -1)
-            echo "body=$FIRST_LINE" >> "$GITHUB_OUTPUT"
+            echo "body=v$VERSION — $FIRST_LINE" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Wait for Vercel deploy
+        if: steps.version.outputs.changed == 'true'
         run: sleep 90
 
       - name: Send push notification
+        if: steps.version.outputs.changed == 'true'
         env:
           DEPLOY_SECRET: ${{ secrets.DEPLOY_NOTIFY_SECRET }}
           NOTIFY_MSG: ${{ steps.msg.outputs.body }}
