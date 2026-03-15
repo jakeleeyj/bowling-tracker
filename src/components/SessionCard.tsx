@@ -899,26 +899,33 @@ export default function SessionCard({
           >
             <div
               style={{
-                zoom: 0.28,
-                transformOrigin: "top center",
+                width: "302px",
                 flexShrink: 0,
               }}
             >
-              <ShareCard
-                ref={shareCardRef}
-                playerName={realName}
-                venue={venue}
-                dateLabel={dateLabel}
-                totalPins={totalPins}
-                games={games.map((g) => ({
-                  game_number: g.game_number,
-                  total_score: g.total_score,
-                  is_clean: g.is_clean,
-                  strike_count: g.strike_count,
-                  spare_count: g.spare_count,
-                  frames: g.frames,
-                }))}
-              />
+              <div
+                style={{
+                  transform: "scale(0.28)",
+                  transformOrigin: "top left",
+                  width: "1080px",
+                }}
+              >
+                <ShareCard
+                  ref={shareCardRef}
+                  playerName={realName}
+                  venue={venue}
+                  dateLabel={dateLabel}
+                  totalPins={totalPins}
+                  games={games.map((g) => ({
+                    game_number: g.game_number,
+                    total_score: g.total_score,
+                    is_clean: g.is_clean,
+                    strike_count: g.strike_count,
+                    spare_count: g.spare_count,
+                    frames: g.frames,
+                  }))}
+                />
+              </div>
             </div>
           </div>
           {/* Buttons at bottom */}
