@@ -872,42 +872,52 @@ export default function SessionCard({
 
       {/* Share overlay */}
       {showShareOverlay && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            background: "rgba(0,0,0,0.95)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            padding: "12px",
-            paddingTop: "calc(20px + env(safe-area-inset-top))",
-            paddingBottom: "calc(140px + env(safe-area-inset-bottom))",
-          }}
-        >
-          {/* Card preview — scrollable */}
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={() => setShowShareOverlay(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 9998,
+              background: "rgba(0,0,0,0.8)",
+            }}
+          />
+          {/* Modal */}
           <div
             style={{
-              flex: 1,
-              width: "100%",
-              overflow: "auto",
-              borderRadius: "16px",
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 9999,
+              width: "calc(100vw - 48px)",
+              maxWidth: "340px",
+              maxHeight: "calc(100dvh - 100px)",
               display: "flex",
-              justifyContent: "center",
+              flexDirection: "column",
+              borderRadius: "20px",
+              overflow: "hidden",
+              background: "#0a0e1a",
             }}
           >
+            {/* Card preview — scaled to fit, no scroll */}
             <div
               style={{
-                width: "302px",
-                flexShrink: 0,
+                flex: 1,
+                overflow: "hidden",
+                position: "relative",
               }}
             >
               <div
                 style={{
-                  transform: "scale(0.28)",
+                  transform: "scale(0.3)",
                   transformOrigin: "top left",
                   width: "1080px",
+                  position: "absolute",
+                  top: 0,
+                  left: "50%",
+                  marginLeft: "-162px",
                 }}
               >
                 <ShareCard
@@ -927,31 +937,32 @@ export default function SessionCard({
                 />
               </div>
             </div>
-          </div>
-          {/* Buttons at bottom */}
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              marginTop: "12px",
-              flexShrink: 0,
-            }}
-          >
-            <button
-              onClick={handleCaptureAndShare}
-              disabled={sharing}
-              className="rounded-xl bg-gradient-to-r from-blue to-blue-dark px-8 py-3 text-sm font-bold text-white active:scale-95 disabled:opacity-50"
+            {/* Buttons */}
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                padding: "12px",
+                background: "#0a0e1a",
+                borderTop: "1px solid rgba(255,255,255,0.06)",
+              }}
             >
-              {sharing ? "Generating..." : "Share"}
-            </button>
-            <button
-              onClick={() => setShowShareOverlay(false)}
-              className="rounded-xl border border-border px-8 py-3 text-sm font-semibold text-text-secondary active:scale-95"
-            >
-              Close
-            </button>
+              <button
+                onClick={handleCaptureAndShare}
+                disabled={sharing}
+                className="flex-1 rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white active:scale-95 disabled:opacity-50"
+              >
+                {sharing ? "Generating..." : "Share"}
+              </button>
+              <button
+                onClick={() => setShowShareOverlay(false)}
+                className="rounded-lg border border-border px-6 py-3 text-sm font-semibold text-text-secondary active:scale-95"
+              >
+                Close
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

@@ -541,7 +541,6 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               <div
                 key={game.game_number}
                 style={{
-                  flex: 1,
                   background: "rgba(255, 255, 255, 0.05)",
                   border: `2px solid ${isHigh ? "#f59e0b" : "rgba(255, 255, 255, 0.08)"}`,
                   borderRadius: `${s.chipRadius}px`,
