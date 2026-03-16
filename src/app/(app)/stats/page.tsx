@@ -31,12 +31,24 @@ interface FrameData {
   frame_score: number;
 }
 
-type Filter = "last10" | "last50" | "ytd";
+type Filter = "last10" | "last50" | "ytd" | "custom";
 type Tab = "overview" | "spares";
 
-function filterGames(games: GameData[], filter: Filter): GameData[] {
+function filterGames(
+  games: GameData[],
+  filter: Filter,
+  dateFrom?: string,
+  dateTo?: string,
+): GameData[] {
   if (filter === "last10") return games.slice(-10);
   if (filter === "last50") return games.slice(-50);
+  if (filter === "custom" && dateFrom && dateTo) {
+    return games.filter(
+      (g) =>
+        g.sessions.session_date >= dateFrom &&
+        g.sessions.session_date <= dateTo,
+    );
+  }
   const yearStart = new Date(new Date().getFullYear(), 0, 1)
     .toISOString()
     .split("T")[0];
@@ -231,6 +243,8 @@ export default function StatsPage() {
   const [error, setError] = useState(false);
   const [filter, setFilter] = useState<Filter>("last10");
   const [tab, setTab] = useState<Tab>("overview");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -269,8 +283,8 @@ export default function StatsPage() {
 
   // Memoize filtered data — must be before early returns (hooks can't be conditional)
   const games = useMemo(
-    () => filterGames(allGames, filter),
-    [allGames, filter],
+    () => filterGames(allGames, filter, dateFrom, dateTo),
+    [allGames, filter, dateFrom, dateTo],
   );
   const frames = useMemo(
     () => getFramesForGames(allFrames, games),
@@ -508,18 +522,32 @@ export default function StatsPage() {
     last10: "Last 10",
     last50: "Last 50",
     ytd: "YTD",
+    custom: "Custom",
   };
+
+  function handleFilterChange(f: Filter) {
+    setFilter(f);
+    if (f === "custom" && !dateFrom) {
+      // Default to last 30 days
+      const to = new Date().toISOString().split("T")[0];
+      const from = new Date(Date.now() - 30 * 86400000)
+        .toISOString()
+        .split("T")[0];
+      setDateFrom(from);
+      setDateTo(to);
+    }
+  }
 
   return (
     <div>
       <h1 className="mb-5 text-xl font-extrabold">Stats</h1>
 
       {/* Filter pills */}
-      <div className="mb-5 flex gap-1.5">
-        {(["last10", "last50", "ytd"] as Filter[]).map((f) => (
+      <div className="mb-3 flex gap-1.5">
+        {(["last10", "last50", "ytd", "custom"] as Filter[]).map((f) => (
           <button
             key={f}
-            onClick={() => setFilter(f)}
+            onClick={() => handleFilterChange(f)}
             className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
               filter === f
                 ? "bg-blue text-white"
@@ -533,6 +561,25 @@ export default function StatsPage() {
           {games.length} game{games.length !== 1 ? "s" : ""}
         </span>
       </div>
+
+      {/* Date range picker */}
+      {filter === "custom" && (
+        <div className="mb-5 flex items-center gap-2">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="flex-1 rounded-lg border border-border bg-surface-light px-3 py-2 text-sm text-text-primary outline-none focus:border-blue"
+          />
+          <span className="text-xs text-text-muted">to</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="flex-1 rounded-lg border border-border bg-surface-light px-3 py-2 text-sm text-text-primary outline-none focus:border-blue"
+          />
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="mb-5 flex rounded-lg bg-surface-light p-[3px]">

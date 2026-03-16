@@ -93,6 +93,11 @@ export default function ProfilePage() {
   const [showSettings, setShowSettings] = useState(false);
   const [showInstall, setShowInstall] = useState(false);
   const [sessions, setSessions] = useState<HistorySession[]>([]);
+  const [historyFilter, setHistoryFilter] = useState<"all" | "ytd" | "custom">(
+    "all",
+  );
+  const [historyDateFrom, setHistoryDateFrom] = useState("");
+  const [historyDateTo, setHistoryDateTo] = useState("");
   const [achievementStats, setAchievementStats] =
     useState<AchievementStats | null>(null);
   const [lp, setLp] = useState(0);
@@ -574,56 +579,121 @@ export default function ProfilePage() {
       <div>
         <h2 className="mb-3 text-sm font-bold">Game History</h2>
 
-        {sessions.length === 0 && (
+        {/* Filter pills */}
+        <div className="mb-3 flex gap-1.5">
+          {(["all", "ytd", "custom"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => {
+                setHistoryFilter(f);
+                if (f === "custom" && !historyDateFrom) {
+                  const to = new Date().toISOString().split("T")[0];
+                  const from = new Date(Date.now() - 30 * 86400000)
+                    .toISOString()
+                    .split("T")[0];
+                  setHistoryDateFrom(from);
+                  setHistoryDateTo(to);
+                }
+              }}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                historyFilter === f
+                  ? "bg-blue text-white"
+                  : "bg-surface-light text-text-muted active:bg-surface-light/80"
+              }`}
+            >
+              {f === "all" ? "All" : f === "ytd" ? "YTD" : "Custom"}
+            </button>
+          ))}
+        </div>
+
+        {historyFilter === "custom" && (
+          <div className="mb-3 flex items-center gap-2">
+            <input
+              type="date"
+              value={historyDateFrom}
+              onChange={(e) => setHistoryDateFrom(e.target.value)}
+              className="flex-1 rounded-lg border border-border bg-surface-light px-3 py-2 text-sm text-text-primary outline-none focus:border-blue"
+            />
+            <span className="text-xs text-text-muted">to</span>
+            <input
+              type="date"
+              value={historyDateTo}
+              onChange={(e) => setHistoryDateTo(e.target.value)}
+              className="flex-1 rounded-lg border border-border bg-surface-light px-3 py-2 text-sm text-text-primary outline-none focus:border-blue"
+            />
+          </div>
+        )}
+
+        {sessions.length === 0 && historyFilter === "all" && (
           <div className="glass p-8 text-center">
             <p className="text-sm text-text-muted">No sessions yet.</p>
           </div>
         )}
 
         <div className="flex flex-col gap-2">
-          {sessions.map((session) => {
-            const sessionGames = [...session.games].sort(
-              (a, b) => a.game_number - b.game_number,
-            );
-            const avg =
-              sessionGames.length > 0
-                ? Math.round(
-                    sessionGames.reduce((s, g) => s + g.total_score, 0) /
-                      sessionGames.length,
-                  )
-                : 0;
+          {sessions
+            .filter((session) => {
+              if (historyFilter === "all") return true;
+              const date =
+                session.session_date ?? session.created_at.split("T")[0];
+              if (historyFilter === "ytd") {
+                const yearStart = new Date(new Date().getFullYear(), 0, 1)
+                  .toISOString()
+                  .split("T")[0];
+                return date >= yearStart;
+              }
+              if (
+                historyFilter === "custom" &&
+                historyDateFrom &&
+                historyDateTo
+              ) {
+                return date >= historyDateFrom && date <= historyDateTo;
+              }
+              return true;
+            })
+            .map((session) => {
+              const sessionGames = [...session.games].sort(
+                (a, b) => a.game_number - b.game_number,
+              );
+              const avg =
+                sessionGames.length > 0
+                  ? Math.round(
+                      sessionGames.reduce((s, g) => s + g.total_score, 0) /
+                        sessionGames.length,
+                    )
+                  : 0;
 
-            const createdAt = new Date(session.created_at);
-            const dateLabel = createdAt.toLocaleDateString("en-SG", {
-              month: "short",
-              day: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-              timeZone: "Asia/Singapore",
-            });
+              const createdAt = new Date(session.created_at);
+              const dateLabel = createdAt.toLocaleDateString("en-SG", {
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                timeZone: "Asia/Singapore",
+              });
 
-            return (
-              <SessionCard
-                key={session.id}
-                sessionId={session.id}
-                name="You"
-                realName={displayName || "You"}
-                dateLabel={dateLabel}
-                avg={avg}
-                totalPins={session.total_pins}
-                venue={session.venue}
-                eventLabel={session.event_label}
-                games={sessionGames}
-                avatarUrl={avatarUrl}
-                isOwn
-                lpChange={
-                  (achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES
-                    ? sessionLpChanges[session.id]
-                    : undefined
-                }
-              />
-            );
-          })}
+              return (
+                <SessionCard
+                  key={session.id}
+                  sessionId={session.id}
+                  name="You"
+                  realName={displayName || "You"}
+                  dateLabel={dateLabel}
+                  avg={avg}
+                  totalPins={session.total_pins}
+                  venue={session.venue}
+                  eventLabel={session.event_label}
+                  games={sessionGames}
+                  avatarUrl={avatarUrl}
+                  isOwn
+                  lpChange={
+                    (achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES
+                      ? sessionLpChanges[session.id]
+                      : undefined
+                  }
+                />
+              );
+            })}
 
           {hasMoreSessions && (
             <div ref={sentinelRef} className="flex justify-center py-4">
