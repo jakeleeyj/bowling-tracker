@@ -24,7 +24,7 @@ A mobile-first bowling score tracker PWA. Track scores frame-by-frame, analyze s
 ### Stats & Analytics
 
 - **Score trend chart** — rolling average over time
-- **Strike/Spare/Double/Pocket rates** — with filter by last 10, 50, or YTD
+- **Strike/Spare/Double/Pocket rates** — filter by Last 10, Last 50, YTD, or custom date range
 - **Spare analysis** — single pin, multi-pin, and split conversion rates
 - **Practice targets** — highlights your most missed leaves
 - **Spare conversion trend** — track improvement over time
@@ -51,6 +51,9 @@ A mobile-first bowling score tracker PWA. Track scores frame-by-frame, analyze s
 - **Haptic feedback** — vibration on strikes, spares, and pin confirms (Android)
 - **Infinite scroll** — session history loads 20 at a time
 - **Ongoing session indicator** — spinning bowling ball icon in nav when session is active
+- **Share scorecard** — generate IG stories-format image of your session, share via native share sheet
+- **Date range filter** — custom date picker on stats and game history pages
+- **Batch save** — optimized session saving with parallel queries and batch inserts
 
 ## Tech Stack
 
@@ -165,9 +168,11 @@ supabase/
 
 ## Roadmap
 
-- [ ] Share scorecard as image
+- [x] Share scorecard as image
 - [ ] Head-to-head player comparison
 - [ ] Export game history (CSV/PDF)
 - [ ] Capacitor wrapper for App Store / Play Store
 - [ ] League/group management
 - [ ] Seasonal rank resets
+- [ ] Offline logging with sync
+- [ ] Single game share card
