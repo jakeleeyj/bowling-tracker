@@ -30,7 +30,12 @@ export default function BottomNav() {
 
   const [hasSavedSession, setHasSavedSession] = useState(false);
   useEffect(() => {
-    setHasSavedSession(localStorage.getItem("spare-me-session") !== null);
+    const check = () =>
+      setHasSavedSession(localStorage.getItem("spare-me-session") !== null);
+    check();
+    // Re-check periodically since localStorage changes from same tab don't fire storage events
+    const interval = setInterval(check, 1000);
+    return () => clearInterval(interval);
   }, [pathname]);
 
   return (
