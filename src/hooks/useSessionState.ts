@@ -869,24 +869,24 @@ export function useSessionState() {
       return;
     }
 
-    // Get display name for notifications
+    // Parallel: get profile name + existing games at once
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: profileData } = await (supabase as any)
-      .from("profiles")
-      .select("display_name")
-      .eq("id", user.id)
-      .single();
-    const playerName = profileData?.display_name ?? "Someone";
-
-    // Snapshot LP + achievements before save
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: existingGames } = await (supabase as any)
-      .from("games")
-      .select(
-        "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
-      )
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+    const [profileResult, gamesResult] = await Promise.all([
+      (supabase as any)
+        .from("profiles")
+        .select("display_name")
+        .eq("id", user.id)
+        .single(),
+      (supabase as any)
+        .from("games")
+        .select(
+          "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
+        )
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
+    ]);
+    const playerName = profileResult.data?.display_name ?? "Someone";
+    const existingGames = gamesResult.data;
 
     const existingGameIds =
       existingGames?.map((g: { id: string }) => g.id) ?? [];
@@ -936,60 +936,62 @@ export function useSessionState() {
       return;
     }
 
+    // Batch insert all games at once
+    const gameInserts = games.map((game, i) => ({
+      session_id: (session as Record<string, string>).id,
+      user_id: user.id,
+      game_number: i + 1,
+      total_score: game.totalScore,
+      entry_type: game.entryType,
+      is_clean:
+        game.entryType === "detailed" ? isCleanGame(game.frames) : false,
+      strike_count:
+        game.entryType === "detailed" ? countStrikes(game.frames) : 0,
+      spare_count: game.entryType === "detailed" ? countSpares(game.frames) : 0,
+    }));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: gameRows, error: gameError } = await (supabase as any)
+      .from("games")
+      .insert(gameInserts)
+      .select();
+
+    if (gameError || !gameRows || gameRows.length === 0) {
+      setSaving(false);
+      savingRef.current = false;
+      toast("Failed to save games — please try again", "error");
+      return;
+    }
+
+    // Batch insert all frames at once
+    const allFrameInserts: Record<string, unknown>[] = [];
     for (let i = 0; i < games.length; i++) {
       const game = games[i];
-      const clean =
-        game.entryType === "detailed" ? isCleanGame(game.frames) : false;
-      const strikes =
-        game.entryType === "detailed" ? countStrikes(game.frames) : 0;
-      const spares =
-        game.entryType === "detailed" ? countSpares(game.frames) : 0;
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: gameRow, error: gameError } = await (supabase as any)
-        .from("games")
-        .insert({
-          session_id: (session as Record<string, string>).id,
-          user_id: user.id,
-          game_number: i + 1,
-          total_score: game.totalScore,
-          entry_type: game.entryType,
-          is_clean: clean,
-          strike_count: strikes,
-          spare_count: spares,
-        })
-        .select()
-        .single();
-
-      if (gameError || !gameRow) {
-        setSaving(false);
-        savingRef.current = false;
-        toast(
-          "Failed to save game " + (i + 1) + " — please try again",
-          "error",
-        );
-        return;
-      }
-
-      if (game.entryType === "detailed" && game.frames.length > 0) {
+      const gameRow = (gameRows as Record<string, string>[])[i];
+      if (game.entryType === "detailed" && game.frames.length > 0 && gameRow) {
         const frameScores = calculateFrameScores(game.frames);
-        const frameInserts = game.frames.map((f, fi) => ({
-          game_id: (gameRow as Record<string, string>).id,
-          frame_number: f.frameNumber,
-          roll_1: f.roll1,
-          roll_2: f.roll2,
-          roll_3: f.roll3,
-          is_strike: f.isStrike,
-          is_spare: f.isSpare,
-          pins_remaining: f.pinsRemaining,
-          pins_remaining_roll2: f.pinsRemainingRoll2,
-          spare_converted: f.spareConverted,
-          frame_score: frameScores[fi] ?? 0,
-        }));
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any).from("frames").insert(frameInserts);
+        for (let fi = 0; fi < game.frames.length; fi++) {
+          const f = game.frames[fi];
+          allFrameInserts.push({
+            game_id: gameRow.id,
+            frame_number: f.frameNumber,
+            roll_1: f.roll1,
+            roll_2: f.roll2,
+            roll_3: f.roll3,
+            is_strike: f.isStrike,
+            is_spare: f.isSpare,
+            pins_remaining: f.pinsRemaining,
+            pins_remaining_roll2: f.pinsRemainingRoll2,
+            spare_converted: f.spareConverted,
+            frame_score: frameScores[fi] ?? 0,
+          });
+        }
       }
+    }
+
+    if (allFrameInserts.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("frames").insert(allFrameInserts);
     }
 
     // Calculate new LP after save

@@ -104,7 +104,7 @@ export default function BottomNav() {
       </div>
 
       {/* Nav items row — all 5 labels aligned */}
-      <div className="relative z-[2] flex pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+      <div className="relative z-[2] flex pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {leftItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (

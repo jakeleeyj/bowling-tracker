@@ -259,7 +259,7 @@ export default function GameEntry(props: GameEntryProps) {
                         disabled={saving}
                         className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
                       >
-                        {saving ? "Saving..." : "Save Session"}
+                        {saving ? "Saving — don't close..." : "Save Session"}
                       </button>
                     );
                   }
