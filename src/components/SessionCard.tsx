@@ -640,7 +640,7 @@ export default function SessionCard({
         <div className="flex items-center gap-2.5">
           <Avatar name={realName} avatarUrl={avatarUrl} size="sm" />
           <div>
-            <p className="flex items-center text-[13px] font-semibold">
+            <span className="flex items-center text-[13px] font-semibold">
               {name}
               {rankTierName && (
                 <span className="ml-1.5 inline-flex items-center gap-1">
@@ -652,7 +652,7 @@ export default function SessionCard({
                   </span>
                 </span>
               )}
-            </p>
+            </span>
             <p className="text-[10px] text-text-muted">
               {dateLabel} &bull; avg {avg}
             </p>
