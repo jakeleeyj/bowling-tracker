@@ -633,8 +633,8 @@ export default function ProfilePage() {
         )}
 
         <div className="flex flex-col gap-2">
-          {sessions
-            .filter((session) => {
+          {(() => {
+            const filtered = sessions.filter((session) => {
               if (historyFilter === "all") return true;
               const date =
                 session.session_date ?? session.created_at.split("T")[0];
@@ -652,8 +652,17 @@ export default function ProfilePage() {
                 return date >= historyDateFrom && date <= historyDateTo;
               }
               return true;
-            })
-            .map((session) => {
+            });
+            if (filtered.length === 0 && historyFilter !== "all") {
+              return (
+                <div className="glass p-8 text-center">
+                  <p className="text-sm text-text-muted">
+                    No sessions in this range.
+                  </p>
+                </div>
+              );
+            }
+            return filtered.map((session) => {
               const sessionGames = [...session.games].sort(
                 (a, b) => a.game_number - b.game_number,
               );
@@ -695,7 +704,8 @@ export default function ProfilePage() {
                   }
                 />
               );
-            })}
+            });
+          })()}
 
           {hasMoreSessions && (
             <div ref={sentinelRef} className="flex justify-center py-4">
