@@ -37,7 +37,7 @@ begin
   game_stats as (
     select
       count(*)::int as total_games,
-      coalesce(round(avg(total_score))::int, 0) as avg_score,
+      coalesce(floor(avg(total_score))::int, 0) as avg_score,
       coalesce(max(total_score), 0) as high_score,
       coalesce(min(total_score), 0) as low_score,
       count(*) filter (where entry_type = 'detailed')::int as detailed_games,
