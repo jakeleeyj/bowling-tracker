@@ -262,6 +262,8 @@ export default async function LeaderboardPage() {
                           {entry.rank.division && ` ${entry.rank.division}`}
                         </span>
                         {" \u2022 "}
+                        avg {entry.avg}
+                        {" \u2022 "}
                         {entry.games} games
                       </>
                     )}
