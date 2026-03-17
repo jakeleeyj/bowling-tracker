@@ -282,6 +282,11 @@ export default async function DashboardPage() {
                   ? userRanks[session.user_id]?.color
                   : undefined
               }
+              rankTierName={
+                (userGameCounts[session.user_id] ?? 0) >= CALIBRATION_GAMES
+                  ? userRanks[session.user_id]?.name
+                  : undefined
+              }
             />
           );
         })}

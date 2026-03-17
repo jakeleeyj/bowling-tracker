@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import Avatar from "@/components/Avatar";
+import RankEmblem from "@/components/RankEmblem";
 import { isSplit } from "@/lib/bowling";
 import { EVENT_LABELS } from "@/lib/ranking";
 import ShareCard from "@/components/ShareCard";
@@ -58,6 +59,7 @@ interface SessionCardProps {
   isCalibrationSession?: boolean;
   rankLabel?: string;
   rankColor?: string;
+  rankTierName?: string;
 }
 
 const DEFAULT_VENUES = [
@@ -555,6 +557,7 @@ export default function SessionCard({
   isCalibrationSession = false,
   rankLabel,
   rankColor,
+  rankTierName,
 }: SessionCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -637,13 +640,16 @@ export default function SessionCard({
         <div className="flex items-center gap-2.5">
           <Avatar name={realName} avatarUrl={avatarUrl} size="sm" />
           <div>
-            <p className="text-[13px] font-semibold">
+            <p className="flex items-center text-[13px] font-semibold">
               {name}
-              {rankLabel && (
-                <span
-                  className={`ml-1.5 text-[10px] font-semibold ${rankColor ?? "text-text-muted"}`}
-                >
-                  {rankLabel}
+              {rankTierName && (
+                <span className="ml-1.5 inline-flex items-center gap-0.5">
+                  <RankEmblem tierName={rankTierName} size={14} />
+                  <span
+                    className={`text-[10px] font-semibold ${rankColor ?? "text-text-muted"}`}
+                  >
+                    {rankLabel}
+                  </span>
                 </span>
               )}
             </p>
