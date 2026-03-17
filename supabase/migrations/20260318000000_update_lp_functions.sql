@@ -64,7 +64,7 @@ begin
 
   v_lp := greatest(v_lp, 0);
 
-  v_avg := round((select avg(unnest) from unnest(v_scores)));
+  v_avg := floor((select avg(unnest) from unnest(v_scores)));
   v_high := (select max(unnest) from unnest(v_scores));
 
   if v_lp >= 2600 then v_rank := 'Challenger'; v_division := null;
@@ -145,7 +145,7 @@ begin
       continue;
     end if;
 
-    v_avg := round((select avg(unnest) from unnest(v_scores)));
+    v_avg := floor((select avg(unnest) from unnest(v_scores)));
     v_high := (select max(unnest) from unnest(v_scores));
 
     v_lp := 1200;

@@ -46,7 +46,7 @@ begin
       continue;
     end if;
 
-    v_avg := round((select avg(unnest) from unnest(v_scores)));
+    v_avg := floor((select avg(unnest) from unnest(v_scores)));
     v_high := (select max(unnest) from unnest(v_scores));
 
     v_lp := 1200;

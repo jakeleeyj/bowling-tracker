@@ -22,7 +22,7 @@ export default function SessionReview({
   onSave,
 }: SessionReviewProps) {
   const totalPins = games.reduce((sum, g) => sum + g.totalScore, 0);
-  const avg = Math.round(totalPins / games.length);
+  const avg = Math.floor(totalPins / games.length);
 
   return (
     <div>

@@ -73,7 +73,7 @@ export default async function PlayerPage({
     [];
   const avg =
     totalGames > 0
-      ? Math.round(scores.reduce((a, b) => a + b, 0) / totalGames)
+      ? Math.floor(scores.reduce((a, b) => a + b, 0) / totalGames)
       : 0;
   const high = totalGames > 0 ? Math.max(...scores) : 0;
   const lp = calculateLP(scores, weights);

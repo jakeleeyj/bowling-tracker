@@ -69,7 +69,7 @@ begin
   v_lp := greatest(v_lp, 0);
 
   -- Compute stats
-  v_avg := round((select avg(unnest) from unnest(v_scores)));
+  v_avg := floor((select avg(unnest) from unnest(v_scores)));
   v_high := (select max(unnest) from unnest(v_scores));
 
   -- Determine tier

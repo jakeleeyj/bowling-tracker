@@ -508,7 +508,7 @@ export function useSessionState() {
           (newRank.division ?? "") !== (oldRank.division ?? "");
         const allScores = queue.flatMap((q) => q.gameScores);
         const totalPins = queue.reduce((s, q) => s + q.totalPins, 0);
-        const sessionAvg = Math.round(
+        const sessionAvg = Math.floor(
           allScores.reduce((s, v) => s + v, 0) / allScores.length,
         );
         const sessionHigh = Math.max(...allScores);
@@ -1203,7 +1203,7 @@ export function useSessionState() {
         })),
         idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
         gameScores,
-        sessionAvg: Math.round(
+        sessionAvg: Math.floor(
           gameScores.reduce((s, v) => s + v, 0) / gameScores.length,
         ),
         sessionHigh: Math.max(...gameScores),

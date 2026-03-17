@@ -668,7 +668,7 @@ export default function ProfilePage() {
               );
               const avg =
                 sessionGames.length > 0
-                  ? Math.round(
+                  ? Math.floor(
                       sessionGames.reduce((s, g) => s + g.total_score, 0) /
                         sessionGames.length,
                     )

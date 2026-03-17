@@ -247,7 +247,7 @@ function renderFrameRolls(
 const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
   ({ playerName, venue, dateLabel, totalPins, games }, ref) => {
     const gameCount = games.length;
-    const avg = gameCount > 0 ? Math.round(totalPins / gameCount) : 0;
+    const avg = gameCount > 0 ? Math.floor(totalPins / gameCount) : 0;
     const highScore = Math.max(...games.map((g) => g.total_score));
     const cleanCount = games.filter((g) => g.is_clean).length;
     const { strikeRate, spareRate } = computeStats(games);
