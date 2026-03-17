@@ -187,10 +187,16 @@ begin
 
     v_progress := 0;
     if v_tier_min is not null then
-      v_progress := round((v_lp - v_tier_min)::numeric / (v_tier_max - v_tier_min) * 100)::int;
       v_division := (array['IV','III','II','I'])[least(floor(
         (v_lp - v_tier_min)::numeric / (v_tier_max - v_tier_min) * 4
       )::int, 3) + 1];
+      -- Progress within current division (50 LP band), matching client getDivisionProgress
+      declare
+        v_div_size numeric := (v_tier_max - v_tier_min)::numeric / 4;
+        v_within_div numeric := ((v_lp - v_tier_min)::numeric) % v_div_size;
+      begin
+        v_progress := least(round(v_within_div / v_div_size * 100)::int, 100);
+      end;
     end if;
 
     result := result || jsonb_build_object(
