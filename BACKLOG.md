@@ -53,6 +53,7 @@
 - [ ] **Seasonal rank system** — Define season duration (monthly/quarterly), reset LP with soft placement based on previous rank `#ranking` `#seasons` _(2026-03-18)_
 - [ ] **Season badge/medal on profile** — Display past season rank badges (e.g. "Season 1: Diamond") on player profile `#ranking` `#seasons` _(2026-03-18)_
 - [ ] **Season history page** — View rank progression across all past seasons `#ranking` `#seasons` _(2026-03-18)_
+- [ ] **LP ceiling tuning** — Make Challenger harder to reach (200 avg currently hits it at ~180 games), review decay curve and multipliers `#ranking` `#seasons` _(2026-03-18)_
 
 ## Low Priority
 
