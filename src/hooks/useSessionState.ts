@@ -32,7 +32,7 @@ import {
 } from "@/lib/achievements";
 
 export type EntryMode = "quick" | "detailed";
-export type Step = "setup" | "resume" | "game" | "results";
+export type Step = "setup" | "resume" | "game" | "results" | "pendingSync";
 
 export interface GameData {
   entryType: EntryMode;
@@ -74,6 +74,19 @@ export interface ResultsData {
   gamesBefore: number;
   isNewPB: boolean;
 }
+
+export interface PendingSyncData {
+  venue: string;
+  eventLabel: string;
+  games: GameData[];
+  idempotencyKey: string;
+  gameScores: number[];
+  sessionAvg: number;
+  sessionHigh: number;
+  totalPins: number;
+}
+
+const PENDING_SYNC_KEY = "spare-me-pending-sync";
 
 export function upsertFrame(
   frames: FrameData[],
@@ -119,6 +132,8 @@ export function useSessionState() {
   // Results screen state
   const [resultsData, setResultsData] = useState<ResultsData | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
+  const [pendingSyncData, setPendingSyncData] =
+    useState<PendingSyncData | null>(null);
 
   const [history, setHistory] = useState<
     Array<{
@@ -143,6 +158,19 @@ export function useSessionState() {
     // Don't restore if editing an existing game
     const editGameParam = searchParams.get("editGame");
     if (editGameParam) return;
+
+    // Check for pending offline sync first
+    const pending = localStorage.getItem(PENDING_SYNC_KEY);
+    if (pending) {
+      const data = JSON.parse(pending) as PendingSyncData;
+      setPendingSyncData(data);
+      setStep("pendingSync");
+      // Auto-sync if online
+      if (navigator.onLine) {
+        syncPendingSession(data);
+      }
+      return;
+    }
 
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -244,9 +272,284 @@ export function useSessionState() {
     editMode,
   ]);
 
+  // Auto-sync when coming back online
+  useEffect(() => {
+    function handleOnline() {
+      const pending = localStorage.getItem(PENDING_SYNC_KEY);
+      if (pending) {
+        syncPendingSession(JSON.parse(pending) as PendingSyncData);
+      }
+    }
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function clearSavedSession() {
     localStorage.removeItem(STORAGE_KEY);
     window.dispatchEvent(new Event("session-storage-change"));
+  }
+
+  async function syncPendingSession(data?: PendingSyncData) {
+    const syncData = data ?? pendingSyncData;
+    if (!syncData) return;
+
+    setSaving(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setSaving(false);
+        toast("Not logged in — please sign in to sync", "error");
+        return;
+      }
+
+      // Re-run the full save flow with the pending data
+      // Temporarily set the games/venue/etc from sync data
+      const totalPins = syncData.totalPins;
+
+      // Check for existing session (idempotency)
+      let session: Database["public"]["Tables"]["sessions"]["Row"] | null =
+        null;
+      if (syncData.idempotencyKey) {
+        const { data: existing } = await supabase
+          .from("sessions")
+          .select("id")
+          .eq("idempotency_key", syncData.idempotencyKey)
+          .maybeSingle();
+        if (existing) {
+          await supabase.from("games").delete().eq("session_id", existing.id);
+          const { data: updated } = await supabase
+            .from("sessions")
+            .update({
+              session_date: new Date().toISOString().split("T")[0],
+              venue: syncData.venue || null,
+              event_label: syncData.eventLabel || null,
+              game_count: syncData.games.length,
+              total_pins: totalPins,
+            })
+            .eq("id", existing.id)
+            .select()
+            .single();
+          session = updated;
+        }
+      }
+
+      if (!session) {
+        const { data: newSession, error: sessionError } = await supabase
+          .from("sessions")
+          .insert({
+            user_id: user.id,
+            session_date: new Date().toISOString().split("T")[0],
+            venue: syncData.venue || null,
+            event_label: syncData.eventLabel || null,
+            game_count: syncData.games.length,
+            total_pins: totalPins,
+            idempotency_key: syncData.idempotencyKey,
+          })
+          .select()
+          .single();
+        if (sessionError || !newSession) {
+          setSaving(false);
+          toast("Sync failed — will retry later", "error");
+          return;
+        }
+        session = newSession;
+      }
+
+      // Insert games
+      const gameInserts = syncData.games.map((game, i) => ({
+        session_id: session!.id,
+        user_id: user.id,
+        game_number: i + 1,
+        total_score: game.totalScore,
+        entry_type: game.entryType,
+        is_clean:
+          game.entryType === "detailed" ? isCleanGame(game.frames) : false,
+        strike_count:
+          game.entryType === "detailed" ? countStrikes(game.frames) : 0,
+        spare_count:
+          game.entryType === "detailed" ? countSpares(game.frames) : 0,
+      }));
+
+      const { data: gameRows, error: gameError } = await supabase
+        .from("games")
+        .insert(gameInserts)
+        .select();
+
+      if (gameError || !gameRows || gameRows.length === 0) {
+        setSaving(false);
+        toast("Sync failed — will retry later", "error");
+        return;
+      }
+
+      // Insert frames
+      const allFrameInserts: Database["public"]["Tables"]["frames"]["Insert"][] =
+        [];
+      for (let i = 0; i < syncData.games.length; i++) {
+        const game = syncData.games[i];
+        const gameRow = gameRows[i];
+        if (
+          game.entryType === "detailed" &&
+          game.frames.length > 0 &&
+          gameRow
+        ) {
+          const frameScores = calculateFrameScores(game.frames);
+          for (let fi = 0; fi < game.frames.length; fi++) {
+            const f = game.frames[fi];
+            allFrameInserts.push({
+              game_id: gameRow.id,
+              frame_number: f.frameNumber,
+              roll_1: f.roll1,
+              roll_2: f.roll2,
+              roll_3: f.roll3,
+              is_strike: f.isStrike,
+              is_spare: f.isSpare,
+              pins_remaining: f.pinsRemaining,
+              pins_remaining_roll2: f.pinsRemainingRoll2,
+              spare_converted: f.spareConverted,
+              frame_score: frameScores[fi] ?? 0,
+            });
+          }
+        }
+      }
+
+      if (allFrameInserts.length > 0) {
+        await supabase.from("frames").insert(allFrameInserts);
+      }
+
+      // Now compute results with real data
+      const [profileResult, gamesResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", user.id)
+          .single(),
+        supabase
+          .from("games")
+          .select(
+            "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
+          )
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false }),
+      ]);
+
+      const playerName = profileResult.data?.display_name ?? "Someone";
+      const existingGames = gamesResult.data ?? [];
+      const existingGameIds = existingGames.map((g) => g.id);
+
+      const { data: existingFrames } = await supabase
+        .from("frames")
+        .select("game_id, is_strike, is_spare, spare_converted, pins_remaining")
+        .in("game_id", existingGameIds.length > 0 ? existingGameIds : ["none"])
+        .order("frame_number", { ascending: true });
+
+      const scores = existingGames.map((g) => g.total_score);
+      const weights = existingGames.map((g) =>
+        getEventWeight(
+          (g as { sessions: { event_label: string | null } | null }).sessions
+            ?.event_label ?? null,
+        ),
+      );
+      const newLp = calculateLP(scores, weights);
+      const newRank = getRank(newLp);
+
+      // LP without this session's games
+      const sessionGameIds = new Set(gameRows.map((g) => g.id));
+      const scoresWithout = scores.filter(
+        (_, i) => !sessionGameIds.has(existingGameIds[i]),
+      );
+      const weightsWithout = weights.filter(
+        (_, i) => !sessionGameIds.has(existingGameIds[i]),
+      );
+      const oldLp =
+        scoresWithout.length > 0
+          ? calculateLP(scoresWithout, weightsWithout)
+          : 0;
+      const oldRank = getRank(oldLp);
+
+      const previousHigh =
+        scoresWithout.length > 0 ? Math.max(...scoresWithout) : 0;
+      const isNewPB = syncData.sessionHigh > previousHigh && previousHigh > 0;
+      const rankChanged =
+        newRank.name !== oldRank.name ||
+        (newRank.division ?? "") !== (oldRank.division ?? "");
+
+      const oldAchievementStats = computeAchievementStats(
+        existingGames.filter((g) => !sessionGameIds.has(g.id)),
+        (existingFrames ?? []).filter(
+          (f) =>
+            !gameRows.some(
+              (gr) => gr.id === (f as { game_id: string }).game_id,
+            ),
+        ),
+        existingGameIds.filter((id) => !sessionGameIds.has(id)),
+      );
+      const newAchievementStats = computeAchievementStats(
+        existingGames,
+        existingFrames ?? [],
+        existingGameIds,
+      );
+      const unlockedAchievements = detectNewAchievements(
+        oldAchievementStats,
+        newAchievementStats,
+      );
+
+      // Send push notification
+      const has149 = syncData.gameScores.includes(149);
+      const notifTitle = has149
+        ? "149 Club!"
+        : isNewPB
+          ? "New PB!"
+          : "Spare Me?";
+      const notifBody = has149
+        ? `${playerName} just bowled a 149. uh oh.`
+        : isNewPB
+          ? `${playerName} just hit ${syncData.sessionHigh} — a new personal best!`
+          : `${playerName} just bowled! Avg: ${syncData.sessionAvg} across ${syncData.games.length} game${syncData.games.length !== 1 ? "s" : ""}`;
+      fetch("/api/push/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: notifTitle,
+          body: notifBody,
+          url: "/dashboard",
+        }),
+      }).catch(() => {});
+
+      // Clear pending sync
+      localStorage.removeItem(PENDING_SYNC_KEY);
+      window.dispatchEvent(new Event("session-storage-change"));
+      setPendingSyncData(null);
+
+      const gamesBefore = scores.length - syncData.games.length;
+      setResultsData({
+        oldLp,
+        newLp,
+        oldRank,
+        newRank,
+        sessionAvg: syncData.sessionAvg,
+        sessionHigh: syncData.sessionHigh,
+        totalPins,
+        gameScores: syncData.gameScores,
+        rankChanged,
+        isRankUp: rankChanged && newLp > oldLp,
+        isRankDown: rankChanged && newLp < oldLp,
+        unlockedAchievements,
+        totalGamesAfter: scores.length,
+        gamesBefore,
+        isNewPB,
+      });
+      setSaving(false);
+      savingRef.current = false;
+      setStep("results");
+      toast("Session synced!");
+    } catch {
+      setSaving(false);
+      savingRef.current = false;
+      toast("Sync failed — will retry when online", "error");
+    }
   }
 
   function discardSession() {
@@ -866,6 +1169,35 @@ export function useSessionState() {
     savingRef.current = true;
     setSaving(true);
 
+    // Offline detection — queue for later sync
+    if (!navigator.onLine) {
+      const gameScores = games.map((g) => g.totalScore);
+      const totalPins = games.reduce((sum, g) => sum + g.totalScore, 0);
+      const syncPayload: PendingSyncData = {
+        venue,
+        eventLabel,
+        games: games.map((g) => ({
+          ...g,
+          frames: g.frames.map((f) => ({ ...f })),
+        })),
+        idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
+        gameScores,
+        sessionAvg: Math.round(
+          gameScores.reduce((s, v) => s + v, 0) / gameScores.length,
+        ),
+        sessionHigh: Math.max(...gameScores),
+        totalPins,
+      };
+      localStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(syncPayload));
+      setPendingSyncData(syncPayload);
+      clearSavedSession();
+      setSaving(false);
+      savingRef.current = false;
+      setStep("pendingSync");
+      toast("Saved offline — will sync when back online");
+      return;
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -1333,6 +1665,10 @@ export function useSessionState() {
 
     // Results
     resultsData,
+
+    // Offline sync
+    pendingSyncData,
+    syncPendingSession,
 
     // History
     history,

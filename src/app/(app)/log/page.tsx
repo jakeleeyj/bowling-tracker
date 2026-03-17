@@ -23,6 +23,49 @@ function LogPage() {
     return <SessionResults data={session.resultsData} />;
   }
 
+  // Pending sync screen (saved offline)
+  if (session.step === "pendingSync") {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gold/10">
+          <svg
+            width={32}
+            height={32}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            className="text-gold"
+          >
+            <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+          </svg>
+        </div>
+        <h2 className="mb-2 text-lg font-extrabold">Pending sync to server</h2>
+        <p className="mb-1 text-sm text-text-muted">
+          {session.pendingSyncData?.games.length ?? 0} game
+          {(session.pendingSyncData?.games.length ?? 0) !== 1 ? "s" : ""} saved
+          to device
+        </p>
+        <p className="mb-6 text-[11px] text-text-muted">
+          Results will appear once synced
+        </p>
+        {session.saving ? (
+          <div className="flex items-center gap-2 text-sm text-text-muted">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue border-t-transparent" />
+            Syncing...
+          </div>
+        ) : (
+          <button
+            onClick={() => session.syncPendingSession()}
+            className="rounded-xl bg-gradient-to-r from-blue to-blue-dark px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 active:scale-[0.97]"
+          >
+            Sync Now
+          </button>
+        )}
+      </div>
+    );
+  }
+
   // Resume prompt
   if (session.step === "resume") {
     return (
