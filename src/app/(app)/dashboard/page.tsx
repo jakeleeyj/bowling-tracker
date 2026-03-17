@@ -11,6 +11,7 @@ import type {
 import SessionCard from "@/components/SessionCard";
 import Avatar from "@/components/Avatar";
 import NotificationPrompt from "@/components/NotificationPrompt";
+import RankEmblem from "@/components/RankEmblem";
 import {
   getRank,
   getDivisionProgress,
@@ -140,35 +141,22 @@ export default async function DashboardPage() {
           href="/leaderboard"
           className={`glass mb-5 flex items-center gap-3 border p-3 ${totalGames >= CALIBRATION_GAMES ? rank.borderColor : "border-border/30"} active:scale-[0.98]`}
         >
-          <div className={`flex h-10 w-10 items-center justify-center`}>
-            <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z"
-                fill="currentColor"
-                fillOpacity={0.15}
-                stroke="currentColor"
-                strokeWidth={1.5}
-                strokeLinejoin="round"
-                className={
-                  totalGames >= CALIBRATION_GAMES
-                    ? rank.color
-                    : "text-text-muted"
-                }
-              />
-              <path
-                d="M12 7l3 5-3 5-3-5z"
-                fill="currentColor"
-                fillOpacity={0.4}
-                stroke="currentColor"
-                strokeWidth={0.75}
-                className={
-                  totalGames >= CALIBRATION_GAMES
-                    ? rank.color
-                    : "text-text-muted"
-                }
-              />
-            </svg>
-          </div>
+          {totalGames >= CALIBRATION_GAMES ? (
+            <RankEmblem tierName={rank.name} size={40} />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center text-text-muted">
+              <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z"
+                  fill="currentColor"
+                  fillOpacity={0.1}
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          )}
           <div className="flex-1">
             {totalGames >= CALIBRATION_GAMES ? (
               <>
