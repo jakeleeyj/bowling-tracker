@@ -606,10 +606,15 @@ export function useSessionState() {
         return;
       }
 
+      // Set editMode FIRST so auto-save effect doesn't trigger
       setEditMode(true);
       setEditGameId(game.id);
       setEditSessionId(game.session_id);
       setEditOriginalScore(game.total_score);
+      // Clear any saved session so nav doesn't show "Ongoing"
+      localStorage.removeItem(STORAGE_KEY);
+      window.dispatchEvent(new Event("session-storage-change"));
+      setStep("game");
 
       if (game.entry_type === "detailed") {
         const { data: dbFrames } = await supabase
@@ -641,8 +646,6 @@ export function useSessionState() {
         setQuickScore(game.total_score.toString());
         setEntryMode("quick");
       }
-
-      setStep("game");
       setGameCount(1);
       setCurrentGameIndex(0);
       setEditLoading(false);
