@@ -88,6 +88,27 @@ export interface PendingSyncData {
 
 const PENDING_SYNC_KEY = "spare-me-pending-sync";
 
+function getPendingQueue(): PendingSyncData[] {
+  try {
+    const raw = localStorage.getItem(PENDING_SYNC_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    // Migrate old single-object format to array
+    return Array.isArray(parsed) ? parsed : [parsed];
+  } catch {
+    return [];
+  }
+}
+
+function savePendingQueue(queue: PendingSyncData[]) {
+  if (queue.length === 0) {
+    localStorage.removeItem(PENDING_SYNC_KEY);
+  } else {
+    localStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(queue));
+  }
+  window.dispatchEvent(new Event("session-storage-change"));
+}
+
 export function upsertFrame(
   frames: FrameData[],
   frame: FrameData,
@@ -132,8 +153,7 @@ export function useSessionState() {
   // Results screen state
   const [resultsData, setResultsData] = useState<ResultsData | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
-  const [pendingSyncData, setPendingSyncData] =
-    useState<PendingSyncData | null>(null);
+  const [pendingSyncCount, setPendingSyncCount] = useState(0);
 
   const [history, setHistory] = useState<
     Array<{
@@ -160,14 +180,12 @@ export function useSessionState() {
     if (editGameParam) return;
 
     // Check for pending offline sync first
-    const pending = localStorage.getItem(PENDING_SYNC_KEY);
-    if (pending) {
-      const data = JSON.parse(pending) as PendingSyncData;
-      setPendingSyncData(data);
+    const queue = getPendingQueue();
+    if (queue.length > 0) {
+      setPendingSyncCount(queue.length);
       setStep("pendingSync");
-      // Auto-sync if online
       if (navigator.onLine) {
-        syncPendingSession(data);
+        syncPendingQueue();
       }
       return;
     }
@@ -275,9 +293,9 @@ export function useSessionState() {
   // Auto-sync when coming back online
   useEffect(() => {
     function handleOnline() {
-      const pending = localStorage.getItem(PENDING_SYNC_KEY);
-      if (pending) {
-        syncPendingSession(JSON.parse(pending) as PendingSyncData);
+      const queue = getPendingQueue();
+      if (queue.length > 0) {
+        syncPendingQueue();
       }
     }
     window.addEventListener("online", handleOnline);
@@ -290,9 +308,133 @@ export function useSessionState() {
     window.dispatchEvent(new Event("session-storage-change"));
   }
 
-  async function syncPendingSession(data?: PendingSyncData) {
-    const syncData = data ?? pendingSyncData;
-    if (!syncData) return;
+  async function syncOneSession(
+    syncData: PendingSyncData,
+    userId: string,
+  ): Promise<boolean> {
+    const totalPins = syncData.totalPins;
+
+    let session: Database["public"]["Tables"]["sessions"]["Row"] | null = null;
+    if (syncData.idempotencyKey) {
+      const { data: existing } = await supabase
+        .from("sessions")
+        .select("id")
+        .eq("idempotency_key", syncData.idempotencyKey)
+        .maybeSingle();
+      if (existing) {
+        await supabase.from("games").delete().eq("session_id", existing.id);
+        const { data: updated } = await supabase
+          .from("sessions")
+          .update({
+            session_date: new Date().toISOString().split("T")[0],
+            venue: syncData.venue || null,
+            event_label: syncData.eventLabel || null,
+            game_count: syncData.games.length,
+            total_pins: totalPins,
+          })
+          .eq("id", existing.id)
+          .select()
+          .single();
+        session = updated;
+      }
+    }
+
+    if (!session) {
+      const { data: newSession, error: sessionError } = await supabase
+        .from("sessions")
+        .insert({
+          user_id: userId,
+          session_date: new Date().toISOString().split("T")[0],
+          venue: syncData.venue || null,
+          event_label: syncData.eventLabel || null,
+          game_count: syncData.games.length,
+          total_pins: totalPins,
+          idempotency_key: syncData.idempotencyKey,
+        })
+        .select()
+        .single();
+      if (sessionError || !newSession) return false;
+      session = newSession;
+    }
+
+    const gameInserts = syncData.games.map((game, i) => ({
+      session_id: session!.id,
+      user_id: userId,
+      game_number: i + 1,
+      total_score: game.totalScore,
+      entry_type: game.entryType,
+      is_clean:
+        game.entryType === "detailed" ? isCleanGame(game.frames) : false,
+      strike_count:
+        game.entryType === "detailed" ? countStrikes(game.frames) : 0,
+      spare_count: game.entryType === "detailed" ? countSpares(game.frames) : 0,
+    }));
+
+    const { data: gameRows, error: gameError } = await supabase
+      .from("games")
+      .insert(gameInserts)
+      .select();
+
+    if (gameError || !gameRows || gameRows.length === 0) return false;
+
+    const allFrameInserts: Database["public"]["Tables"]["frames"]["Insert"][] =
+      [];
+    for (let i = 0; i < syncData.games.length; i++) {
+      const game = syncData.games[i];
+      const gameRow = gameRows[i];
+      if (game.entryType === "detailed" && game.frames.length > 0 && gameRow) {
+        const frameScores = calculateFrameScores(game.frames);
+        for (let fi = 0; fi < game.frames.length; fi++) {
+          const f = game.frames[fi];
+          allFrameInserts.push({
+            game_id: gameRow.id,
+            frame_number: f.frameNumber,
+            roll_1: f.roll1,
+            roll_2: f.roll2,
+            roll_3: f.roll3,
+            is_strike: f.isStrike,
+            is_spare: f.isSpare,
+            pins_remaining: f.pinsRemaining,
+            pins_remaining_roll2: f.pinsRemainingRoll2,
+            spare_converted: f.spareConverted,
+            frame_score: frameScores[fi] ?? 0,
+          });
+        }
+      }
+    }
+
+    if (allFrameInserts.length > 0) {
+      await supabase.from("frames").insert(allFrameInserts);
+    }
+
+    // Send push notification
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", userId)
+      .single();
+    const playerName = profileData?.display_name ?? "Someone";
+    const has149 = syncData.gameScores.includes(149);
+    const notifTitle = has149 ? "149 Club!" : "Spare Me?";
+    const notifBody = has149
+      ? `${playerName} just bowled a 149. uh oh.`
+      : `${playerName} just bowled! Avg: ${syncData.sessionAvg} across ${syncData.games.length} game${syncData.games.length !== 1 ? "s" : ""}`;
+    fetch("/api/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: notifTitle,
+        body: notifBody,
+        url: "/dashboard",
+      }),
+    }).catch(() => {});
+
+    return true;
+  }
+
+  async function syncPendingQueue() {
+    const queue = getPendingQueue();
+    if (queue.length === 0) return;
 
     setSaving(true);
     try {
@@ -305,251 +447,127 @@ export function useSessionState() {
         return;
       }
 
-      // Re-run the full save flow with the pending data
-      // Temporarily set the games/venue/etc from sync data
-      const totalPins = syncData.totalPins;
-
-      // Check for existing session (idempotency)
-      let session: Database["public"]["Tables"]["sessions"]["Row"] | null =
-        null;
-      if (syncData.idempotencyKey) {
-        const { data: existing } = await supabase
-          .from("sessions")
-          .select("id")
-          .eq("idempotency_key", syncData.idempotencyKey)
-          .maybeSingle();
-        if (existing) {
-          await supabase.from("games").delete().eq("session_id", existing.id);
-          const { data: updated } = await supabase
-            .from("sessions")
-            .update({
-              session_date: new Date().toISOString().split("T")[0],
-              venue: syncData.venue || null,
-              event_label: syncData.eventLabel || null,
-              game_count: syncData.games.length,
-              total_pins: totalPins,
-            })
-            .eq("id", existing.id)
-            .select()
-            .single();
-          session = updated;
+      let synced = 0;
+      const remaining = [...queue];
+      for (const item of queue) {
+        const ok = await syncOneSession(item, user.id);
+        if (ok) {
+          remaining.shift();
+          savePendingQueue(remaining);
+          synced++;
+          setPendingSyncCount(remaining.length);
+        } else {
+          break;
         }
       }
 
-      if (!session) {
-        const { data: newSession, error: sessionError } = await supabase
-          .from("sessions")
-          .insert({
-            user_id: user.id,
-            session_date: new Date().toISOString().split("T")[0],
-            venue: syncData.venue || null,
-            event_label: syncData.eventLabel || null,
-            game_count: syncData.games.length,
-            total_pins: totalPins,
-            idempotency_key: syncData.idempotencyKey,
-          })
-          .select()
-          .single();
-        if (sessionError || !newSession) {
-          setSaving(false);
-          toast("Sync failed — will retry later", "error");
-          return;
-        }
-        session = newSession;
-      }
-
-      // Insert games
-      const gameInserts = syncData.games.map((game, i) => ({
-        session_id: session!.id,
-        user_id: user.id,
-        game_number: i + 1,
-        total_score: game.totalScore,
-        entry_type: game.entryType,
-        is_clean:
-          game.entryType === "detailed" ? isCleanGame(game.frames) : false,
-        strike_count:
-          game.entryType === "detailed" ? countStrikes(game.frames) : 0,
-        spare_count:
-          game.entryType === "detailed" ? countSpares(game.frames) : 0,
-      }));
-
-      const { data: gameRows, error: gameError } = await supabase
-        .from("games")
-        .insert(gameInserts)
-        .select();
-
-      if (gameError || !gameRows || gameRows.length === 0) {
-        setSaving(false);
-        toast("Sync failed — will retry later", "error");
-        return;
-      }
-
-      // Insert frames
-      const allFrameInserts: Database["public"]["Tables"]["frames"]["Insert"][] =
-        [];
-      for (let i = 0; i < syncData.games.length; i++) {
-        const game = syncData.games[i];
-        const gameRow = gameRows[i];
-        if (
-          game.entryType === "detailed" &&
-          game.frames.length > 0 &&
-          gameRow
-        ) {
-          const frameScores = calculateFrameScores(game.frames);
-          for (let fi = 0; fi < game.frames.length; fi++) {
-            const f = game.frames[fi];
-            allFrameInserts.push({
-              game_id: gameRow.id,
-              frame_number: f.frameNumber,
-              roll_1: f.roll1,
-              roll_2: f.roll2,
-              roll_3: f.roll3,
-              is_strike: f.isStrike,
-              is_spare: f.isSpare,
-              pins_remaining: f.pinsRemaining,
-              pins_remaining_roll2: f.pinsRemainingRoll2,
-              spare_converted: f.spareConverted,
-              frame_score: frameScores[fi] ?? 0,
-            });
-          }
-        }
-      }
-
-      if (allFrameInserts.length > 0) {
-        await supabase.from("frames").insert(allFrameInserts);
-      }
-
-      // Now compute results with real data
-      const [profileResult, gamesResult] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("id", user.id)
-          .single(),
-        supabase
+      if (remaining.length === 0) {
+        // All synced — compute results for combined sessions
+        const { data: allGames } = await supabase
           .from("games")
           .select(
             "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
           )
           .eq("user_id", user.id)
-          .order("created_at", { ascending: false }),
-      ]);
+          .order("created_at", { ascending: false });
 
-      const playerName = profileResult.data?.display_name ?? "Someone";
-      const existingGames = gamesResult.data ?? [];
-      const existingGameIds = existingGames.map((g) => g.id);
+        const existingGames = allGames ?? [];
+        const existingGameIds = existingGames.map((g) => g.id);
+        const { data: existingFrames } = await supabase
+          .from("frames")
+          .select(
+            "game_id, is_strike, is_spare, spare_converted, pins_remaining",
+          )
+          .in(
+            "game_id",
+            existingGameIds.length > 0 ? existingGameIds : ["none"],
+          )
+          .order("frame_number", { ascending: true });
 
-      const { data: existingFrames } = await supabase
-        .from("frames")
-        .select("game_id, is_strike, is_spare, spare_converted, pins_remaining")
-        .in("game_id", existingGameIds.length > 0 ? existingGameIds : ["none"])
-        .order("frame_number", { ascending: true });
+        const scores = existingGames.map((g) => g.total_score);
+        const weights = existingGames.map((g) =>
+          getEventWeight(
+            (g as { sessions: { event_label: string | null } | null }).sessions
+              ?.event_label ?? null,
+          ),
+        );
+        const newLp = calculateLP(scores, weights);
+        const newRank = getRank(newLp);
 
-      const scores = existingGames.map((g) => g.total_score);
-      const weights = existingGames.map((g) =>
-        getEventWeight(
-          (g as { sessions: { event_label: string | null } | null }).sessions
-            ?.event_label ?? null,
-        ),
-      );
-      const newLp = calculateLP(scores, weights);
-      const newRank = getRank(newLp);
+        const totalSyncedGames = queue.reduce((s, q) => s + q.games.length, 0);
+        const scoresWithout = scores.slice(totalSyncedGames);
+        const weightsWithout = weights.slice(totalSyncedGames);
+        const oldLp =
+          scoresWithout.length > 0
+            ? calculateLP(scoresWithout, weightsWithout)
+            : 0;
+        const oldRank = getRank(oldLp);
 
-      // LP without this session's games
-      const sessionGameIds = new Set(gameRows.map((g) => g.id));
-      const scoresWithout = scores.filter(
-        (_, i) => !sessionGameIds.has(existingGameIds[i]),
-      );
-      const weightsWithout = weights.filter(
-        (_, i) => !sessionGameIds.has(existingGameIds[i]),
-      );
-      const oldLp =
-        scoresWithout.length > 0
-          ? calculateLP(scoresWithout, weightsWithout)
-          : 0;
-      const oldRank = getRank(oldLp);
+        const rankChanged =
+          newRank.name !== oldRank.name ||
+          (newRank.division ?? "") !== (oldRank.division ?? "");
+        const allScores = queue.flatMap((q) => q.gameScores);
+        const totalPins = queue.reduce((s, q) => s + q.totalPins, 0);
+        const sessionAvg = Math.round(
+          allScores.reduce((s, v) => s + v, 0) / allScores.length,
+        );
+        const sessionHigh = Math.max(...allScores);
+        const previousHigh =
+          scoresWithout.length > 0 ? Math.max(...scoresWithout) : 0;
+        const isNewPB = sessionHigh > previousHigh && previousHigh > 0;
 
-      const previousHigh =
-        scoresWithout.length > 0 ? Math.max(...scoresWithout) : 0;
-      const isNewPB = syncData.sessionHigh > previousHigh && previousHigh > 0;
-      const rankChanged =
-        newRank.name !== oldRank.name ||
-        (newRank.division ?? "") !== (oldRank.division ?? "");
+        const oldAchievementStats = computeAchievementStats(
+          existingGames.slice(totalSyncedGames),
+          (existingFrames ?? []).filter((f) => {
+            const idx = existingGameIds.indexOf(
+              (f as { game_id: string }).game_id,
+            );
+            return idx >= totalSyncedGames;
+          }),
+          existingGameIds.slice(totalSyncedGames),
+        );
+        const newAchievementStats = computeAchievementStats(
+          existingGames,
+          existingFrames ?? [],
+          existingGameIds,
+        );
+        const unlockedAchievements = detectNewAchievements(
+          oldAchievementStats,
+          newAchievementStats,
+        );
 
-      const oldAchievementStats = computeAchievementStats(
-        existingGames.filter((g) => !sessionGameIds.has(g.id)),
-        (existingFrames ?? []).filter(
-          (f) =>
-            !gameRows.some(
-              (gr) => gr.id === (f as { game_id: string }).game_id,
-            ),
-        ),
-        existingGameIds.filter((id) => !sessionGameIds.has(id)),
-      );
-      const newAchievementStats = computeAchievementStats(
-        existingGames,
-        existingFrames ?? [],
-        existingGameIds,
-      );
-      const unlockedAchievements = detectNewAchievements(
-        oldAchievementStats,
-        newAchievementStats,
-      );
-
-      // Send push notification
-      const has149 = syncData.gameScores.includes(149);
-      const notifTitle = has149
-        ? "149 Club!"
-        : isNewPB
-          ? "New PB!"
-          : "Spare Me?";
-      const notifBody = has149
-        ? `${playerName} just bowled a 149. uh oh.`
-        : isNewPB
-          ? `${playerName} just hit ${syncData.sessionHigh} — a new personal best!`
-          : `${playerName} just bowled! Avg: ${syncData.sessionAvg} across ${syncData.games.length} game${syncData.games.length !== 1 ? "s" : ""}`;
-      fetch("/api/push/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: notifTitle,
-          body: notifBody,
-          url: "/dashboard",
-        }),
-      }).catch(() => {});
-
-      // Clear pending sync
-      localStorage.removeItem(PENDING_SYNC_KEY);
-      window.dispatchEvent(new Event("session-storage-change"));
-      setPendingSyncData(null);
-
-      const gamesBefore = scores.length - syncData.games.length;
-      setResultsData({
-        oldLp,
-        newLp,
-        oldRank,
-        newRank,
-        sessionAvg: syncData.sessionAvg,
-        sessionHigh: syncData.sessionHigh,
-        totalPins,
-        gameScores: syncData.gameScores,
-        rankChanged,
-        isRankUp: rankChanged && newLp > oldLp,
-        isRankDown: rankChanged && newLp < oldLp,
-        unlockedAchievements,
-        totalGamesAfter: scores.length,
-        gamesBefore,
-        isNewPB,
-      });
-      setSaving(false);
-      savingRef.current = false;
-      setStep("results");
-      toast("Session synced!");
+        setResultsData({
+          oldLp,
+          newLp,
+          oldRank,
+          newRank,
+          sessionAvg,
+          sessionHigh,
+          totalPins,
+          gameScores: allScores,
+          rankChanged,
+          isRankUp: rankChanged && newLp > oldLp,
+          isRankDown: rankChanged && newLp < oldLp,
+          unlockedAchievements,
+          totalGamesAfter: scores.length,
+          gamesBefore: scores.length - totalSyncedGames,
+          isNewPB,
+        });
+        setStep("results");
+        toast(synced === 1 ? "Session synced!" : `${synced} sessions synced!`);
+      } else {
+        toast(`Synced ${synced} of ${queue.length} — will retry the rest`);
+      }
     } catch {
+      toast("Sync failed — will retry when online", "error");
+    } finally {
       setSaving(false);
       savingRef.current = false;
-      toast("Sync failed — will retry when online", "error");
     }
+  }
+
+  function startNewWhilePending() {
+    setStep("setup");
   }
 
   function discardSession() {
@@ -1188,8 +1206,10 @@ export function useSessionState() {
         sessionHigh: Math.max(...gameScores),
         totalPins,
       };
-      localStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(syncPayload));
-      setPendingSyncData(syncPayload);
+      const queue = getPendingQueue();
+      queue.push(syncPayload);
+      savePendingQueue(queue);
+      setPendingSyncCount(queue.length);
       clearSavedSession();
       setSaving(false);
       savingRef.current = false;
@@ -1667,8 +1687,9 @@ export function useSessionState() {
     resultsData,
 
     // Offline sync
-    pendingSyncData,
-    syncPendingSession,
+    pendingSyncCount,
+    syncPendingQueue,
+    startNewWhilePending,
 
     // History
     history,

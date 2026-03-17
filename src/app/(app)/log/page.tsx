@@ -42,9 +42,8 @@ function LogPage() {
         </div>
         <h2 className="mb-2 text-lg font-extrabold">Pending sync to server</h2>
         <p className="mb-1 text-sm text-text-muted">
-          {session.pendingSyncData?.games.length ?? 0} game
-          {(session.pendingSyncData?.games.length ?? 0) !== 1 ? "s" : ""} saved
-          to device
+          {session.pendingSyncCount} session
+          {session.pendingSyncCount !== 1 ? "s" : ""} saved to device
         </p>
         <p className="mb-6 text-[11px] text-text-muted">
           Results will appear once synced
@@ -56,10 +55,10 @@ function LogPage() {
           </div>
         ) : (
           <button
-            onClick={() => session.syncPendingSession()}
+            onClick={() => session.startNewWhilePending()}
             className="rounded-xl bg-gradient-to-r from-blue to-blue-dark px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 active:scale-[0.97]"
           >
-            Sync Now
+            Log Another Session
           </button>
         )}
       </div>
