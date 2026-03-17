@@ -195,17 +195,17 @@ export function getAllPins(): number[] {
 export const PIN_LAYOUT = [[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]] as const;
 
 // Pin adjacency graph — pins that physically touch each other
-// Includes same-row neighbors and diagonal (front/back row) neighbors
+// Includes same-row neighbors, diagonal neighbors, and sleeper pairs (2-8, 3-9)
 const PIN_ADJACENCY: Record<number, number[]> = {
   1: [2, 3],
-  2: [1, 3, 4, 5],
-  3: [1, 2, 5, 6],
+  2: [1, 3, 4, 5, 8],
+  3: [1, 2, 5, 6, 9],
   4: [2, 5, 7, 8],
   5: [2, 3, 4, 6, 8, 9],
   6: [3, 5, 9, 10],
   7: [4, 8],
-  8: [4, 5, 7, 9],
-  9: [5, 6, 8, 10],
+  8: [2, 4, 5, 7, 9],
+  9: [3, 5, 6, 8, 10],
   10: [6, 9],
 };
 

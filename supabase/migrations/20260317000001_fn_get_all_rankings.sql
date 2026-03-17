@@ -52,9 +52,10 @@ begin
     v_lp := 1200;
     for i in 1..v_total loop
       v_lp := v_lp + round(
-        (v_scores[i] - 180) * v_weights[i] *
+        (v_scores[i] - 180) *
+        case when (v_total - i) < 4 then 1.0 else v_weights[i] end *
         case when (v_total - i) < 4 then 5 else 1 end *
-        case when i - 1 >= 60 then 0.25 when i - 1 >= 30 then 0.5 else 1.0 end
+        greatest(0.25, 1.0 - (i - 1) * 0.0125)
       );
     end loop;
     v_lp := greatest(v_lp, 0);

@@ -49,9 +49,10 @@ begin
     v_full_lp := 1200;
     for i in 1..v_total loop
       v_full_lp := v_full_lp + round(
-        (v_scores[i] - 180) * v_weights[i] *
+        (v_scores[i] - 180) *
+        case when (v_total - i) < 4 then 1.0 else v_weights[i] end *
         case when (v_total - i) < 4 then 5 else 1 end *
-        case when i - 1 >= 60 then 0.25 when i - 1 >= 30 then 0.5 else 1.0 end
+        greatest(0.25, 1.0 - (i - 1) * 0.0125)
       );
     end loop;
     v_full_lp := greatest(v_full_lp, 0);
@@ -84,9 +85,10 @@ begin
       v_without_lp := 1200;
       for i in 1..array_length(v_scores_without, 1) loop
         v_without_lp := v_without_lp + round(
-          (v_scores_without[i] - 180) * v_weights_without[i] *
+          (v_scores_without[i] - 180) *
+          case when (array_length(v_scores_without, 1) - i) < 4 then 1.0 else v_weights_without[i] end *
           case when (array_length(v_scores_without, 1) - i) < 4 then 5 else 1 end *
-          case when i - 1 >= 60 then 0.25 when i - 1 >= 30 then 0.5 else 1.0 end
+          greatest(0.25, 1.0 - (i - 1) * 0.0125)
         );
       end loop;
       v_without_lp := greatest(v_without_lp, 0);
