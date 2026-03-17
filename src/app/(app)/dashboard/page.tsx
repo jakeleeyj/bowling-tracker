@@ -86,6 +86,18 @@ export default async function DashboardPage() {
 
   const displayName = profile?.display_name ?? "Bowler";
 
+  // Track which sessions include calibration games (per user)
+  // Sessions are newest-first, so walk in reverse to count chronologically
+  const gamesBeforeSession: Record<string, Record<string, number>> = {};
+  const userRunning: Record<string, number> = {};
+  for (const s of [...(sessions ?? [])].reverse()) {
+    const u = s.user_id;
+    userRunning[u] = userRunning[u] ?? 0;
+    gamesBeforeSession[u] = gamesBeforeSession[u] ?? {};
+    gamesBeforeSession[u][s.id] = userRunning[u];
+    userRunning[u] += s.games.length;
+  }
+
   return (
     <div>
       {/* Header */}
@@ -226,6 +238,9 @@ export default async function DashboardPage() {
 
       <div className="flex flex-col gap-2">
         {sessions?.map((session) => {
+          const gamesBefore =
+            gamesBeforeSession[session.user_id]?.[session.id] ?? 0;
+          const isCalibrationSession = gamesBefore < CALIBRATION_GAMES;
           const sessionProfile = session.profiles;
           const sessionGames = [...session.games].sort(
             (a, b) => a.game_number - b.game_number,
@@ -267,6 +282,7 @@ export default async function DashboardPage() {
               avatarUrl={sessionProfile?.avatar_url}
               isOwn={isOwnSession}
               lpChange={sessionLpChange[session.id]}
+              isCalibrationSession={isCalibrationSession}
               rankLabel={
                 userRanks[session.user_id] &&
                 (userGameCounts[session.user_id] ?? 0) >= CALIBRATION_GAMES

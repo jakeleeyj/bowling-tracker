@@ -55,6 +55,7 @@ interface SessionCardProps {
   avatarUrl?: string | null;
   isOwn?: boolean;
   lpChange?: number;
+  isCalibrationSession?: boolean;
   rankLabel?: string;
   rankColor?: string;
 }
@@ -551,6 +552,7 @@ export default function SessionCard({
   avatarUrl,
   isOwn = false,
   lpChange,
+  isCalibrationSession = false,
   rankLabel,
   rankColor,
 }: SessionCardProps) {
@@ -655,14 +657,18 @@ export default function SessionCard({
             <div className="text-lg font-extrabold leading-tight">
               {totalPins}
             </div>
-            {lpChange !== undefined && (
+            {isCalibrationSession ? (
+              <div className="text-[10px] font-semibold leading-tight text-blue">
+                Calibrated
+              </div>
+            ) : lpChange !== undefined ? (
               <div
                 className={`text-[10px] font-semibold leading-tight ${lpChange > 0 ? "text-green" : lpChange < 0 ? "text-red" : "text-text-muted"}`}
               >
                 {lpChange > 0 ? "+" : ""}
                 {lpChange} LP
               </div>
-            )}
+            ) : null}
           </div>
           <ChevronDown
             size={14}
