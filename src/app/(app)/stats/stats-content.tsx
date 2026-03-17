@@ -10,11 +10,13 @@ function TrendChart({
   avg,
   color = "#3b82f6",
   suffix = "",
+  highlights,
 }: {
   values: number[];
   avg: number;
   color?: string;
   suffix?: string;
+  highlights?: boolean[];
 }) {
   if (values.length === 0) return null;
 
@@ -88,31 +90,44 @@ function TrendChart({
         strokeLinecap="round"
       />
 
-      {values.map((s, i) => (
-        <g key={i}>
-          <circle
-            cx={toX(i)}
-            cy={toY(s)}
-            r={3}
-            fill={s >= avg ? color : "#334155"}
-            stroke={s >= avg ? color : "#64748b"}
-            strokeWidth={1}
-          />
-          {showValueLabels && (
-            <text
-              x={toX(i)}
-              y={toY(s) - 8}
-              textAnchor="middle"
-              fontSize={7}
-              fontWeight="bold"
-              fill="#e2e8f0"
-            >
-              {s}
-              {suffix}
-            </text>
-          )}
-        </g>
-      ))}
+      {values.map((s, i) => {
+        const isHighlighted = highlights?.[i] ?? false;
+        const dotColor = isHighlighted
+          ? "#22c55e"
+          : s >= avg
+            ? color
+            : "#334155";
+        const dotStroke = isHighlighted
+          ? "#22c55e"
+          : s >= avg
+            ? color
+            : "#64748b";
+        return (
+          <g key={i}>
+            <circle
+              cx={toX(i)}
+              cy={toY(s)}
+              r={3}
+              fill={dotColor}
+              stroke={dotStroke}
+              strokeWidth={1}
+            />
+            {showValueLabels && (
+              <text
+                x={toX(i)}
+                y={toY(s) - 8}
+                textAnchor="middle"
+                fontSize={7}
+                fontWeight="bold"
+                fill={isHighlighted ? "#22c55e" : "#e2e8f0"}
+              >
+                {s}
+                {suffix}
+              </text>
+            )}
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -210,6 +225,7 @@ export default function StatsContent({ overview, leaves }: Props) {
     double_rate = 0,
     spare_conv_trend = [],
     scores = [],
+    clean_flags = [],
   } = overview;
 
   const {
@@ -290,7 +306,7 @@ export default function StatsContent({ overview, leaves }: Props) {
             <h3 className="mb-2 text-xs font-bold text-text-secondary">
               Score Trend
             </h3>
-            <TrendChart values={scores} avg={avg} />
+            <TrendChart values={scores} avg={avg} highlights={clean_flags} />
           </div>
 
           {/* Strike & Spare rates */}

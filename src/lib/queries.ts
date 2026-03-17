@@ -102,6 +102,7 @@ export interface OverviewStats {
   max_spare_streak: number;
   spare_conv_trend: number[];
   scores: number[];
+  clean_flags: boolean[];
 }
 
 export interface LeaveEntry {

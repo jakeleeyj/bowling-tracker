@@ -104,7 +104,9 @@ begin
     ) sub
   ),
   score_trend as (
-    select coalesce(jsonb_agg(total_score order by created_at asc), '[]'::jsonb) as scores
+    select
+      coalesce(jsonb_agg(total_score order by created_at asc), '[]'::jsonb) as scores,
+      coalesce(jsonb_agg(is_clean order by created_at asc), '[]'::jsonb) as clean_flags
     from sliced_games
   )
   select jsonb_build_object(
@@ -134,7 +136,8 @@ begin
       then round(dc.doubles::numeric / dc.double_opportunities * 100)::int else 0 end,
     'max_spare_streak', ss.max_spare_streak,
     'spare_conv_trend', st.spare_conv_trend,
-    'scores', sctr.scores
+    'scores', sctr.scores,
+    'clean_flags', sctr.clean_flags
   ) into result
   from game_stats gs
   cross join frame_stats fs
