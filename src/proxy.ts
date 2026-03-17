@@ -28,9 +28,12 @@ export async function proxy(request: NextRequest) {
     },
   });
 
+  // Use getSession() for fast cookie-based check (no network call)
+  // Individual pages still call getUser() for verified auth
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   const isAuthPage =
     request.nextUrl.pathname === "/login" ||

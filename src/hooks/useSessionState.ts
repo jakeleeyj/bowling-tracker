@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
+import type { Database } from "@/lib/database.types";
 import {
   type FrameData,
   getAllPins,
@@ -117,6 +118,7 @@ export function useSessionState() {
 
   // Results screen state
   const [resultsData, setResultsData] = useState<ResultsData | null>(null);
+  const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
 
   const [history, setHistory] = useState<
     Array<{
@@ -181,6 +183,7 @@ export function useSessionState() {
       setCurrentFrame(data.currentFrame ?? 1);
       setCurrentRoll(data.currentRoll ?? 1);
       setStandingPins(data.standingPins ?? []);
+      setIdempotencyKey(data.idempotencyKey ?? crypto.randomUUID());
       if (data.editorStates) {
         const map = new Map<number, GameEditorState>(
           Object.entries(data.editorStates).map(([k, v]) => [
@@ -192,6 +195,7 @@ export function useSessionState() {
       }
     } catch {
       localStorage.removeItem(STORAGE_KEY);
+      window.dispatchEvent(new Event("session-storage-change"));
       setStep("setup");
     }
   }
@@ -214,10 +218,12 @@ export function useSessionState() {
       currentFrame,
       currentRoll,
       standingPins,
+      idempotencyKey,
       editorStates: Object.fromEntries(editorStatesRef.current),
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      window.dispatchEvent(new Event("session-storage-change"));
     } catch {
       // localStorage full — silently fail, session still in memory
     }
@@ -234,11 +240,13 @@ export function useSessionState() {
     currentFrame,
     currentRoll,
     standingPins,
+    idempotencyKey,
     editMode,
   ]);
 
   function clearSavedSession() {
     localStorage.removeItem(STORAGE_KEY);
+    window.dispatchEvent(new Event("session-storage-change"));
   }
 
   function discardSession() {
@@ -262,14 +270,14 @@ export function useSessionState() {
     const editGameParam = searchParams.get("editGame");
     if (!editGameParam || editInitialized.current) return;
     editInitialized.current = true;
+    const gameId = editGameParam;
 
     setEditLoading(true);
     async function loadGameForEdit() {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: game } = await (supabase as any)
+      const { data: game } = await supabase
         .from("games")
         .select("id, session_id, total_score, entry_type")
-        .eq("id", editGameParam)
+        .eq("id", gameId)
         .single();
 
       if (!game) {
@@ -283,8 +291,7 @@ export function useSessionState() {
       setEditOriginalScore(game.total_score);
 
       if (game.entry_type === "detailed") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: dbFrames } = await (supabase as any)
+        const { data: dbFrames } = await supabase
           .from("frames")
           .select("*")
           .eq("game_id", game.id)
@@ -329,8 +336,7 @@ export function useSessionState() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("sessions")
         .select("venue")
         .eq("user_id", user.id)
@@ -408,6 +414,7 @@ export function useSessionState() {
     setStep("game");
     setGames([]);
     setCurrentGameIndex(0);
+    setIdempotencyKey(crypto.randomUUID());
     editorStatesRef.current.clear();
     resetGameState();
   }
@@ -870,14 +877,13 @@ export function useSessionState() {
     }
 
     // Parallel: get profile name + existing games at once
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [profileResult, gamesResult] = await Promise.all([
-      (supabase as any)
+      supabase
         .from("profiles")
         .select("display_name")
         .eq("id", user.id)
         .single(),
-      (supabase as any)
+      supabase
         .from("games")
         .select(
           "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
@@ -890,8 +896,7 @@ export function useSessionState() {
 
     const existingGameIds =
       existingGames?.map((g: { id: string }) => g.id) ?? [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: existingFrames } = await (supabase as any)
+    const { data: existingFrames } = await supabase
       .from("frames")
       .select("game_id, is_strike, is_spare, spare_converted, pins_remaining")
       .in("game_id", existingGameIds.length > 0 ? existingGameIds : ["none"])
@@ -915,30 +920,61 @@ export function useSessionState() {
 
     const totalPins = games.reduce((sum, g) => sum + g.totalScore, 0);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: session, error: sessionError } = await (supabase as any)
-      .from("sessions")
-      .insert({
-        user_id: user.id,
-        session_date: new Date().toISOString().split("T")[0],
-        venue: venue || null,
-        event_label: eventLabel || null,
-        game_count: games.length,
-        total_pins: totalPins,
-      })
-      .select()
-      .single();
+    // Check for existing session from a previous partial save (idempotency)
+    let session: Database["public"]["Tables"]["sessions"]["Row"] | null = null;
+    if (idempotencyKey) {
+      const { data: existing } = await supabase
+        .from("sessions")
+        .select("id")
+        .eq("idempotency_key", idempotencyKey)
+        .maybeSingle();
+      if (existing) {
+        // Previous partial save — delete orphaned games (cascades to frames)
+        await supabase.from("games").delete().eq("session_id", existing.id);
+        // Update the session with current data
+        const { data: updated } = await supabase
+          .from("sessions")
+          .update({
+            session_date: new Date().toISOString().split("T")[0],
+            venue: venue || null,
+            event_label: eventLabel || null,
+            game_count: games.length,
+            total_pins: totalPins,
+          })
+          .eq("id", existing.id)
+          .select()
+          .single();
+        session = updated;
+      }
+    }
 
-    if (sessionError || !session) {
-      setSaving(false);
-      savingRef.current = false;
-      toast("Failed to save session", "error");
-      return;
+    if (!session) {
+      const { data: newSession, error: sessionError } = await supabase
+        .from("sessions")
+        .insert({
+          user_id: user.id,
+          session_date: new Date().toISOString().split("T")[0],
+          venue: venue || null,
+          event_label: eventLabel || null,
+          game_count: games.length,
+          total_pins: totalPins,
+          idempotency_key: idempotencyKey,
+        })
+        .select()
+        .single();
+
+      if (sessionError || !newSession) {
+        setSaving(false);
+        savingRef.current = false;
+        toast("Failed to save session", "error");
+        return;
+      }
+      session = newSession;
     }
 
     // Batch insert all games at once
     const gameInserts = games.map((game, i) => ({
-      session_id: (session as Record<string, string>).id,
+      session_id: session!.id,
       user_id: user.id,
       game_number: i + 1,
       total_score: game.totalScore,
@@ -950,8 +986,7 @@ export function useSessionState() {
       spare_count: game.entryType === "detailed" ? countSpares(game.frames) : 0,
     }));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: gameRows, error: gameError } = await (supabase as any)
+    const { data: gameRows, error: gameError } = await supabase
       .from("games")
       .insert(gameInserts)
       .select();
@@ -964,10 +999,11 @@ export function useSessionState() {
     }
 
     // Batch insert all frames at once
-    const allFrameInserts: Record<string, unknown>[] = [];
+    const allFrameInserts: Database["public"]["Tables"]["frames"]["Insert"][] =
+      [];
     for (let i = 0; i < games.length; i++) {
       const game = games[i];
-      const gameRow = (gameRows as Record<string, string>[])[i];
+      const gameRow = gameRows[i];
       if (game.entryType === "detailed" && game.frames.length > 0 && gameRow) {
         const frameScores = calculateFrameScores(game.frames);
         for (let fi = 0; fi < game.frames.length; fi++) {
@@ -990,8 +1026,7 @@ export function useSessionState() {
     }
 
     if (allFrameInserts.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("frames").insert(allFrameInserts);
+      await supabase.from("frames").insert(allFrameInserts);
     }
 
     // Calculate new LP after save
@@ -1016,7 +1051,7 @@ export function useSessionState() {
     const isRankDown = rankChanged && newLp < oldLp;
 
     // Detect newly unlocked achievements
-    const sessionId = (session as Record<string, string>).id;
+    const sessionId = session!.id;
     const newGameRecords = games.map((g, i) => ({
       total_score: g.totalScore,
       is_clean: g.entryType === "detailed" ? isCleanGame(g.frames) : false,
@@ -1114,8 +1149,7 @@ export function useSessionState() {
     const spares = game.entryType === "detailed" ? countSpares(game.frames) : 0;
 
     // Get old score for session total diff
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: oldGame } = await (supabase as any)
+    const { data: oldGame } = await supabase
       .from("games")
       .select("total_score")
       .eq("id", editGameId)
@@ -1125,8 +1159,7 @@ export function useSessionState() {
     const diff = game.totalScore - oldScore;
 
     // Update game record
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
+    await supabase
       .from("games")
       .update({
         total_score: game.totalScore,
@@ -1139,16 +1172,14 @@ export function useSessionState() {
 
     // Update session total_pins
     if (diff !== 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: session } = await (supabase as any)
+      const { data: session } = await supabase
         .from("sessions")
         .select("total_pins")
         .eq("id", editSessionId)
         .single();
 
       if (session) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any)
+        await supabase
           .from("sessions")
           .update({ total_pins: session.total_pins + diff })
           .eq("id", editSessionId);
@@ -1158,8 +1189,7 @@ export function useSessionState() {
     // Replace frames
     if (game.entryType === "detailed" && game.frames.length > 0) {
       // Delete old frames
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("frames").delete().eq("game_id", editGameId);
+      await supabase.from("frames").delete().eq("game_id", editGameId);
 
       // Insert new frames
       const frameScores = calculateFrameScores(game.frames);
@@ -1177,8 +1207,7 @@ export function useSessionState() {
         frame_score: frameScores[fi] ?? 0,
       }));
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("frames").insert(frameInserts);
+      await supabase.from("frames").insert(frameInserts);
     }
 
     setSaving(false);

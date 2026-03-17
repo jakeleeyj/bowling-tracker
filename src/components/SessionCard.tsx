@@ -343,6 +343,7 @@ function SessionStats({
     );
   }
 
+  // Lazy compute: skip heavy stats until panel is opened
   const totalFrames = allFrames.length;
   const strikes = allFrames.filter((f) => f.is_strike).length;
   const spares = allFrames.filter((f) => f.is_spare).length;
@@ -359,39 +360,43 @@ function SessionStats({
       ? Math.round((spares / spareOpportunities.length) * 100)
       : 0;
 
-  // Leaves breakdown
-  const leaves = allFrames
-    .filter(
-      (f) => !f.is_strike && f.pins_remaining && f.pins_remaining.length > 0,
-    )
-    .map((f) => ({
-      pins: f.pins_remaining!.sort((a, b) => a - b),
-      converted: f.is_spare,
-    }));
+  // Only compute leave breakdown when panel is open
+  let singlePinLeaves: { pins: number[]; total: number; converted: number }[] =
+    [];
+  let splitLeaves: { pins: number[]; total: number; converted: number }[] = [];
+  let sortedLeaves: { pins: number[]; total: number; converted: number }[] = [];
 
-  // Group by pin combo
-  const leaveMap = new Map<
-    string,
-    { pins: number[]; total: number; converted: number }
-  >();
-  for (const l of leaves) {
-    const key = l.pins.join("-");
-    const existing = leaveMap.get(key) ?? {
-      pins: l.pins,
-      total: 0,
-      converted: 0,
-    };
-    existing.total++;
-    if (l.converted) existing.converted++;
-    leaveMap.set(key, existing);
+  if (show) {
+    const leaves = allFrames
+      .filter(
+        (f) => !f.is_strike && f.pins_remaining && f.pins_remaining.length > 0,
+      )
+      .map((f) => ({
+        pins: f.pins_remaining!.sort((a, b) => a - b),
+        converted: f.is_spare,
+      }));
+
+    const leaveMap = new Map<
+      string,
+      { pins: number[]; total: number; converted: number }
+    >();
+    for (const l of leaves) {
+      const key = l.pins.join("-");
+      const existing = leaveMap.get(key) ?? {
+        pins: l.pins,
+        total: 0,
+        converted: 0,
+      };
+      existing.total++;
+      if (l.converted) existing.converted++;
+      leaveMap.set(key, existing);
+    }
+    sortedLeaves = [...leaveMap.values()].sort((a, b) => b.total - a.total);
+    singlePinLeaves = sortedLeaves.filter((l) => l.pins.length === 1);
+    splitLeaves = sortedLeaves.filter(
+      (l) => l.pins.length >= 2 && isSplit(l.pins),
+    );
   }
-  const sortedLeaves = [...leaveMap.values()].sort((a, b) => b.total - a.total);
-
-  // Categorize
-  const singlePinLeaves = sortedLeaves.filter((l) => l.pins.length === 1);
-  const splitLeaves = sortedLeaves.filter(
-    (l) => l.pins.length >= 2 && isSplit(l.pins),
-  );
   const multiPinLeaves = sortedLeaves.filter(
     (l) => l.pins.length >= 2 && !isSplit(l.pins),
   );
@@ -586,8 +591,7 @@ export default function SessionCard({
   async function handleSaveMeta() {
     setSavingMeta(true);
     const supabase = createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
+    await supabase
       .from("sessions")
       .update({
         venue: editVenue || null,
@@ -605,24 +609,17 @@ export default function SessionCard({
     setDeleting(true);
     const supabase = createClient();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: gameRows } = await (supabase as any)
+    const { data: gameRows } = await supabase
       .from("games")
       .select("id")
       .eq("session_id", sessionId);
 
     const gameIds = gameRows?.map((g: { id: string }) => g.id) ?? [];
     if (gameIds.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("frames").delete().in("game_id", gameIds);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any)
-        .from("games")
-        .delete()
-        .eq("session_id", sessionId);
+      await supabase.from("frames").delete().in("game_id", gameIds);
+      await supabase.from("games").delete().eq("session_id", sessionId);
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).from("sessions").delete().eq("id", sessionId);
+    await supabase.from("sessions").delete().eq("id", sessionId);
 
     toast("Session deleted");
     router.refresh();

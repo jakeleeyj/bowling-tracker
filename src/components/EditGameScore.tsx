@@ -29,23 +29,20 @@ export default function EditGameScore({
     const supabase = createClient();
     const diff = newScore - currentScore;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
+    await supabase
       .from("games")
       .update({ total_score: newScore })
       .eq("id", gameId);
 
     // Update session total_pins
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: session } = await (supabase as any)
+    const { data: session } = await supabase
       .from("sessions")
       .select("total_pins")
       .eq("id", sessionId)
       .single();
 
     if (session) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any)
+      await supabase
         .from("sessions")
         .update({ total_pins: session.total_pins + diff })
         .eq("id", sessionId);

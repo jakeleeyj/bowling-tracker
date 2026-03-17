@@ -119,53 +119,55 @@ export default function ProfilePage() {
         if (!user) return;
 
         setEmail(user.email ?? "");
-        const { data: profile } = (await supabase
-          .from("profiles")
-          .select("display_name, avatar_url")
-          .eq("id", user.id)
-          .single()) as {
-          data: { display_name: string; avatar_url: string | null } | null;
-        };
 
+        // Parallel fetch: profile, sessions, and games all at once
+        const [profileResult, sessionResult, gamesResult] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("display_name, avatar_url")
+            .eq("id", user.id)
+            .single(),
+          supabase
+            .from("sessions")
+            .select("*, games(*, frames(*))")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(SESSIONS_PER_PAGE),
+          supabase
+            .from("games")
+            .select(
+              "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
+            )
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false }),
+        ]);
+
+        const profile = profileResult.data as {
+          display_name: string;
+          avatar_url: string | null;
+        } | null;
         if (profile) {
           setDisplayName(profile.display_name);
           setAvatarUrl(profile.avatar_url);
         }
 
-        // Fetch history with full frame data for SessionCard
-        const { data: sessionData } = (await supabase
-          .from("sessions")
-          .select("*, games(*, frames(*))")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(SESSIONS_PER_PAGE)) as {
-          data: HistorySession[] | null;
-        };
+        const sessionData = sessionResult.data as HistorySession[] | null;
         if (sessionData) {
           setSessions(sessionData);
           setHasMoreSessions(sessionData.length === SESSIONS_PER_PAGE);
         }
 
-        // Fetch achievement stats + LP
-        const { data: games } = (await supabase
-          .from("games")
-          .select(
-            "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
-          )
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })) as {
-          data:
-            | {
-                id: string;
-                total_score: number;
-                is_clean: boolean;
-                strike_count: number;
-                spare_count: number;
-                session_id: string;
-                sessions: { event_label: string | null } | null;
-              }[]
-            | null;
-        };
+        const games = gamesResult.data as
+          | {
+              id: string;
+              total_score: number;
+              is_clean: boolean;
+              strike_count: number;
+              spare_count: number;
+              session_id: string;
+              sessions: { event_label: string | null } | null;
+            }[]
+          | null;
 
         // Calculate LP (games already ordered newest-first)
         const scores = games?.map((g) => g.total_score) ?? [];
@@ -199,6 +201,7 @@ export default function ProfilePage() {
         }
         setSessionLpChanges(lpMap);
 
+        // Frames fetch depends on games result
         const gameIds = games?.map((g) => g.id) ?? [];
         const { data: frames } = (await supabase
           .from("frames")
@@ -247,8 +250,7 @@ export default function ProfilePage() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
+    await supabase
       .from("profiles")
       .update({ display_name: trimmed })
       .eq("id", user.id);

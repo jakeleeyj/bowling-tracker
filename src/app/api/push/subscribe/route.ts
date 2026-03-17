@@ -19,8 +19,7 @@ export async function POST(request: Request) {
   }
 
   // Upsert — one subscription per endpoint
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any).from("push_subscriptions").upsert(
+  await supabase.from("push_subscriptions").upsert(
     {
       user_id: user.id,
       endpoint: subscription.endpoint,
@@ -43,11 +42,11 @@ export async function DELETE(request: Request) {
 
   const { endpoint } = await request.json();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any)
+  await supabase
     .from("push_subscriptions")
     .delete()
-    .eq("endpoint", endpoint);
+    .eq("endpoint", endpoint)
+    .eq("user_id", user.id);
 
   return NextResponse.json({ ok: true });
 }

@@ -19,8 +19,7 @@ export default function DeleteSessionButton({
     setDeleting(true);
 
     // Delete frames, games, then session (cascade would be cleaner but doing it manually)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: games } = await (supabase as any)
+    const { data: games } = await supabase
       .from("games")
       .select("id")
       .eq("session_id", sessionId);
@@ -28,17 +27,14 @@ export default function DeleteSessionButton({
     const gameIds = games?.map((g: { id: string }) => g.id) ?? [];
 
     if (gameIds.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("frames").delete().in("game_id", gameIds);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any)
+      await supabase.from("frames").delete().in("game_id", gameIds);
+      await supabase
         .from("games")
         .delete()
         .eq("session_id", sessionId);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).from("sessions").delete().eq("id", sessionId);
+    await supabase.from("sessions").delete().eq("id", sessionId);
 
     router.push("/profile");
     router.refresh();

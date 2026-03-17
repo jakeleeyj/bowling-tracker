@@ -4,66 +4,21 @@ import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { Swords, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import RankInfoModal from "@/components/RankInfoModal";
-import type { ProfileRow, GameRow } from "@/lib/queries";
+import RankEmblem from "@/components/RankEmblem";
+import type { ProfileRow } from "@/lib/queries";
 import Avatar from "@/components/Avatar";
-import {
-  calculateLP,
-  getRank,
-  getDivisionProgress,
-  formatLP,
-  getEventWeight,
-  CALIBRATION_GAMES,
-} from "@/lib/ranking";
+import { getRank, formatLP, CALIBRATION_GAMES } from "@/lib/ranking";
 
-function RankEmblem({
-  tierName,
-  size = "md",
-}: {
-  tierName: string;
-  size?: "sm" | "md" | "lg";
-}) {
-  const dims =
-    size === "lg" ? "h-12 w-12" : size === "md" ? "h-9 w-9" : "h-7 w-7";
-  const iconSize = size === "lg" ? 28 : size === "md" ? 20 : 16;
-
-  const tierColors: Record<string, { fill: string; stroke: string }> = {
-    Iron: { fill: "#9ca3af", stroke: "#6b7280" },
-    Bronze: { fill: "#b45309", stroke: "#92400e" },
-    Silver: { fill: "#d1d5db", stroke: "#9ca3af" },
-    Gold: { fill: "#f59e0b", stroke: "#d97706" },
-    Platinum: { fill: "#22d3ee", stroke: "#06b6d4" },
-    Diamond: { fill: "#3b82f6", stroke: "#2563eb" },
-    Master: { fill: "#8b5cf6", stroke: "#7c3aed" },
-    Grandmaster: { fill: "#ef4444", stroke: "#dc2626" },
-    Emerald: { fill: "#34d399", stroke: "#10b981" },
-    Challenger: { fill: "#fb7185", stroke: "#f43f5e" },
-  };
-
-  const colors = tierColors[tierName] ?? tierColors.Iron;
-
-  return (
-    <div className={`${dims} flex items-center justify-center`}>
-      <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none">
-        {/* Shield shape */}
-        <path
-          d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z"
-          fill={colors.fill}
-          fillOpacity={0.2}
-          stroke={colors.stroke}
-          strokeWidth={1.5}
-          strokeLinejoin="round"
-        />
-        {/* Inner diamond */}
-        <path
-          d="M12 7l3 5-3 5-3-5z"
-          fill={colors.fill}
-          fillOpacity={0.6}
-          stroke={colors.stroke}
-          strokeWidth={0.75}
-        />
-      </svg>
-    </div>
-  );
+interface RankingRow {
+  user_id: string;
+  lp: number;
+  total_games: number;
+  avg: number;
+  high: number;
+  trend: "up" | "down" | "stable";
+  rank: string;
+  division: string | null;
+  progress: number;
 }
 
 export default async function LeaderboardPage() {
@@ -72,97 +27,51 @@ export default async function LeaderboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: profiles } = (await supabase.from("profiles").select("*")) as {
-    data: ProfileRow[] | null;
-  };
+  // Parallel: profiles + all rankings computed in Postgres
+  const [profilesResult, rankingsResult] = await Promise.all([
+    supabase.from("profiles").select("id, display_name, avatar_url"),
+    supabase.rpc("get_all_rankings"),
+  ]);
 
-  const { data: allGames } = (await supabase
-    .from("games")
-    .select("*, sessions(event_label)")
-    .order("created_at", { ascending: false })) as {
-    data:
-      | (GameRow & { sessions: { event_label: string | null } | null })[]
-      | null;
-  };
+  const profiles = (profilesResult.data ?? []) as ProfileRow[];
+  const rankingRows = (rankingsResult.data ?? []) as unknown as RankingRow[];
 
-  // Pre-index games by user to avoid O(n*m) filtering
-  const gamesByUser = new Map<string, typeof allGames>();
-  allGames?.forEach((g) => {
-    const list = gamesByUser.get(g.user_id) ?? [];
-    list.push(g);
-    gamesByUser.set(g.user_id, list);
-  });
+  // Index rankings by user_id
+  const rankMap = new Map<string, RankingRow>();
+  for (const r of rankingRows) {
+    rankMap.set(r.user_id, r);
+  }
 
-  const rankings = (profiles ?? [])
+  const rankings = profiles
     .map((profile) => {
-      const userGames = gamesByUser.get(profile.id) ?? [];
-      const totalGames = userGames.length;
-
-      if (totalGames === 0) {
-        return {
-          id: profile.id,
-          name: profile.display_name,
-          avatarUrl: profile.avatar_url,
-          mmr: 0,
-          rank: getRank(0),
-          progress: 0,
-          avg: 0,
-          high: 0,
-          games: 0,
-          trend: "stable" as const,
-          isCurrentUser: profile.id === user?.id,
-          isCalibrating: true,
-          isUnranked: true,
-        };
-      }
-
-      // Scores newest-first (already sorted by query)
-      const scores = userGames.map((g) => g.total_score);
-      const weights = userGames.map((g) =>
-        getEventWeight(g.sessions?.event_label ?? null),
-      );
-      const mmr = calculateLP(scores, weights);
-      const rank = getRank(mmr);
-      const progress = getDivisionProgress(mmr);
-      const avg = Math.round(scores.reduce((s, v) => s + v, 0) / scores.length);
-      const high = Math.max(...scores);
-
-      // Recent trend: compare last 5 games avg LP gain vs overall avg LP gain
-      let trend: "up" | "down" | "stable" = "stable";
-      if (scores.length >= 10) {
-        const recentAvg = scores.slice(0, 5).reduce((s, v) => s + v, 0) / 5;
-        const olderAvg = scores.slice(5, 10).reduce((s, v) => s + v, 0) / 5;
-        if (recentAvg - olderAvg > 5) trend = "up";
-        else if (olderAvg - recentAvg > 5) trend = "down";
-      }
+      const r = rankMap.get(profile.id);
+      const totalGames = r?.total_games ?? 0;
+      const rank = getRank(r?.lp ?? 0);
 
       return {
         id: profile.id,
         name: profile.display_name,
         avatarUrl: profile.avatar_url,
-        mmr,
+        mmr: r?.lp ?? 0,
         rank,
-        progress,
-        avg,
-        high,
+        progress: r?.progress ?? 0,
+        avg: r?.avg ?? 0,
+        high: r?.high ?? 0,
         games: totalGames,
-        trend,
+        trend: (r?.trend ?? "stable") as "up" | "down" | "stable",
         isCurrentUser: profile.id === user?.id,
         isCalibrating: totalGames < CALIBRATION_GAMES,
-        isUnranked: false,
+        isUnranked: totalGames === 0,
       };
     })
     .sort((a, b) => {
-      // Unranked (0 games) at very bottom
       if (a.isUnranked && !b.isUnranked) return 1;
       if (!a.isUnranked && b.isUnranked) return -1;
-      // Calibrating users next to bottom
       if (a.isCalibrating && !b.isCalibrating) return 1;
       if (!a.isCalibrating && b.isCalibrating) return -1;
       return b.mmr - a.mmr;
     });
 
-  // Find current user's entry
   const currentUserEntry = rankings.find((e) => e?.isCurrentUser);
 
   return (

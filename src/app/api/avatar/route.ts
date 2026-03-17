@@ -25,7 +25,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Max 2MB" }, { status: 400 });
   }
 
-  const ext = file.name.split(".").pop() ?? "jpg";
+  const mimeToExt: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif",
+  };
+  const ext = mimeToExt[file.type];
+  if (!ext) {
+    return NextResponse.json(
+      { error: "Unsupported image type" },
+      { status: 400 },
+    );
+  }
   const path = `${user.id}/avatar.${ext}`;
 
   const { error: uploadError } = await supabase.storage
@@ -43,8 +55,7 @@ export async function POST(request: Request) {
   // Add cache-buster to force refresh
   const avatarUrl = `${publicUrl}?v=${Date.now()}`;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any)
+  await supabase
     .from("profiles")
     .update({ avatar_url: avatarUrl })
     .eq("id", user.id);

@@ -10,12 +10,8 @@ import {
   Crown,
   Award,
 } from "lucide-react";
-import {
-  getRank,
-  getDivisionProgress,
-  CALIBRATION_GAMES,
-  type RankTier,
-} from "@/lib/ranking";
+import { getRank, getDivisionProgress, CALIBRATION_GAMES } from "@/lib/ranking";
+import RankEmblem from "@/components/RankEmblem";
 import type { ResultsData } from "@/hooks/useSessionState";
 import type { AchievementDef } from "@/lib/achievements";
 
@@ -41,40 +37,6 @@ function AnimatedCounter({
     requestAnimationFrame(tick);
   }, [from, to, duration]);
   return <>{value}</>;
-}
-
-function RankEmblem({
-  rank,
-  size = 80,
-  className = "",
-}: {
-  rank: RankTier;
-  size?: number;
-  className?: string;
-}) {
-  return (
-    <div className={`flex items-center justify-center ${className}`}>
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-        <path
-          d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z"
-          fill="currentColor"
-          fillOpacity={0.15}
-          stroke="currentColor"
-          strokeWidth={1.5}
-          strokeLinejoin="round"
-          className={rank.color}
-        />
-        <path
-          d="M12 7l3 5-3 5-3-5z"
-          fill="currentColor"
-          fillOpacity={0.4}
-          stroke="currentColor"
-          strokeWidth={0.75}
-          className={rank.color}
-        />
-      </svg>
-    </div>
-  );
 }
 
 const RESULTS_ICON_MAP: Record<string, React.ReactNode> = {
@@ -129,7 +91,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
     >
       <div className="animate-results-emblem mb-4">
         <RankEmblem
-          rank={isCalibrating ? getRank(0) : data.newRank}
+          tierName={isCalibrating ? getRank(0).name : data.newRank.name}
           size={96}
         />
       </div>

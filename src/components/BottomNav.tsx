@@ -33,9 +33,10 @@ export default function BottomNav() {
     const check = () =>
       setHasSavedSession(localStorage.getItem("spare-me-session") !== null);
     check();
-    // Re-check periodically since localStorage changes from same tab don't fire storage events
-    const interval = setInterval(check, 1000);
-    return () => clearInterval(interval);
+    // Listen for custom event dispatched by useSessionState on save/clear
+    const handler = () => check();
+    window.addEventListener("session-storage-change", handler);
+    return () => window.removeEventListener("session-storage-change", handler);
   }, [pathname]);
 
   return (

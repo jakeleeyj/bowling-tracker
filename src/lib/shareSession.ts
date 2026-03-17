@@ -1,6 +1,5 @@
-import { toPng } from "html-to-image";
-
 export async function shareSession(cardElement: HTMLElement): Promise<void> {
+  const { toPng } = await import("html-to-image");
   const dataUrl = await toPng(cardElement, {
     width: 1080,
     height: 1920,

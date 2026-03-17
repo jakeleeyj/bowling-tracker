@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const AVATAR_GRADIENTS = [
   "from-blue to-indigo-500",
   "from-purple to-fuchsia-500",
@@ -33,10 +35,13 @@ export default function Avatar({
   const s = SIZES[size];
 
   if (avatarUrl) {
+    const dim = size === "lg" ? 56 : size === "md" ? 40 : 28;
     return (
-      <img
+      <Image
         src={avatarUrl}
         alt={name}
+        width={dim}
+        height={dim}
         className={`${s.container} shrink-0 rounded-full object-cover`}
       />
     );

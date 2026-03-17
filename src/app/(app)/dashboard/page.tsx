@@ -6,16 +6,15 @@ import { ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import type {
   ProfileRow,
   SessionWithGamesFramesAndProfile,
+  PlayerLP,
 } from "@/lib/queries";
 import SessionCard from "@/components/SessionCard";
 import Avatar from "@/components/Avatar";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import {
-  calculateLP,
   getRank,
   getDivisionProgress,
   formatLP,
-  getEventWeight,
   CALIBRATION_GAMES,
 } from "@/lib/ranking";
 
@@ -28,146 +27,61 @@ export default async function DashboardPage() {
 
   const uid = user?.id ?? "";
 
-  // Phase 1: fetch profile, user games, and recent sessions in parallel
-  const [profileResult, userGamesResult, sessionsResult] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", uid).single(),
-    supabase
-      .from("games")
-      .select("total_score, session_id, sessions(event_label)")
-      .eq("user_id", uid)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("sessions")
-      .select("*, profiles(*), games(*, frames(*))")
-      .order("created_at", { ascending: false })
-      .limit(10),
-  ]);
+  // Phase 1: fetch profile, user LP, recent sessions, and all rankings in parallel
+  const [profileResult, userLpResult, sessionsResult, allRankingsResult] =
+    await Promise.all([
+      supabase.from("profiles").select("*").eq("id", uid).single(),
+      supabase.rpc("get_player_lp", { p_user_id: uid }),
+      supabase
+        .from("sessions")
+        .select("*, profiles(*), games(*, frames(*))")
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase.rpc("get_all_rankings"),
+    ]);
 
   const profile = profileResult.data as ProfileRow | null;
-  const userGames = userGamesResult.data as
-    | {
-        total_score: number;
-        session_id: string;
-        sessions: { event_label: string | null } | null;
-      }[]
-    | null;
+  const userLpData = (userLpResult.data ?? {}) as unknown as PlayerLP;
   const sessions = sessionsResult.data as
     | SessionWithGamesFramesAndProfile[]
     | null;
+  const allRankings = (allRankingsResult.data ?? []) as unknown as {
+    user_id: string;
+    lp: number;
+    total_games: number;
+    rank: string;
+    division: string | null;
+  }[];
 
-  // Phase 2: only fetch games for users in the recent sessions (not ALL users)
-  const sessionUserIds = [...new Set(sessions?.map((s) => s.user_id) ?? [])];
-  const { data: feedGamesData } =
-    sessionUserIds.length > 0
-      ? await supabase
-          .from("games")
-          .select("id, user_id, total_score, sessions(event_label)")
-          .in("user_id", sessionUserIds)
-          .order("created_at", { ascending: false })
-      : { data: null };
-  const allGamesForRank = feedGamesData as
-    | {
-        id: string;
-        user_id: string;
-        total_score: number;
-        sessions: { event_label: string | null } | null;
-      }[]
-    | null;
-
-  const totalGames = userGames?.length ?? 0;
-  const avgScore =
-    totalGames > 0
-      ? Math.round(
-          (userGames?.reduce((sum, g) => sum + g.total_score, 0) ?? 0) /
-            totalGames,
-        )
-      : 0;
-  const highScore =
-    totalGames > 0
-      ? Math.max(...(userGames?.map((g) => g.total_score) ?? [0]))
-      : 0;
-
-  // Compute per-user rank and game count
+  // Index rankings by user_id for feed rank badges
   const userRanks: Record<string, ReturnType<typeof getRank>> = {};
   const userGameCounts: Record<string, number> = {};
-  if (allGamesForRank) {
-    const byUser: Record<string, { scores: number[]; weights: number[] }> = {};
-    allGamesForRank.forEach((g) => {
-      if (!byUser[g.user_id]) byUser[g.user_id] = { scores: [], weights: [] };
-      byUser[g.user_id].scores.push(g.total_score);
-      byUser[g.user_id].weights.push(
-        getEventWeight(g.sessions?.event_label ?? null),
-      );
-    });
-    for (const [uid, d] of Object.entries(byUser)) {
-      userRanks[uid] = getRank(calculateLP(d.scores, d.weights));
-      userGameCounts[uid] = d.scores.length;
-    }
+  for (const r of allRankings) {
+    userRanks[r.user_id] = getRank(r.lp);
+    userGameCounts[r.user_id] = r.total_games;
   }
 
-  const scores = userGames?.map((g) => g.total_score) ?? [];
-  const eventWeights =
-    userGames?.map((g) => getEventWeight(g.sessions?.event_label ?? null)) ??
-    [];
-  const lp = calculateLP(scores, eventWeights);
+  const totalGames = userLpData.total_games ?? 0;
+  const avgScore = userLpData.avg ?? 0;
+  const highScore = userLpData.high ?? 0;
+  const lp = userLpData.lp ?? 0;
   const rank = getRank(lp);
 
-  // Trend: compare recent 5 avg vs older 5 avg
-  let trend: "up" | "down" | "stable" = "stable";
-  if (scores.length >= 10) {
-    const recentAvg = scores.slice(0, 5).reduce((s, v) => s + v, 0) / 5;
-    const olderAvg = scores.slice(5, 10).reduce((s, v) => s + v, 0) / 5;
-    if (recentAvg - olderAvg > 5) trend = "up";
-    else if (olderAvg - recentAvg > 5) trend = "down";
-  }
+  // Trend from rankings data
+  const myRanking = allRankings.find((r) => r.user_id === uid);
+  const trend = ((myRanking as { trend?: string })?.trend ?? "stable") as
+    | "up"
+    | "down"
+    | "stable";
 
-  // Compute per-session LP change using real LP calculation
-  const sessionLpChange: Record<string, number> = {};
-  if (sessions && allGamesForRank) {
-    // Build per-user scores/weights from allGamesForRank
-    const userScoresMap: Record<
-      string,
-      { scores: number[]; weights: number[] }
-    > = {};
-    allGamesForRank.forEach((g) => {
-      if (!userScoresMap[g.user_id])
-        userScoresMap[g.user_id] = { scores: [], weights: [] };
-      userScoresMap[g.user_id].scores.push(g.total_score);
-      userScoresMap[g.user_id].weights.push(
-        getEventWeight(g.sessions?.event_label ?? null),
-      );
+  // Phase 2: compute session LP deltas via Postgres function
+  const sessionIds = sessions?.map((s) => s.id) ?? [];
+  let sessionLpChange: Record<string, number> = {};
+  if (sessionIds.length > 0) {
+    const { data: deltas } = await supabase.rpc("get_session_lp_deltas", {
+      p_session_ids: sessionIds,
     });
-
-    for (const session of sessions) {
-      const userId = session.user_id;
-      if ((userGameCounts[userId] ?? 0) < CALIBRATION_GAMES) continue;
-
-      const userData = userScoresMap[userId];
-      if (!userData) continue;
-
-      // LP with all games
-      const fullLp = calculateLP(userData.scores, userData.weights);
-
-      // LP without this session's games
-      const sessionGameIds = new Set(
-        session.games.map((g: { id: string }) => g.id),
-      );
-      const scoresWithout: number[] = [];
-      const weightsWithout: number[] = [];
-      // Games are newest-first; filter out this session's games
-      allGamesForRank.forEach((g) => {
-        if (g.user_id === userId && !sessionGameIds.has(g.id)) {
-          scoresWithout.push(g.total_score);
-          weightsWithout.push(getEventWeight(g.sessions?.event_label ?? null));
-        }
-      });
-      const lpWithout =
-        scoresWithout.length > 0
-          ? calculateLP(scoresWithout, weightsWithout)
-          : 0;
-
-      sessionLpChange[session.id] = fullLp - lpWithout;
-    }
+    sessionLpChange = (deltas ?? {}) as Record<string, number>;
   }
 
   const displayName = profile?.display_name ?? "Bowler";

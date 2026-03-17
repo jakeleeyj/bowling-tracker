@@ -76,3 +76,62 @@ export interface GameWithSession extends GameRow {
 export interface GameWithSessionDate extends GameRow {
   sessions: { session_date: string };
 }
+
+// RPC return types for Postgres stats functions
+
+export interface OverviewStats {
+  total_games: number;
+  avg: number;
+  high: number;
+  low: number;
+  detailed_games: number;
+  clean_games: number;
+  clean_rate: number;
+  strikes: number;
+  total_frames_played: number;
+  strike_rate: number;
+  spare_opportunities: number;
+  spares_converted: number;
+  spare_rate: number;
+  first_ball_frames: number;
+  pocket_hits: number;
+  pocket_rate: number;
+  doubles: number;
+  double_opportunities: number;
+  double_rate: number;
+  max_spare_streak: number;
+  spare_conv_trend: number[];
+  scores: number[];
+}
+
+export interface LeaveEntry {
+  pins: number[];
+  attempts: number;
+  converted: number;
+  rate: number;
+  category?: string;
+}
+
+export interface LeaveStats {
+  total_spare_opportunities: number;
+  total_spares_converted: number;
+  spare_rate: number;
+  single_pin: { attempts: number; converted: number; rate: number };
+  multi_pin: { attempts: number; converted: number; rate: number };
+  splits: { attempts: number; converted: number; rate: number };
+  single_pin_leaves: LeaveEntry[];
+  multi_pin_leaves: LeaveEntry[];
+  split_leaves: LeaveEntry[];
+  practice_targets: LeaveEntry[];
+}
+
+export interface PlayerLP {
+  lp: number;
+  total_games: number;
+  rank: string;
+  division: string | null;
+  avg: number;
+  high: number;
+}
+
+export type StatsFilter = "last10" | "last50" | "ytd" | "custom" | "all";
