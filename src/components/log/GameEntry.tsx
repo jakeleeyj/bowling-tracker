@@ -168,12 +168,27 @@ export default function GameEntry(props: GameEntryProps) {
               </button>
             );
           })}
-          <button
-            onClick={() => setGameCount((c: number) => c + 1)}
-            className="flex h-auto w-8 shrink-0 items-center justify-center rounded-lg bg-surface-light text-sm font-bold text-text-muted active:scale-95"
-          >
-            +
-          </button>
+          {gameCount > 1 && !games[gameCount - 1] && (
+            <button
+              onClick={() => {
+                setGameCount((c: number) => Math.max(1, c - 1));
+                if (currentGameIndex >= gameCount - 1) {
+                  switchToGame(gameCount - 2);
+                }
+              }}
+              className="flex h-auto w-8 shrink-0 items-center justify-center rounded-lg bg-surface-light text-sm font-bold text-text-muted active:scale-95"
+            >
+              &minus;
+            </button>
+          )}
+          {gameCount < 8 && (
+            <button
+              onClick={() => setGameCount((c: number) => c + 1)}
+              className="flex h-auto w-8 shrink-0 items-center justify-center rounded-lg bg-surface-light text-sm font-bold text-text-muted active:scale-95"
+            >
+              +
+            </button>
+          )}
         </div>
       )}
 
@@ -272,7 +287,7 @@ export default function GameEntry(props: GameEntryProps) {
       ) : (
         <>
           {/* Mode toggle */}
-          <div className="mb-4 flex rounded-lg bg-surface-light p-[3px]">
+          <div className="mb-2 flex rounded-lg bg-surface-light p-[3px]">
             <button
               onClick={() => setEntryMode("quick")}
               className={`flex-1 rounded-md py-[6px] text-[13px] transition-colors ${
@@ -373,14 +388,13 @@ export default function GameEntry(props: GameEntryProps) {
 
               {/* Action buttons */}
               <div className="flex gap-2">
-                {history.length > 0 && (
-                  <button
-                    onClick={handleUndo}
-                    className="flex w-12 items-center justify-center rounded-xl bg-surface-light text-text-muted active:bg-surface-light/80"
-                  >
-                    <Undo2 size={18} />
-                  </button>
-                )}
+                <button
+                  onClick={handleUndo}
+                  disabled={history.length === 0}
+                  className="flex w-12 items-center justify-center rounded-xl bg-surface-light text-text-muted active:bg-surface-light/80 disabled:opacity-30"
+                >
+                  <Undo2 size={18} />
+                </button>
                 <button
                   onClick={handleGutter}
                   className="rounded-xl bg-surface-light px-3 py-3.5 text-xs font-bold text-text-muted active:bg-surface-light/80"

@@ -51,15 +51,14 @@ begin
     v_score := v_scores[i];
     v_weight := v_weights[i];
 
-    -- Recency weight (i-1 is 0-based index from newest)
-    if i - 1 >= 60 then v_recency := 0.25;
-    elsif i - 1 >= 30 then v_recency := 0.5;
-    else v_recency := 1.0;
-    end if;
+    -- Recency: linear decay from 1.0 to 0.25 over 60 games
+    v_recency := greatest(0.25, 1.0 - (i - 1) * 0.0125);
 
-    -- Calibration: oldest 4 games get 5x multiplier
+    -- Calibration: oldest 4 games get 5x multiplier, no event weight
     -- chronological index from oldest = v_total_games - i (0-based)
-    if (v_total_games - i) < 4 then v_multiplier := 5;
+    if (v_total_games - i) < 4 then
+      v_multiplier := 5;
+      v_weight := 1.0; -- ignore event weight during calibration
     else v_multiplier := 1;
     end if;
 

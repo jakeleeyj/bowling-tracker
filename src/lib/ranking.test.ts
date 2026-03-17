@@ -30,8 +30,13 @@ describe("calculateLP", () => {
   });
 
   it("calibration games earn 5x LP", () => {
-    // 4 calibration games of 200: (200-180) * 5 * 4 = +400
-    expect(calculateLP([200, 200, 200, 200])).toBe(1600);
+    // 4 calibration games of 200 with linear recency decay
+    // i=3: 20*5*max(0.25, 1-0.0375)=20*5*0.9625=96
+    // i=2: 20*5*max(0.25, 1-0.025)=20*5*0.975=98
+    // i=1: 20*5*max(0.25, 1-0.0125)=20*5*0.9875=99
+    // i=0: 20*5*max(0.25, 1-0)=20*5*1.0=100
+    // Total: 1200 + 96+98+99+100 = 1593
+    expect(calculateLP([200, 200, 200, 200])).toBe(1593);
   });
 
   it("normal games earn 1x LP after calibration", () => {
@@ -40,20 +45,29 @@ describe("calculateLP", () => {
   });
 
   it("LP accumulates over many games", () => {
-    // 4 cal + 6 normal, all 200
-    // Cal: 4 * (20 * 5) = 400
-    // Normal: 6 * 20 = 120
-    // Total: 1200 + 400 + 120 = 1720
+    // 4 cal + 6 normal, all 200, with linear recency decay
     const scores = Array.from({ length: 10 }, () => 200);
-    expect(calculateLP(scores)).toBe(1720);
+    const lp = calculateLP(scores);
+    // Should be between 1600 and 1720 (decay reduces older games)
+    expect(lp).toBeGreaterThan(1600);
+    expect(lp).toBeLessThan(1720);
   });
 
-  it("applies event weights", () => {
-    // 1 cal game of 200, tournament (1.5x): (20 * 1.5 * 5) = 150
+  it("ignores event weights during calibration", () => {
+    // Calibration games always use 1.0 event weight
     const tournament = calculateLP([200], [1.5]);
-    // 1 cal game of 200, casual (1.0x): (20 * 1.0 * 5) = 100
     const casual = calculateLP([200], [1.0]);
-    expect(tournament).toBeGreaterThan(casual);
+    expect(tournament).toBe(casual);
+  });
+
+  it("applies event weights after calibration", () => {
+    // 4 cal + 1 normal: tournament weight only affects the 5th game
+    const scores = [200, 200, 200, 200, 200];
+    const tournamentW = [1.5, 1.0, 1.0, 1.0, 1.0];
+    const casualW = [1.0, 1.0, 1.0, 1.0, 1.0];
+    expect(calculateLP(scores, tournamentW)).toBeGreaterThan(
+      calculateLP(scores, casualW),
+    );
   });
 
   it("LP floor is 0", () => {

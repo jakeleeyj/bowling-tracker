@@ -63,13 +63,14 @@ export default function FrameScorecard({
 
   return (
     <div className="glass overflow-hidden rounded-lg">
-      <table className="w-full border-collapse text-center text-[10px]">
+      <table className="w-full table-fixed border-collapse text-center text-[10px]">
         {/* Frame numbers */}
         <thead>
           <tr>
             {Array.from({ length: 10 }, (_, i) => (
               <th
                 key={i}
+                style={{ width: "10%" }}
                 className="border border-border px-0 py-[3px] font-normal text-text-muted"
               >
                 {i + 1}
@@ -92,15 +93,11 @@ export default function FrameScorecard({
                   className={`border border-border text-[11px] ${isCurrentFrame ? "bg-blue/10" : ""} ${isTappable ? "cursor-pointer active:bg-blue/5" : ""}`}
                 >
                   {frame ? (
-                    <div
-                      className={`flex ${i < 9 ? "justify-between" : "justify-around"} px-[2px]`}
-                    >
+                    <div className="flex justify-center gap-1 px-[2px]">
                       {i < 9 ? (
                         <>
                           {frame.isStrike ? (
-                            <span className="ml-auto font-bold text-green">
-                              X
-                            </span>
+                            <span className="font-bold text-green">X</span>
                           ) : (
                             <>
                               <span
@@ -199,7 +196,7 @@ export default function FrameScorecard({
               return (
                 <td
                   key={i}
-                  className="border border-border text-[12px] font-bold text-text-primary"
+                  className="overflow-hidden border border-border text-[12px] font-bold text-text-primary"
                 >
                   {canDisplay ? (
                     score

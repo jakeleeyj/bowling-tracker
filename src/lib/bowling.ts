@@ -194,34 +194,40 @@ export function getAllPins(): number[] {
 //        1
 export const PIN_LAYOUT = [[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]] as const;
 
-// Common split patterns (headpin must be down, 2+ non-adjacent pins remaining)
-const SPLIT_PATTERNS = [
-  [7, 10],
-  [4, 6],
-  [4, 10],
-  [6, 7],
-  [3, 10],
-  [2, 7],
-  [4, 6, 7, 10],
-  [4, 6, 7, 9, 10],
-  [3, 7],
-  [2, 10],
-  [3, 7, 10],
-  [2, 7, 10],
-  [4, 7, 10],
-  [6, 7, 10],
-  [2, 4, 10],
-  [3, 6, 7],
-  [4, 9],
-  [6, 8],
-  [5, 7],
-  [5, 10],
-];
+// Pin adjacency graph — pins that physically touch each other
+// Includes same-row neighbors and diagonal (front/back row) neighbors
+const PIN_ADJACENCY: Record<number, number[]> = {
+  1: [2, 3],
+  2: [1, 3, 4, 5],
+  3: [1, 2, 5, 6],
+  4: [2, 5, 7, 8],
+  5: [2, 3, 4, 6, 8, 9],
+  6: [3, 5, 9, 10],
+  7: [4, 8],
+  8: [4, 5, 7, 9],
+  9: [5, 6, 8, 10],
+  10: [6, 9],
+};
 
+// A split is when headpin is down, 2+ pins remain, and remaining pins
+// form disconnected groups (can't trace a path between all of them)
 export function isSplit(pins: number[]): boolean {
   if (pins.length < 2 || pins.includes(1)) return false;
-  return SPLIT_PATTERNS.some(
-    (pattern) =>
-      pattern.length === pins.length && pattern.every((p) => pins.includes(p)),
-  );
+
+  const pinSet = new Set(pins);
+  const visited = new Set<number>();
+  const queue = [pins[0]];
+  visited.add(pins[0]);
+
+  while (queue.length > 0) {
+    const current = queue.pop()!;
+    for (const neighbor of PIN_ADJACENCY[current]) {
+      if (pinSet.has(neighbor) && !visited.has(neighbor)) {
+        visited.add(neighbor);
+        queue.push(neighbor);
+      }
+    }
+  }
+
+  return visited.size < pins.length;
 }
