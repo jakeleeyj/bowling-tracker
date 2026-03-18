@@ -635,6 +635,14 @@ export default function ProfilePage() {
                 </div>
               );
             }
+            // Track calibration: walk oldest-first to count games chronologically
+            const gamesBeforeSession: Record<string, number> = {};
+            let running = 0;
+            for (const s of [...filtered].reverse()) {
+              gamesBeforeSession[s.id] = running;
+              running += s.games.length;
+            }
+
             return filtered.map((session) => {
               const sessionGames = [...session.games].sort(
                 (a, b) => a.game_number - b.game_number,
@@ -646,6 +654,8 @@ export default function ProfilePage() {
                         sessionGames.length,
                     )
                   : 0;
+              const isCalibrationSession =
+                (gamesBeforeSession[session.id] ?? 0) < CALIBRATION_GAMES;
 
               const createdAt = new Date(session.created_at);
               const dateLabel = createdAt.toLocaleDateString("en-SG", {
@@ -670,6 +680,7 @@ export default function ProfilePage() {
                   games={sessionGames}
                   avatarUrl={avatarUrl}
                   isOwn
+                  isCalibrationSession={isCalibrationSession}
                   lpChange={
                     (achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES
                       ? sessionLpChanges[session.id]
