@@ -34,10 +34,10 @@ create policy "Rankings readable by all authenticated users"
   on player_rankings_cache for select
   to authenticated using (true);
 
--- Session LP cache readable by session owner
-create policy "Session LP cache readable by owner"
+-- Session LP cache readable by all (LP deltas are shown in the public activity feed)
+create policy "Session LP cache readable by all authenticated users"
   on session_lp_cache for select
-  to authenticated using (user_id = auth.uid());
+  to authenticated using (true);
 
 -- 3. Function to recalculate rankings for a single user
 create or replace function refresh_player_ranking(p_user_id uuid)
