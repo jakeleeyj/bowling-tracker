@@ -1,7 +1,6 @@
 export const revalidate = 300;
 
 import { createClient } from "@/lib/supabase-server";
-import type { FrameRow } from "@/lib/queries";
 import {
   Trophy,
   Zap,
@@ -11,7 +10,7 @@ import {
   Crown,
   Award,
 } from "lucide-react";
-import { ACHIEVEMENTS, computeAchievementStats } from "@/lib/achievements";
+import { ACHIEVEMENTS, type AchievementStats } from "@/lib/achievements";
 
 const ACHIEVEMENT_ICONS: Record<string, React.ReactNode> = {
   Trophy: <Trophy size={24} />,
@@ -29,41 +28,11 @@ export default async function AchievementsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: games } = (await supabase
-    .from("games")
-    .select("id, total_score, is_clean, strike_count, spare_count, session_id")
-    .eq("user_id", user?.id ?? "")
-    .order("created_at", { ascending: false })) as {
-    data:
-      | {
-          id: string;
-          total_score: number;
-          is_clean: boolean;
-          strike_count: number;
-          spare_count: number;
-          session_id: string;
-        }[]
-      | null;
-  };
-
-  const gameIds = games?.map((g) => g.id) ?? [];
-  const { data: allFrames } = (await supabase
-    .from("frames")
-    .select("game_id, is_strike, is_spare, spare_converted, pins_remaining")
-    .in("game_id", gameIds.length > 0 ? gameIds : ["none"])
-    .order("frame_number", { ascending: true })) as {
-    data:
-      | {
-          game_id: string;
-          is_strike: boolean;
-          is_spare: boolean;
-          spare_converted: boolean;
-          pins_remaining: number[] | null;
-        }[]
-      | null;
-  };
-
-  const stats = computeAchievementStats(games ?? [], allFrames ?? [], gameIds);
+  const { data: statsData } = await supabase.rpc(
+    "get_player_achievement_stats",
+    { p_user_id: user?.id ?? "" },
+  );
+  const stats = (statsData ?? {}) as unknown as AchievementStats;
 
   const earned = ACHIEVEMENTS.filter((a) => a.check(stats));
   const locked = ACHIEVEMENTS.filter((a) => !a.check(stats));
