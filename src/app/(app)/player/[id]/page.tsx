@@ -5,16 +5,15 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type {
   ProfileRow,
+  PlayerLP,
   SessionWithGamesFramesAndProfile,
 } from "@/lib/queries";
 import Avatar from "@/components/Avatar";
 import PlayerSessions from "@/components/PlayerSessions";
 import {
-  calculateLP,
   getRank,
   getDivisionProgress,
   formatLP,
-  getEventWeight,
   CALIBRATION_GAMES,
 } from "@/lib/ranking";
 
@@ -26,13 +25,9 @@ export default async function PlayerPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [profileResult, gamesResult, sessionsResult] = await Promise.all([
+  const [profileResult, lpResult, sessionsResult] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", id).single(),
-    supabase
-      .from("games")
-      .select("total_score, sessions(event_label)")
-      .eq("user_id", id)
-      .order("created_at", { ascending: false }),
+    supabase.rpc("get_player_lp", { p_user_id: id }),
     supabase
       .from("sessions")
       .select("*, profiles(*), games(*, frames(*))")
@@ -42,9 +37,7 @@ export default async function PlayerPage({
   ]);
 
   const profile = profileResult.data as ProfileRow | null;
-  const userGames = gamesResult.data as
-    | { total_score: number; sessions: { event_label: string | null } | null }[]
-    | null;
+  const lpData = (lpResult.data ?? {}) as unknown as PlayerLP;
   const sessions = sessionsResult.data as
     | SessionWithGamesFramesAndProfile[]
     | null;
@@ -66,17 +59,10 @@ export default async function PlayerPage({
     );
   }
 
-  const totalGames = userGames?.length ?? 0;
-  const scores = userGames?.map((g) => g.total_score) ?? [];
-  const weights =
-    userGames?.map((g) => getEventWeight(g.sessions?.event_label ?? null)) ??
-    [];
-  const avg =
-    totalGames > 0
-      ? Math.floor(scores.reduce((a, b) => a + b, 0) / totalGames)
-      : 0;
-  const high = totalGames > 0 ? Math.max(...scores) : 0;
-  const lp = calculateLP(scores, weights);
+  const totalGames = lpData.total_games ?? 0;
+  const avg = lpData.avg ?? 0;
+  const high = lpData.high ?? 0;
+  const lp = lpData.lp ?? 0;
   const rank = getRank(lp);
   const isCalibrating = totalGames < CALIBRATION_GAMES;
 
