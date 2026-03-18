@@ -28,6 +28,16 @@ export default function BottomNav() {
 
   const isLogActive = pathname.startsWith("/log");
 
+  // /player/[id] is part of the Ranked section
+  function isNavActive(href: string) {
+    if (href === "/leaderboard") {
+      return (
+        pathname.startsWith("/leaderboard") || pathname.startsWith("/player/")
+      );
+    }
+    return pathname.startsWith(href);
+  }
+
   const [hasSavedSession, setHasSavedSession] = useState(false);
   useEffect(() => {
     const check = () =>
@@ -112,7 +122,7 @@ export default function BottomNav() {
       {/* Nav items row — all 5 labels aligned */}
       <div className="relative z-[2] flex pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {leftItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
+          const isActive = isNavActive(item.href);
           return (
             <button
               key={item.href}
@@ -156,7 +166,7 @@ export default function BottomNav() {
         </button>
 
         {rightItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
+          const isActive = isNavActive(item.href);
           return (
             <button
               key={item.href}

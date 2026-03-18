@@ -66,6 +66,16 @@ export default async function PlayerPage({
   const rank = getRank(lp);
   const isCalibrating = totalGames < CALIBRATION_GAMES;
 
+  // Fetch session LP deltas from cache
+  const sessionIds = sessions?.map((s) => s.id) ?? [];
+  let sessionLpChanges: Record<string, number> = {};
+  if (sessionIds.length > 0 && totalGames >= CALIBRATION_GAMES) {
+    const { data: deltas } = await supabase.rpc("get_session_lp_deltas", {
+      p_session_ids: sessionIds,
+    });
+    sessionLpChanges = (deltas ?? {}) as Record<string, number>;
+  }
+
   return (
     <div>
       <Link
@@ -186,6 +196,8 @@ export default async function PlayerPage({
         avatarUrl={profile.avatar_url}
         initialSessions={sessions ?? []}
         initialHasMore={(sessions?.length ?? 0) === 20}
+        totalGames={totalGames}
+        initialLpChanges={sessionLpChanges}
       />
     </div>
   );

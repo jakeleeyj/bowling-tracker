@@ -13,7 +13,11 @@ interface PlayerSessionsProps {
   avatarUrl: string | null;
   initialSessions: SessionWithGamesFramesAndProfile[];
   initialHasMore: boolean;
+  totalGames: number;
+  initialLpChanges: Record<string, number>;
 }
+
+import { CALIBRATION_GAMES } from "@/lib/ranking";
 
 export default function PlayerSessions({
   playerId,
@@ -21,6 +25,8 @@ export default function PlayerSessions({
   avatarUrl,
   initialSessions,
   initialHasMore,
+  totalGames,
+  initialLpChanges,
 }: PlayerSessionsProps) {
   const supabase = createClient();
   const [sessions, setSessions] =
@@ -68,6 +74,14 @@ export default function PlayerSessions({
     return () => observer.disconnect();
   }, [hasMore, loadMore]);
 
+  // Track calibration: walk oldest-first to count games chronologically
+  const gamesBeforeSession: Record<string, number> = {};
+  let running = 0;
+  for (const s of [...sessions].reverse()) {
+    gamesBeforeSession[s.id] = running;
+    running += s.games.length;
+  }
+
   if (sessions.length === 0) {
     return (
       <div className="glass p-8 text-center">
@@ -98,6 +112,9 @@ export default function PlayerSessions({
           timeZone: "Asia/Singapore",
         });
 
+        const isCalibrationSession =
+          (gamesBeforeSession[session.id] ?? 0) < CALIBRATION_GAMES;
+
         return (
           <SessionCard
             key={session.id}
@@ -112,6 +129,12 @@ export default function PlayerSessions({
             games={sessionGames}
             avatarUrl={avatarUrl}
             isOwn={false}
+            isCalibrationSession={isCalibrationSession}
+            lpChange={
+              totalGames >= CALIBRATION_GAMES
+                ? initialLpChanges[session.id]
+                : undefined
+            }
           />
         );
       })}
