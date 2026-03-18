@@ -47,6 +47,8 @@
 - [ ] **League/group management** — create groups, track team stats `#feature` _(2026-03-16)_
 - [x] **Seasonal rank resets** — replaced with linear recency decay, no hard resets needed `#ranking` _(2026-03-16)_
 - [x] **Migrate profile/achievements to Postgres functions** — get*player_achievement_stats + get_player_lp RPCs replace client-side computation `#performance` *(2026-03-17)\_
+- [x] **Rankings + LP delta caching** — Cache tables with trigger on game insert, get*all_rankings and get_session_lp_deltas read from cache, get_player_lp reads from cache `#performance` *(2026-03-18)\_
+- [x] **Achievements page uses RPC** — Replaced client-side games+frames fetch with get*player_achievement_stats `#performance` *(2026-03-18)\_
 
 ## Epic: Seasons
 
