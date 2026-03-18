@@ -19,22 +19,13 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import ErrorCard from "@/components/ErrorCard";
-import {
-  calculateLP,
-  getRank,
-  formatLP,
-  getEventWeight,
-  CALIBRATION_GAMES,
-} from "@/lib/ranking";
+import { getRank, formatLP, CALIBRATION_GAMES } from "@/lib/ranking";
+import type { PlayerLP } from "@/lib/queries";
 import SessionCard from "@/components/SessionCard";
 import NotificationToggle from "@/components/NotificationToggle";
 import AvatarPicker from "@/components/AvatarPicker";
 import Avatar from "@/components/Avatar";
-import {
-  ACHIEVEMENTS,
-  computeAchievementStats,
-  type AchievementStats,
-} from "@/lib/achievements";
+import { ACHIEVEMENTS, type AchievementStats } from "@/lib/achievements";
 
 const SESSIONS_PER_PAGE = 20;
 
@@ -123,27 +114,25 @@ export default function ProfilePage() {
 
         setEmail(user.email ?? "");
 
-        // Parallel fetch: profile, sessions, and games all at once
-        const [profileResult, sessionResult, gamesResult] = await Promise.all([
-          supabase
-            .from("profiles")
-            .select("display_name, avatar_url")
-            .eq("id", user.id)
-            .single(),
-          supabase
-            .from("sessions")
-            .select("*, games(*, frames(*))")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(SESSIONS_PER_PAGE),
-          supabase
-            .from("games")
-            .select(
-              "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
-            )
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false }),
-        ]);
+        // Parallel fetch: profile, sessions, LP, and achievement stats via RPCs
+        const [profileResult, sessionResult, lpResult, achieveResult] =
+          await Promise.all([
+            supabase
+              .from("profiles")
+              .select("display_name, avatar_url")
+              .eq("id", user.id)
+              .single(),
+            supabase
+              .from("sessions")
+              .select("*, games(*, frames(*))")
+              .eq("user_id", user.id)
+              .order("created_at", { ascending: false })
+              .limit(SESSIONS_PER_PAGE),
+            supabase.rpc("get_player_lp", { p_user_id: user.id }),
+            supabase.rpc("get_player_achievement_stats", {
+              p_user_id: user.id,
+            }),
+          ]);
 
         const profile = profileResult.data as {
           display_name: string;
@@ -160,80 +149,28 @@ export default function ProfilePage() {
           setHasMoreSessions(sessionData.length === SESSIONS_PER_PAGE);
         }
 
-        const games = gamesResult.data as
-          | {
-              id: string;
-              total_score: number;
-              is_clean: boolean;
-              strike_count: number;
-              spare_count: number;
-              session_id: string;
-              sessions: { event_label: string | null } | null;
-            }[]
-          | null;
-
-        // Calculate LP (games already ordered newest-first)
-        const scores = games?.map((g) => g.total_score) ?? [];
-        const weights =
-          games?.map((g) => getEventWeight(g.sessions?.event_label ?? null)) ??
-          [];
-        const userLp = calculateLP(scores, weights);
+        // LP and stats from Postgres
+        const lpData = (lpResult.data ?? {}) as unknown as PlayerLP;
+        const userLp = lpData.lp ?? 0;
         setLp(userLp);
         setRank(getRank(userLp));
-        setStatsTotalGames(scores.length);
-        setStatsAvg(
-          scores.length > 0
-            ? Math.floor(scores.reduce((a, b) => a + b, 0) / scores.length)
-            : 0,
-        );
-        setStatsHigh(scores.length > 0 ? Math.max(...scores) : 0);
+        setStatsAvg(lpData.avg ?? 0);
+        setStatsHigh(lpData.high ?? 0);
+        setStatsTotalGames(lpData.total_games ?? 0);
 
-        // Per-session LP change
-        const lpMap: Record<string, number> = {};
-        if (games && games.length > 0) {
-          const sessionGameIndices: Record<string, number[]> = {};
-          games.forEach((g, i) => {
-            if (!sessionGameIndices[g.session_id])
-              sessionGameIndices[g.session_id] = [];
-            sessionGameIndices[g.session_id].push(i);
+        // Achievement stats from Postgres
+        const achData = (achieveResult.data ??
+          {}) as unknown as AchievementStats;
+        setAchievementStats(achData);
+
+        // Per-session LP deltas via Postgres
+        const sessionIds = sessionData?.map((s) => s.id) ?? [];
+        if (sessionIds.length > 0) {
+          const { data: deltas } = await supabase.rpc("get_session_lp_deltas", {
+            p_session_ids: sessionIds,
           });
-          for (const [sid, indices] of Object.entries(sessionGameIndices)) {
-            const scoresWithout = scores.filter((_, i) => !indices.includes(i));
-            const weightsWithout = weights.filter(
-              (_, i) => !indices.includes(i),
-            );
-            const lpWithout =
-              scoresWithout.length > 0
-                ? calculateLP(scoresWithout, weightsWithout)
-                : 0;
-            lpMap[sid] = userLp - lpWithout;
-          }
+          setSessionLpChanges((deltas ?? {}) as Record<string, number>);
         }
-        setSessionLpChanges(lpMap);
-
-        // Frames fetch depends on games result
-        const gameIds = games?.map((g) => g.id) ?? [];
-        const { data: frames } = (await supabase
-          .from("frames")
-          .select(
-            "game_id, is_strike, is_spare, spare_converted, pins_remaining",
-          )
-          .in("game_id", gameIds.length > 0 ? gameIds : ["none"])
-          .order("frame_number", { ascending: true })) as {
-          data:
-            | {
-                game_id: string;
-                is_strike: boolean;
-                is_spare: boolean;
-                spare_converted: boolean;
-                pins_remaining: number[] | null;
-              }[]
-            | null;
-        };
-
-        setAchievementStats(
-          computeAchievementStats(games ?? [], frames ?? [], gameIds),
-        );
       } catch {
         setError(true);
       } finally {

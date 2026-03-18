@@ -240,6 +240,12 @@ export interface Database {
         };
         Returns: Json;
       };
+      get_player_achievement_stats: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
       is_split: {
         Args: {
           pins: Json;

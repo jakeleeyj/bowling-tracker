@@ -46,7 +46,7 @@
 - [ ] **Capacitor wrapper** — wrap PWA for App Store / Play Store, unlocks haptics `#platform` _(2026-03-16)_
 - [ ] **League/group management** — create groups, track team stats `#feature` _(2026-03-16)_
 - [x] **Seasonal rank resets** — replaced with linear recency decay, no hard resets needed `#ranking` _(2026-03-16)_
-- [ ] **Migrate profile/achievements to Postgres functions** — reduce client-side computation `#performance` _(2026-03-17)_
+- [x] **Migrate profile/achievements to Postgres functions** — get*player_achievement_stats + get_player_lp RPCs replace client-side computation `#performance` *(2026-03-17)\_
 
 ## Epic: Seasons
 
