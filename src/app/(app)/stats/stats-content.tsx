@@ -237,6 +237,8 @@ export default function StatsContent({ overview, leaves }: Props) {
     multi_pin_leaves = [],
     split_leaves = [],
     practice_targets = [],
+    most_missed = [],
+    most_left = [],
   } = leaves;
 
   return (
@@ -396,25 +398,49 @@ export default function StatsContent({ overview, leaves }: Props) {
           </div>
 
           {/* Practice These */}
-          {practice_targets.length > 0 && (
+          {(most_missed.length > 0 || most_left.length > 0) && (
             <div className="glass mb-4 border border-gold/20 p-4">
               <h3 className="mb-2 text-xs font-bold text-gold">
                 Practice These
               </h3>
-              <p className="mb-3 text-[10px] text-text-muted">
-                Your most missed leaves — focus here to improve
-              </p>
-              <div className="flex flex-col gap-1.5">
-                {practice_targets.map((l) => (
-                  <LeaveItem
-                    key={l.pins.join("-")}
-                    pins={l.pins}
-                    attempts={l.attempts}
-                    converted={l.converted}
-                    isSplitLeave={l.category === "split"}
-                  />
-                ))}
-              </div>
+
+              {most_missed.length > 0 && (
+                <div className={most_left.length > 0 ? "mb-4" : ""}>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                    Most Missed
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    {most_missed.map((l) => (
+                      <LeaveItem
+                        key={l.pins.join("-")}
+                        pins={l.pins}
+                        attempts={l.attempts}
+                        converted={l.converted}
+                        isSplitLeave={false}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {most_left.length > 0 && (
+                <div>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                    Most Left
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    {most_left.map((l) => (
+                      <LeaveItem
+                        key={l.pins.join("-")}
+                        pins={l.pins}
+                        attempts={l.attempts}
+                        converted={l.converted}
+                        isSplitLeave={l.category === "split"}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -102,6 +102,9 @@ export default function ProfilePage() {
     useState<AchievementStats | null>(null);
   const [lp, setLp] = useState(0);
   const [rank, setRank] = useState<ReturnType<typeof getRank> | null>(null);
+  const [statsAvg, setStatsAvg] = useState(0);
+  const [statsHigh, setStatsHigh] = useState(0);
+  const [statsTotalGames, setStatsTotalGames] = useState(0);
   const [sessionLpChanges, setSessionLpChanges] = useState<
     Record<string, number>
   >({});
@@ -177,6 +180,13 @@ export default function ProfilePage() {
         const userLp = calculateLP(scores, weights);
         setLp(userLp);
         setRank(getRank(userLp));
+        setStatsTotalGames(scores.length);
+        setStatsAvg(
+          scores.length > 0
+            ? Math.floor(scores.reduce((a, b) => a + b, 0) / scores.length)
+            : 0,
+        );
+        setStatsHigh(scores.length > 0 ? Math.max(...scores) : 0);
 
         // Per-session LP change
         const lpMap: Record<string, number> = {};
@@ -534,6 +544,32 @@ export default function ProfilePage() {
                 </p>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Quick Stats */}
+      {statsTotalGames > 0 && (
+        <div className="mb-5 flex gap-2">
+          <div className="glass flex-1 p-3 text-center">
+            <div className="text-[10px] uppercase tracking-wide text-text-muted">
+              Avg
+            </div>
+            <div className="my-1 text-2xl font-extrabold">{statsAvg}</div>
+          </div>
+          <div className="glass flex-1 p-3 text-center">
+            <div className="text-[10px] uppercase tracking-wide text-text-muted">
+              High
+            </div>
+            <div className="my-1 text-2xl font-extrabold">{statsHigh}</div>
+          </div>
+          <div className="glass flex-1 p-3 text-center">
+            <div className="text-[10px] uppercase tracking-wide text-text-muted">
+              Games
+            </div>
+            <div className="my-1 text-2xl font-extrabold">
+              {statsTotalGames}
+            </div>
           </div>
         </div>
       )}

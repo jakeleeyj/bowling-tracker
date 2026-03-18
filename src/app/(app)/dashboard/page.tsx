@@ -113,28 +113,6 @@ export default async function DashboardPage() {
       {/* Notification prompt — shows once for new users */}
       <NotificationPrompt />
 
-      {/* Quick Stats */}
-      <div className="mb-5 flex gap-2">
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
-            Avg
-          </div>
-          <div className="my-1 text-2xl font-extrabold">{avgScore}</div>
-        </div>
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
-            High
-          </div>
-          <div className="my-1 text-2xl font-extrabold">{highScore}</div>
-        </div>
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
-            Games
-          </div>
-          <div className="my-1 text-2xl font-extrabold">{totalGames}</div>
-        </div>
-      </div>
-
       {/* Rank Card */}
       {totalGames > 0 && (
         <Link
@@ -199,6 +177,28 @@ export default async function DashboardPage() {
           <ChevronRight size={14} className="shrink-0 text-text-muted/30" />
         </Link>
       )}
+
+      {/* Quick Stats */}
+      <div className="mb-5 flex gap-2">
+        <div className="glass flex-1 p-3 text-center">
+          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            Avg
+          </div>
+          <div className="my-1 text-2xl font-extrabold">{avgScore}</div>
+        </div>
+        <div className="glass flex-1 p-3 text-center">
+          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            High
+          </div>
+          <div className="my-1 text-2xl font-extrabold">{highScore}</div>
+        </div>
+        <div className="glass flex-1 p-3 text-center">
+          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            Games
+          </div>
+          <div className="my-1 text-2xl font-extrabold">{totalGames}</div>
+        </div>
+      </div>
 
       {/* CTA */}
       <Link

@@ -124,6 +124,8 @@ export interface LeaveStats {
   multi_pin_leaves: LeaveEntry[];
   split_leaves: LeaveEntry[];
   practice_targets: LeaveEntry[];
+  most_missed: LeaveEntry[];
+  most_left: LeaveEntry[];
 }
 
 export interface PlayerLP {

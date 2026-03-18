@@ -1,3 +1,4 @@
+-- Add most_missed (excludes splits) and most_left (excludes overlaps) to leave stats
 create or replace function get_player_leave_stats(
   p_user_id uuid,
   p_filter text default 'all',
