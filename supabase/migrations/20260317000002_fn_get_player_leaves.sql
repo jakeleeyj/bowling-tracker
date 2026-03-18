@@ -79,11 +79,6 @@ begin
     )), '[]'::jsonb) as practice_targets
     from (select * from all_leaves_sorted where attempts >= 2 limit 3) sub
   ),
-  most_missed_raw as (
-    select * from all_leaves_sorted
-    where category != 'split' and attempts >= 2
-    limit 3
-  ),
   most_missed as (
     select coalesce(jsonb_agg(jsonb_build_object(
       'pins', pins,
@@ -91,21 +86,10 @@ begin
       'converted', converted,
       'category', category
     )), '[]'::jsonb) as items
-    from most_missed_raw
-  ),
-  most_left as (
-    select coalesce(jsonb_agg(jsonb_build_object(
-      'pins', pins,
-      'attempts', attempts,
-      'converted', converted,
-      'category', category
-    )), '[]'::jsonb) as items
     from (
-      select * from leave_groups
-      where leave_key not in (select leave_key from most_missed_raw)
-        and attempts >= 2
-      order by attempts desc
-      limit 3
+      select * from all_leaves_sorted
+      where category != 'split' and attempts >= 2
+      limit 5
     ) sub
   ),
   leaves_by_cat as (
@@ -149,8 +133,7 @@ begin
     'multi_pin_leaves', coalesce((select leaves from leaves_by_cat where category = 'multi'), '[]'::jsonb),
     'split_leaves', coalesce((select leaves from leaves_by_cat where category = 'split'), '[]'::jsonb),
     'practice_targets', (select practice_targets from targets),
-    'most_missed', (select items from most_missed),
-    'most_left', (select items from most_left)
+    'most_missed', (select items from most_missed)
   ) into result;
 
   return coalesce(result, '{}'::jsonb);
