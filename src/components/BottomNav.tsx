@@ -102,14 +102,27 @@ export default function BottomNav() {
         </div>
       </button>
 
+      {/* Blur layer clipped to nav shape */}
+      <div
+        className="absolute inset-0 -top-7 overflow-visible pointer-events-none backdrop-blur-xl"
+        style={{
+          clipPath: "url(#nav-clip)",
+          WebkitClipPath: "url(#nav-clip)",
+        }}
+      />
       {/* SVG background with notch cutout */}
-      <div className="absolute inset-0 -top-7 overflow-visible pointer-events-none backdrop-blur-xl">
+      <div className="absolute inset-0 -top-7 overflow-visible pointer-events-none">
         <svg
           viewBox="0 -20 480 100"
           preserveAspectRatio="xMidYMin slice"
           className="h-full w-full"
           xmlns="http://www.w3.org/2000/svg"
         >
+          <defs>
+            <clipPath id="nav-clip" clipPathUnits="objectBoundingBox">
+              <path d="M0 0.283 L0.4 0.283 C0.429 0.283,0.438 0.275,0.446 0.2 A0.067 0.267 0 0 1 0.554 0.2 C0.563 0.275,0.571 0.283,0.6 0.283 L1 0.283 L1 0.667 L0 0.667 Z" />
+            </clipPath>
+          </defs>
           <path
             d="M0 14 L192 14 C206 14,210 13,214 4 A32 32 0 0 1 266 4 C270 13,274 14,288 14 L480 14 L480 80 L0 80 Z"
             fill="rgba(15,23,41,0.75)"
