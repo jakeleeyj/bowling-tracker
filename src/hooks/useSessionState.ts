@@ -705,10 +705,22 @@ export function useSessionState() {
   function handleFrameTap(frameNumber: number) {
     saveHistory();
     let newFrames = [...frames];
-    // Remove partial current frame (roll 1 entered but not roll 2, and not a strike)
+    // Remove partial current frame so advanceFrame doesn't think it's complete
     const currentData = newFrames.find((f) => f.frameNumber === currentFrame);
-    if (currentData && !currentData.isStrike && currentData.roll2 === null) {
-      newFrames = newFrames.filter((f) => f.frameNumber !== currentFrame);
+    if (currentData) {
+      const isPartial =
+        currentFrame === 10
+          ? // Frame 10: incomplete if missing roll 2, or has strike/spare but missing roll 3
+            currentData.roll2 === null ||
+            ((currentData.isStrike ||
+              currentData.isSpare ||
+              currentData.roll2 === 10) &&
+              currentData.roll3 === null)
+          : // Frames 1-9: incomplete if not a strike and no roll 2
+            !currentData.isStrike && currentData.roll2 === null;
+      if (isPartial) {
+        newFrames = newFrames.filter((f) => f.frameNumber !== currentFrame);
+      }
     }
     // Clear frame 10 when re-editing — it has multi-roll state that
     // handle10thFrameRoll checks incrementally (roll2 === null, etc.)
