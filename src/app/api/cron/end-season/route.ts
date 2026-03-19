@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { getCurrentSeason } from "@/lib/seasons";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   // Verify cron secret (Vercel sends this header)
   const authHeader = request.headers.get("authorization");
