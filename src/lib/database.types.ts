@@ -262,6 +262,13 @@ export interface Database {
         };
         Returns: Json;
       };
+      end_season: {
+        Args: {
+          p_season_number: number;
+          p_season_name: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
   };
