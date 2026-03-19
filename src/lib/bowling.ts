@@ -96,7 +96,30 @@ export function calculateMaxPossible(frames: FrameData[]): number {
   const completedFrames = frames.length;
   const currentScore = scores[scores.length - 1] ?? 0;
 
-  if (completedFrames >= 10) return currentScore;
+  if (completedFrames >= 10) {
+    // Frame 10: check if rolls are still pending
+    const f10 = frames[9];
+    let maxRemaining = 0;
+
+    if (f10.roll2 === null) {
+      // Roll 2 not done yet
+      if (f10.isStrike) {
+        // Strike on roll 1: max = two more strikes (20)
+        maxRemaining = 20;
+      } else {
+        // Not a strike: max = spare + strike (10 + 10 = 20)
+        maxRemaining = 10 - f10.roll1 + 10;
+      }
+    } else if (
+      f10.roll3 === null &&
+      (f10.isStrike || f10.isSpare || f10.roll2 === 10)
+    ) {
+      // Roll 3 available but not done: max = strike (10)
+      maxRemaining = 10;
+    }
+
+    return currentScore + maxRemaining;
+  }
 
   // Max possible = current score + max remaining
   // Each remaining frame can score at most 30 (strike + two more strikes)
