@@ -8,6 +8,12 @@ import RankEmblem from "@/components/RankEmblem";
 import type { ProfileRow } from "@/lib/queries";
 import Avatar from "@/components/Avatar";
 import { getRank, formatLP, CALIBRATION_GAMES } from "@/lib/ranking";
+import {
+  getCurrentSeason,
+  getSeasonDaysLeft,
+  getSeasonProgress,
+  formatDaysLeft,
+} from "@/lib/seasons";
 
 interface RankingRow {
   user_id: string;
@@ -76,13 +82,40 @@ export default async function LeaderboardPage() {
 
   return (
     <div>
-      <div className="mb-5 flex items-center gap-2">
-        <Swords size={20} className="text-blue" />
-        <h1 className="flex-1 text-xl font-extrabold text-text-primary">
-          Ranked
-        </h1>
-        <RankInfoModal />
-      </div>
+      {(() => {
+        const season = getCurrentSeason();
+        const daysLeft = getSeasonDaysLeft(season);
+        const progress = getSeasonProgress(season);
+        const urgency =
+          daysLeft <= 7
+            ? "text-red"
+            : daysLeft <= 30
+              ? "text-gold"
+              : "text-text-muted";
+
+        return (
+          <div className="mb-5">
+            <div className="flex items-center gap-2">
+              <Swords size={20} className="text-blue" />
+              <h1 className="flex-1 text-xl font-extrabold text-text-primary">
+                {season.name}
+              </h1>
+              <RankInfoModal />
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/5">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-blue to-blue-dark"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className={`text-[10px] font-semibold ${urgency}`}>
+                {formatDaysLeft(daysLeft)}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Current user's rank card */}
       {currentUserEntry && (
