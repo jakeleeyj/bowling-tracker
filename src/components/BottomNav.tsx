@@ -50,7 +50,7 @@ export default function BottomNav() {
   }, [pathname]);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px] overflow-visible">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px] overflow-visible backdrop-blur-xl">
       {/* Floating circle — above the notch */}
       <button
         onClick={() => handleNav("/log")}
@@ -112,7 +112,7 @@ export default function BottomNav() {
         >
           <path
             d="M0 14 L192 14 C206 14,210 13,214 4 A32 32 0 0 1 266 4 C270 13,274 14,288 14 L480 14 L480 80 L0 80 Z"
-            fill="rgba(15,23,41,0.92)"
+            fill="rgba(15,23,41,0.7)"
             stroke="rgba(255,255,255,0.06)"
             strokeWidth="1"
           />
