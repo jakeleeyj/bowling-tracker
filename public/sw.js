@@ -1,4 +1,5 @@
-const CACHE_NAME = "spare-me-v1";
+const CACHE_NAME = "spare-me-v2";
+const MAX_CACHED_PAGES = 30;
 const OFFLINE_PAGES = ["/log"];
 
 // Cache app shell on install
@@ -27,6 +28,17 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// Trim cache to max entries (evict oldest)
+async function trimCache(cacheName, max) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length > max) {
+    await Promise.all(
+      keys.slice(0, keys.length - max).map((k) => cache.delete(k)),
+    );
+  }
+}
+
 // Network-first with cache fallback for pages, cache-first for static assets
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
@@ -35,11 +47,8 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   if (url.pathname.startsWith("/api/")) return;
 
-  // Static assets (JS, CSS, images) — cache on fetch
-  if (
-    url.pathname.startsWith("/_next/static/") ||
-    url.pathname.match(/\.(png|jpg|jpeg|svg|webp|ico|woff2?)$/)
-  ) {
+  // Images and fonts — cache-first (content-addressed filenames, safe to cache)
+  if (url.pathname.match(/\.(png|jpg|jpeg|svg|webp|ico|woff2?)$/)) {
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) =>
         cache.match(event.request).then((cached) => {
@@ -54,6 +63,29 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // JS/CSS chunks — network-first with cache fallback
+  // Prevents stale chunk errors after deploys (chunk hashes change)
+  if (url.pathname.startsWith("/_next/static/")) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() =>
+          caches
+            .match(event.request)
+            .then((cached) => cached || new Response("", { status: 503 })),
+        ),
+    );
+    return;
+  }
+
   // Pages — network first, fall back to cache
   if (event.request.headers.get("accept")?.includes("text/html")) {
     event.respondWith(
@@ -62,9 +94,10 @@ self.addEventListener("fetch", (event) => {
           // Cache successful page responses
           if (response.ok) {
             const clone = response.clone();
-            caches
-              .open(CACHE_NAME)
-              .then((cache) => cache.put(event.request, clone));
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, clone);
+              trimCache(CACHE_NAME, MAX_CACHED_PAGES);
+            });
           }
           return response;
         })
