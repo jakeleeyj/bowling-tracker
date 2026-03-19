@@ -1384,11 +1384,17 @@ export function useSessionState() {
       await supabase.from("frames").insert(allFrameInserts);
     }
 
-    // Calculate new LP after save
-    const newEventWeight = getEventWeight(eventLabel || null);
-    const newScores = [...games.map((g) => g.totalScore), ...oldScores];
-    const newWeights = [...games.map(() => newEventWeight), ...oldWeights];
-    const newLp = calculateLP(newScores, newWeights);
+    // Read authoritative LP from cache (trigger has already fired)
+    const { data: lpData } = await supabase.rpc("get_player_lp", {
+      p_user_id: user.id,
+    });
+    const lpResult = (lpData ?? {}) as { lp?: number };
+    const newLp =
+      lpResult.lp ??
+      calculateLP(
+        [...games.map((g) => g.totalScore), ...oldScores],
+        [...games.map(() => getEventWeight(eventLabel || null)), ...oldWeights],
+      );
     const newRank = getRank(newLp);
 
     const gameScores = games.map((g) => g.totalScore);
