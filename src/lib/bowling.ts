@@ -114,11 +114,14 @@ export function calculateMaxPossible(frames: FrameData[]): number {
         last.isSpare = true;
         last.roll3 = 10;
       }
-    } else if (
-      last.roll3 === null &&
-      (last.isStrike || last.isSpare || last.roll2 === 10)
-    ) {
-      last.roll3 = 10;
+    } else if (last.roll3 === null) {
+      if (last.roll2 === 10 || last.isSpare) {
+        // Pins reset after strike on roll 2 or spare — roll 3 can be strike
+        last.roll3 = 10;
+      } else if (last.isStrike && last.roll2 !== null && last.roll2 < 10) {
+        // Roll 1 strike, roll 2 not strike — pins didn't reset, max = remaining
+        last.roll3 = 10 - last.roll2;
+      }
     }
   }
 
