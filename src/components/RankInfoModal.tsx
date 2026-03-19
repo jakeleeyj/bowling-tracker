@@ -55,9 +55,9 @@ export default function RankInfoModal() {
             <div className="mb-4 space-y-2.5 text-[12px] leading-relaxed text-text-secondary">
               <p>
                 You earn <span className="font-bold text-text-primary">LP</span>{" "}
-                (League Points) each game based on your score. Games above 180
-                earn LP, games below 180 lose LP. Recent games count more — your
-                last 30 games have full impact, older games gradually fade.
+                (League Points) each game based on your score. Games above 185
+                earn LP, games below 185 lose LP. Recent games count more — your
+                last 60 games have full impact, older games gradually fade.
               </p>
               <p>
                 Your first{" "}

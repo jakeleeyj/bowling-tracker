@@ -14,43 +14,43 @@ describe("calculateLP", () => {
     expect(calculateLP([])).toBe(0);
   });
 
-  it("returns starting LP (1200) for a single calibration game of 180 (base)", () => {
-    // 180 = base, so 0 gain, but starting LP is 1200
-    expect(calculateLP([180])).toBe(1200);
+  it("returns starting LP (1200) for a single calibration game of 185 (base)", () => {
+    // 185 = base, so 0 gain, but starting LP is 1200
+    expect(calculateLP([185])).toBe(1200);
   });
 
   it("gains LP for above-base scores", () => {
-    // Single calibration game of 200: (200-180) * 5 = +100
-    expect(calculateLP([200])).toBe(1300);
+    // Single calibration game of 200: (200-185) * 5 = +75
+    expect(calculateLP([200])).toBe(1275);
   });
 
   it("loses LP for below-base scores", () => {
-    // Single calibration game of 140: (140-180) * 5 = -200
-    expect(calculateLP([140])).toBe(1000);
+    // Single calibration game of 140: (140-185) * 5 = -225
+    expect(calculateLP([140])).toBe(975);
   });
 
   it("calibration games earn 5x LP", () => {
     // 4 calibration games of 200 with linear recency decay
-    // i=3: 20*5*max(0.25, 1-0.0375)=20*5*0.9625=96
-    // i=2: 20*5*max(0.25, 1-0.025)=20*5*0.975=98
-    // i=1: 20*5*max(0.25, 1-0.0125)=20*5*0.9875=99
-    // i=0: 20*5*max(0.25, 1-0)=20*5*1.0=100
-    // Total: 1200 + 96+98+99+100 = 1593
-    expect(calculateLP([200, 200, 200, 200])).toBe(1593);
+    // i=3: 15*5*max(0.25, 1-0.0375)=15*5*0.9625=72
+    // i=2: 15*5*max(0.25, 1-0.025)=15*5*0.975=73
+    // i=1: 15*5*max(0.25, 1-0.0125)=15*5*0.9875=74
+    // i=0: 15*5*max(0.25, 1-0)=15*5*1.0=75
+    // Total: 1200 + 72+73+74+75 = 1494
+    expect(calculateLP([200, 200, 200, 200])).toBe(1494);
   });
 
   it("normal games earn 1x LP after calibration", () => {
-    // 4 cal games of 180 (0 gain) + 1 normal game of 200 (+20)
-    expect(calculateLP([200, 180, 180, 180, 180])).toBe(1220);
+    // 4 cal games of 185 (0 gain) + 1 normal game of 200 (+15)
+    expect(calculateLP([200, 185, 185, 185, 185])).toBe(1215);
   });
 
   it("LP accumulates over many games", () => {
     // 4 cal + 6 normal, all 200, with linear recency decay
     const scores = Array.from({ length: 10 }, () => 200);
     const lp = calculateLP(scores);
-    // Should be between 1600 and 1720 (decay reduces older games)
-    expect(lp).toBeGreaterThan(1600);
-    expect(lp).toBeLessThan(1720);
+    // Should be between 1500 and 1650 (decay reduces older games)
+    expect(lp).toBeGreaterThan(1500);
+    expect(lp).toBeLessThan(1650);
   });
 
   it("ignores event weights during calibration", () => {
@@ -77,23 +77,23 @@ describe("calculateLP", () => {
   });
 
   it("recent games count more than old games (recency weighting)", () => {
-    // 45 games total: 4 calibration (180) + 41 normal
+    // 45 games total: 4 calibration (185) + 41 normal
     // Compare a 220 at position 5 (recent, 1.0x) vs position 35 (older, 0.5x)
-    const cal = Array.from({ length: 4 }, () => 180);
+    const cal = Array.from({ length: 4 }, () => 185);
 
     // 220 is the 5th newest game (index 4, recency 1.0x)
     const recentScores = [
       ...cal,
-      ...Array(4).fill(180),
+      ...Array(4).fill(185),
       220,
-      ...Array(36).fill(180),
+      ...Array(36).fill(185),
     ];
     // 220 is the 35th newest game (index 34, recency 0.5x)
     const oldScores = [
       ...cal,
-      ...Array(34).fill(180),
+      ...Array(34).fill(185),
       220,
-      ...Array(6).fill(180),
+      ...Array(6).fill(185),
     ];
 
     const lpRecent = calculateLP(recentScores);

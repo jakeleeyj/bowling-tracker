@@ -1,11 +1,11 @@
 // LP Ranking System (League Points, like LoL)
-// Each game earns LP = (score - 180) × event_weight × recency_weight
+// Each game earns LP = (score - 185) × event_weight × recency_weight
 // Calibration games (first 4) earn 5× LP with no event weight (pure skill placement)
 // Recency: linear decay from 1.0x to 0.25x floor over 60 games
 // LP accumulates over time, floor at 0
 // Starting LP: 1200 (Silver baseline)
 
-const LP_BASE_SCORE = 180;
+const LP_BASE_SCORE = 185;
 const STARTING_LP = 1200;
 const CALIBRATION_MULTIPLIER = 5;
 export const CALIBRATION_GAMES = 4;

@@ -103,7 +103,7 @@ export default function BottomNav() {
       </button>
 
       {/* SVG background with notch cutout */}
-      <div className="absolute inset-0 -top-7 overflow-visible pointer-events-none">
+      <div className="absolute inset-0 -top-7 overflow-visible pointer-events-none backdrop-blur-xl">
         <svg
           viewBox="0 -20 480 100"
           preserveAspectRatio="xMidYMin slice"
@@ -112,7 +112,7 @@ export default function BottomNav() {
         >
           <path
             d="M0 14 L192 14 C206 14,210 13,214 4 A32 32 0 0 1 266 4 C270 13,274 14,288 14 L480 14 L480 80 L0 80 Z"
-            fill="rgba(15,23,41,0.92)"
+            fill="rgba(15,23,41,0.75)"
             stroke="rgba(255,255,255,0.06)"
             strokeWidth="1"
           />
