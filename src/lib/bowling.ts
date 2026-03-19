@@ -97,28 +97,30 @@ export function calculateMaxPossible(frames: FrameData[]): number {
   const currentScore = scores[scores.length - 1] ?? 0;
 
   if (completedFrames >= 10) {
-    // Frame 10: check if rolls are still pending
+    // Frame 10: simulate remaining rolls as strikes/spares and recalculate
+    // This correctly accounts for pending bonuses on frames 8 and 9
     const f10 = frames[9];
-    let maxRemaining = 0;
+    const simulated: FrameData = { ...f10 };
 
-    if (f10.roll2 === null) {
-      // Roll 2 not done yet
-      if (f10.isStrike) {
-        // Strike on roll 1: max = two more strikes (20)
-        maxRemaining = 20;
+    if (simulated.roll2 === null) {
+      if (simulated.isStrike) {
+        simulated.roll2 = 10;
+        simulated.roll3 = 10;
       } else {
-        // Not a strike: max = spare + strike (10 + 10 = 20)
-        maxRemaining = 10 - f10.roll1 + 10;
+        simulated.roll2 = 10 - simulated.roll1;
+        simulated.isSpare = true;
+        simulated.roll3 = 10;
       }
     } else if (
-      f10.roll3 === null &&
-      (f10.isStrike || f10.isSpare || f10.roll2 === 10)
+      simulated.roll3 === null &&
+      (simulated.isStrike || simulated.isSpare || simulated.roll2 === 10)
     ) {
-      // Roll 3 available but not done: max = strike (10)
-      maxRemaining = 10;
+      simulated.roll3 = 10;
     }
 
-    return currentScore + maxRemaining;
+    const simFrames = [...frames.slice(0, 9), simulated];
+    const simScores = calculateFrameScores(simFrames);
+    return simScores[simScores.length - 1] ?? currentScore;
   }
 
   // Max possible = current score + max remaining
