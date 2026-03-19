@@ -52,10 +52,13 @@
 
 ## Epic: Seasons
 
-- [ ] **Seasonal rank system** — Define season duration (monthly/quarterly), reset LP with soft placement based on previous rank `#ranking` `#seasons` _(2026-03-18)_
+**Direction:** 6-month seasons, LP base raised from 180 to 185. Sub-185 bowlers lose LP. Event multipliers (League 1.25x, Funbowl 1.35x, Tournament 1.5x) reward competitive play. Tier benchmarks at 4 games/week over 6 months: Silver ~190, Gold ~195, Emerald ~200, Diamond ~205, Master ~210, Challenger ~220.
+
+- [ ] **LP base score change (180 → 185)** — Raise the LP gain threshold so sub-185 games cost LP, making ranks harder to inflate `#ranking` `#seasons` _(2026-03-19)_
+- [ ] **Seasonal rank system** — 6-month seasons, reset LP with soft placement based on previous rank `#ranking` `#seasons` _(2026-03-18)_
 - [ ] **Season badge/medal on profile** — Display past season rank badges (e.g. "Season 1: Diamond") on player profile `#ranking` `#seasons` _(2026-03-18)_
 - [ ] **Season history page** — View rank progression across all past seasons `#ranking` `#seasons` _(2026-03-18)_
-- [ ] **LP ceiling tuning** — Make Challenger harder to reach (200 avg currently hits it at ~180 games), review decay curve and multipliers `#ranking` `#seasons` _(2026-03-18)_
+- [x] **LP ceiling tuning** — Resolved: base 185 + 6-month seasons keeps Challenger at ~220 avg, Master at ~210 `#ranking` `#seasons` _(2026-03-18)_
 
 ## Low Priority
 
