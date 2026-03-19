@@ -2,9 +2,10 @@
 // Season 1: Mar 19 2026 → Dec 31 2026 (inaugural season)
 // After that: 6-month cycles (Jan 1–Jun 30, Jul 1–Dec 31)
 
-interface Season {
+export interface Season {
   number: number;
   name: string;
+  shortName: string;
   start: Date;
   end: Date;
 }
@@ -13,6 +14,7 @@ const SEASONS: Season[] = [
   {
     number: 1,
     name: "Season 1",
+    shortName: "S1",
     start: new Date("2026-03-19T00:00:00+08:00"),
     end: new Date("2026-12-31T23:59:59+08:00"),
   },
@@ -23,6 +25,7 @@ function generateSeason(half: "H1" | "H2", year: number, num: number): Season {
     return {
       number: num,
       name: `Season ${num}`,
+      shortName: `S${num}`,
       start: new Date(`${year}-01-01T00:00:00+08:00`),
       end: new Date(`${year}-06-30T23:59:59+08:00`),
     };
@@ -30,6 +33,7 @@ function generateSeason(half: "H1" | "H2", year: number, num: number): Season {
   return {
     number: num,
     name: `Season ${num}`,
+    shortName: `S${num}`,
     start: new Date(`${year}-07-01T00:00:00+08:00`),
     end: new Date(`${year}-12-31T23:59:59+08:00`),
   };

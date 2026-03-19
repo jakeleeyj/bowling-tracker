@@ -18,6 +18,7 @@ import {
   formatLP,
   CALIBRATION_GAMES,
 } from "@/lib/ranking";
+import { getCurrentSeason } from "@/lib/seasons";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -139,6 +140,9 @@ export default async function DashboardPage() {
             {totalGames >= CALIBRATION_GAMES ? (
               <>
                 <div className="flex items-center gap-1">
+                  <span className="rounded bg-blue/15 px-1.5 py-0.5 text-[9px] font-bold text-blue">
+                    {getCurrentSeason().shortName}
+                  </span>
                   <span className={`text-sm font-extrabold ${rank.color}`}>
                     {rank.name}
                     {rank.division ? ` ${rank.division}` : ""}
@@ -164,9 +168,14 @@ export default async function DashboardPage() {
               </>
             ) : (
               <>
-                <span className="text-sm font-extrabold text-text-muted">
-                  Calibrating
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="rounded bg-blue/15 px-1.5 py-0.5 text-[9px] font-bold text-blue">
+                    {getCurrentSeason().shortName}
+                  </span>
+                  <span className="text-sm font-extrabold text-text-muted">
+                    Calibrating
+                  </span>
+                </div>
                 <p className="text-[10px] text-text-muted">
                   {CALIBRATION_GAMES - totalGames} more game
                   {CALIBRATION_GAMES - totalGames !== 1 ? "s" : ""} to rank

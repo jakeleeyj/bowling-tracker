@@ -106,7 +106,7 @@ export default async function LeaderboardPage() {
               <RankInfoModal />
             </div>
             <div className="mt-2 flex items-center gap-2">
-              <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/5">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-blue to-blue-dark"
                   style={{ width: `${progress}%` }}

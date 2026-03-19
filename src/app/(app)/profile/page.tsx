@@ -26,6 +26,8 @@ import NotificationToggle from "@/components/NotificationToggle";
 import AvatarPicker from "@/components/AvatarPicker";
 import Avatar from "@/components/Avatar";
 import { ACHIEVEMENTS, type AchievementStats } from "@/lib/achievements";
+import { getCurrentSeason } from "@/lib/seasons";
+import { ChevronDown } from "lucide-react";
 
 const SESSIONS_PER_PAGE = 20;
 
@@ -99,6 +101,16 @@ export default function ProfilePage() {
   const [sessionLpChanges, setSessionLpChanges] = useState<
     Record<string, number>
   >({});
+  const [seasonResults, setSeasonResults] = useState<
+    {
+      season_number: number;
+      season_name: string;
+      final_lp: number;
+      final_rank: string;
+      final_division: string | null;
+    }[]
+  >([]);
+  const [showAchievements, setShowAchievements] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMoreSessions, setHasMoreSessions] = useState(false);
@@ -115,24 +127,36 @@ export default function ProfilePage() {
         setEmail(user.email ?? "");
 
         // Parallel fetch: profile, sessions, LP, and achievement stats via RPCs
-        const [profileResult, sessionResult, lpResult, achieveResult] =
-          await Promise.all([
-            supabase
-              .from("profiles")
-              .select("display_name, avatar_url")
-              .eq("id", user.id)
-              .single(),
-            supabase
-              .from("sessions")
-              .select("*, games(*, frames(*))")
-              .eq("user_id", user.id)
-              .order("created_at", { ascending: false })
-              .limit(SESSIONS_PER_PAGE),
-            supabase.rpc("get_player_lp", { p_user_id: user.id }),
-            supabase.rpc("get_player_achievement_stats", {
-              p_user_id: user.id,
-            }),
-          ]);
+        const [
+          profileResult,
+          sessionResult,
+          lpResult,
+          achieveResult,
+          seasonResult,
+        ] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("display_name, avatar_url")
+            .eq("id", user.id)
+            .single(),
+          supabase
+            .from("sessions")
+            .select("*, games(*, frames(*))")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(SESSIONS_PER_PAGE),
+          supabase.rpc("get_player_lp", { p_user_id: user.id }),
+          supabase.rpc("get_player_achievement_stats", {
+            p_user_id: user.id,
+          }),
+          supabase
+            .from("season_results")
+            .select(
+              "season_number, season_name, final_lp, final_rank, final_division",
+            )
+            .eq("user_id", user.id)
+            .order("season_number", { ascending: true }),
+        ]);
 
         const profile = profileResult.data as {
           display_name: string;
@@ -162,6 +186,16 @@ export default function ProfilePage() {
         const achData = (achieveResult.data ??
           {}) as unknown as AchievementStats;
         setAchievementStats(achData);
+
+        // Past season results
+        const pastSeasons = (seasonResult.data ?? []) as {
+          season_number: number;
+          season_name: string;
+          final_lp: number;
+          final_rank: string;
+          final_division: string | null;
+        }[];
+        setSeasonResults(pastSeasons);
 
         // Per-session LP deltas via Postgres
         const sessionIds = sessionData?.map((s) => s.id) ?? [];
@@ -511,43 +545,110 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Achievements */}
+      {/* Season Medals */}
       <div className="mb-5">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-bold">Achievements</h2>
-          {achievementStats && (
-            <span className="text-[10px] text-text-muted">
-              {earned.length}/{ACHIEVEMENTS.length}
-            </span>
+        <h2 className="mb-2 text-sm font-bold">Rank History</h2>
+        <div className="flex flex-wrap gap-1.5">
+          {/* Current season — in progress */}
+          {rank && statsTotalGames > 0 && (
+            <div
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 ${
+                statsTotalGames >= CALIBRATION_GAMES
+                  ? rank.borderColor
+                  : "border-border/30"
+              }`}
+            >
+              <span className="rounded bg-blue/15 px-1.5 py-0.5 text-[9px] font-bold text-blue">
+                {getCurrentSeason().shortName}
+              </span>
+              <span
+                className={`text-xs font-bold ${
+                  statsTotalGames >= CALIBRATION_GAMES
+                    ? rank.color
+                    : "text-text-muted"
+                }`}
+              >
+                {statsTotalGames >= CALIBRATION_GAMES
+                  ? `${rank.name}${rank.division ? ` ${rank.division}` : ""}`
+                  : "Calibrating"}
+              </span>
+              <span className="text-[9px] text-text-muted">now</span>
+            </div>
+          )}
+          {/* Past seasons */}
+          {seasonResults.map((sr) => {
+            const srRank = getRank(sr.final_lp);
+            return (
+              <div
+                key={sr.season_number}
+                className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 ${srRank.borderColor}`}
+              >
+                <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-bold text-text-muted">
+                  S{sr.season_number}
+                </span>
+                <span className={`text-xs font-bold ${srRank.color}`}>
+                  {sr.final_rank}
+                  {sr.final_division ? ` ${sr.final_division}` : ""}
+                </span>
+              </div>
+            );
+          })}
+          {statsTotalGames === 0 && seasonResults.length === 0 && (
+            <p className="text-xs text-text-muted">
+              Play your first game to start ranking
+            </p>
           )}
         </div>
+      </div>
 
-        <div className="flex flex-wrap gap-1.5">
-          {/* Earned badges */}
-          {earned.map((a) => (
-            <div
-              key={a.id}
-              className={`flex items-center gap-1.5 rounded-full ${a.bgColor} px-2.5 py-1`}
-              title={a.description}
-            >
-              <span className={a.color}>{ACHIEVEMENT_ICONS[a.iconName]}</span>
-              <span className="text-[10px] font-semibold">{a.name}</span>
-            </div>
-          ))}
-          {/* Locked badges */}
-          {locked.map((a) => (
-            <div
-              key={a.id}
-              className="flex items-center gap-1.5 rounded-full bg-surface-light/50 px-2.5 py-1 opacity-30"
-              title={a.description}
-            >
-              <span className="text-text-muted">
-                {ACHIEVEMENT_ICONS[a.iconName]}
+      {/* Achievements — collapsible */}
+      <div className="mb-5">
+        <button
+          onClick={() => setShowAchievements(!showAchievements)}
+          className="mb-2 flex w-full items-center justify-between"
+        >
+          <h2 className="text-sm font-bold">Achievements</h2>
+          <div className="flex items-center gap-1.5">
+            {achievementStats && (
+              <span className="text-[10px] text-text-muted">
+                {earned.length}/{ACHIEVEMENTS.length}
               </span>
-              <span className="text-[10px] font-semibold">{a.name}</span>
-            </div>
-          ))}
-        </div>
+            )}
+            <ChevronDown
+              size={14}
+              className={`text-text-muted transition-transform ${
+                showAchievements ? "rotate-180" : ""
+              }`}
+            />
+          </div>
+        </button>
+
+        {showAchievements && (
+          <div className="flex flex-wrap gap-1.5">
+            {earned.map((a) => (
+              <div
+                key={a.id}
+                className={`flex items-center gap-1.5 rounded-full ${a.bgColor} px-2.5 py-1`}
+                title={a.description}
+              >
+                <span className={a.color}>{ACHIEVEMENT_ICONS[a.iconName]}</span>
+                <span className="text-[10px] font-semibold">{a.name}</span>
+              </div>
+            ))}
+            {locked.map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center gap-1.5 rounded-full bg-surface-light/50 px-2.5 py-1 opacity-30"
+                title={a.description}
+              >
+                <span className="text-text-muted">
+                  {ACHIEVEMENT_ICONS[a.iconName]}
+                </span>
+                <span className="text-[10px] font-semibold">{a.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Game History */}
