@@ -92,71 +92,54 @@ function getNextRolls(
 export function calculateMaxPossible(frames: FrameData[]): number {
   if (frames.length === 0) return 300;
 
-  const scores = calculateFrameScores(frames);
-  const completedFrames = frames.length;
-  const currentScore = scores[scores.length - 1] ?? 0;
+  // Simulate: complete the current frame optimally, then fill remaining frames with strikes
+  const simFrames: FrameData[] = frames.map((f) => ({ ...f }));
 
-  if (completedFrames >= 10) {
-    // Frame 10: simulate remaining rolls as strikes/spares and recalculate
-    // This correctly accounts for pending bonuses on frames 8 and 9
-    const f10 = frames[9];
-    const simulated: FrameData = { ...f10 };
-
-    if (simulated.roll2 === null) {
-      if (simulated.isStrike) {
-        simulated.roll2 = 10;
-        simulated.roll3 = 10;
+  // Complete the last frame if it has pending rolls
+  const last = simFrames[simFrames.length - 1];
+  if (last.frameNumber < 10) {
+    // Frames 1-9: if roll 2 is pending, simulate a spare
+    if (last.roll2 === null && !last.isStrike) {
+      last.roll2 = 10 - last.roll1;
+      last.isSpare = true;
+    }
+  } else {
+    // Frame 10: fill remaining rolls
+    if (last.roll2 === null) {
+      if (last.isStrike) {
+        last.roll2 = 10;
+        last.roll3 = 10;
       } else {
-        simulated.roll2 = 10 - simulated.roll1;
-        simulated.isSpare = true;
-        simulated.roll3 = 10;
+        last.roll2 = 10 - last.roll1;
+        last.isSpare = true;
+        last.roll3 = 10;
       }
     } else if (
-      simulated.roll3 === null &&
-      (simulated.isStrike || simulated.isSpare || simulated.roll2 === 10)
+      last.roll3 === null &&
+      (last.isStrike || last.isSpare || last.roll2 === 10)
     ) {
-      simulated.roll3 = 10;
-    }
-
-    const simFrames = [...frames.slice(0, 9), simulated];
-    const simScores = calculateFrameScores(simFrames);
-    return simScores[simScores.length - 1] ?? currentScore;
-  }
-
-  // Max possible = current score + max remaining
-  // Each remaining frame can score at most 30 (strike + two more strikes)
-  const remainingFrames = 10 - completedFrames;
-
-  // For the last completed frame, if it was a strike or spare,
-  // the bonus rolls could be maximized too
-  let maxBonus = 0;
-  const lastFrame = frames[completedFrames - 1];
-
-  if (lastFrame.isStrike) {
-    // Need to check if we already accounted for bonus rolls
-    const bonusRolls = getNextRollsCount(frames, completedFrames - 1);
-    if (bonusRolls < 2) {
-      maxBonus += (2 - bonusRolls) * 10;
-    }
-  } else if (lastFrame.isSpare) {
-    const bonusRolls = getNextRollsCount(frames, completedFrames - 1);
-    if (bonusRolls < 1) {
-      maxBonus += 10;
+      last.roll3 = 10;
     }
   }
 
-  // Check second-to-last frame too if it was a strike
-  if (completedFrames >= 2) {
-    const prevFrame = frames[completedFrames - 2];
-    if (prevFrame.isStrike) {
-      const bonusRolls = getNextRollsCount(frames, completedFrames - 2);
-      if (bonusRolls < 2) {
-        maxBonus += (2 - bonusRolls) * 10;
-      }
-    }
+  // Fill remaining frames with strikes
+  for (let i = simFrames.length; i < 10; i++) {
+    const isFrame10 = i === 9;
+    simFrames.push({
+      frameNumber: i + 1,
+      roll1: 10,
+      roll2: isFrame10 ? 10 : null,
+      roll3: isFrame10 ? 10 : null,
+      isStrike: true,
+      isSpare: false,
+      pinsRemaining: null,
+      pinsRemainingRoll2: null,
+      spareConverted: false,
+    });
   }
 
-  return currentScore + maxBonus + remainingFrames * 30;
+  const simScores = calculateFrameScores(simFrames);
+  return simScores[simScores.length - 1] ?? 300;
 }
 
 function getNextRollsCount(frames: FrameData[], frameIndex: number): number {
