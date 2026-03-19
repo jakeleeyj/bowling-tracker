@@ -98,7 +98,10 @@ export default async function LeaderboardPage() {
             <div className="flex items-center gap-2">
               <Swords size={20} className="text-blue" />
               <h1 className="flex-1 text-xl font-extrabold text-text-primary">
-                {season.name}
+                Ranked
+                <span className="ml-1.5 text-sm font-semibold text-text-muted">
+                  {season.name}
+                </span>
               </h1>
               <RankInfoModal />
             </div>
