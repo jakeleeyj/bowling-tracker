@@ -133,7 +133,11 @@ export default async function GameDetailPage({
                               : "text-text-secondary"
                           }
                         >
-                          {f.is_strike ? "X" : f.roll_1.toString()}
+                          {f.is_strike
+                            ? "X"
+                            : f.roll_1 === 0
+                              ? "-"
+                              : f.roll_1.toString()}
                         </span>
                         {f.frame_number < 10 ? (
                           !f.is_strike && (
@@ -144,7 +148,11 @@ export default async function GameDetailPage({
                                   : "text-text-secondary"
                               }
                             >
-                              {f.is_spare ? "/" : (f.roll_2?.toString() ?? "")}
+                              {f.is_spare
+                                ? "/"
+                                : f.roll_2 === 0
+                                  ? "-"
+                                  : (f.roll_2?.toString() ?? "")}
                             </span>
                           )
                         ) : (
@@ -162,17 +170,33 @@ export default async function GameDetailPage({
                                 ? "X"
                                 : f.is_spare
                                   ? "/"
-                                  : (f.roll_2?.toString() ?? "")}
+                                  : f.roll_2 === 0
+                                    ? "-"
+                                    : (f.roll_2?.toString() ?? "")}
                             </span>
                             {f.roll_3 !== null && (
                               <span
                                 className={
                                   f.roll_3 === 10
                                     ? "font-bold text-green"
-                                    : "text-text-secondary"
+                                    : f.roll_1 === 10 &&
+                                        f.roll_2 !== null &&
+                                        f.roll_2 !== 10 &&
+                                        f.roll_2 + f.roll_3 === 10
+                                      ? "font-bold text-gold"
+                                      : "text-text-secondary"
                                 }
                               >
-                                {f.roll_3 === 10 ? "X" : f.roll_3}
+                                {f.roll_3 === 10
+                                  ? "X"
+                                  : f.roll_1 === 10 &&
+                                      f.roll_2 !== null &&
+                                      f.roll_2 !== 10 &&
+                                      f.roll_2 + f.roll_3 === 10
+                                    ? "/"
+                                    : f.roll_3 === 0
+                                      ? "-"
+                                      : f.roll_3}
                               </span>
                             )}
                           </>
