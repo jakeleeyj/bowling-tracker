@@ -44,6 +44,7 @@ function formatRoll(
     if (frame.roll3 === 10) return "X";
     if (
       frame.roll2 !== null &&
+      frame.roll1 === 10 &&
       frame.roll2 !== 10 &&
       frame.roll2 + frame.roll3 === 10
     )
@@ -156,14 +157,16 @@ export default function FrameScorecard({
                             className={
                               frame.roll3 === 10
                                 ? "font-bold text-green"
-                                : frame.roll2 !== null &&
+                                : frame.roll1 === 10 &&
+                                    frame.roll2 !== null &&
                                     frame.roll2 !== 10 &&
                                     frame.roll3 !== null &&
                                     frame.roll2 + frame.roll3 === 10 &&
                                     frame.pinsRemaining &&
                                     isSplit(frame.pinsRemaining)
                                   ? "font-bold text-red"
-                                  : frame.roll2 !== null &&
+                                  : frame.roll1 === 10 &&
+                                      frame.roll2 !== null &&
                                       frame.roll2 !== 10 &&
                                       frame.roll3 !== null &&
                                       frame.roll2 + frame.roll3 === 10

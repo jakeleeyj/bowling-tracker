@@ -127,6 +127,7 @@ function formatFrameRoll(frame: FrameInfo, rollNum: 1 | 2 | 3): string {
     if (frame.roll_3 === 10) return "X";
     if (
       frame.roll_2 !== null &&
+      frame.roll_1 === 10 &&
       frame.roll_2 !== 10 &&
       frame.roll_2 + frame.roll_3 === 10
     )
