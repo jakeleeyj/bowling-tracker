@@ -40,6 +40,7 @@
 
 ## Medium Priority
 
+- [ ] **Live Games on Dashboard** — "Now Bowling" section showing friends' games in progress as they track frame-by-frame. New `live_games` table, frame entry upserts, dashboard component, staleness cleanup. Detailed entry only. Revisit when user base grows. `#feature` `#social` _(2026-03-21)_
 - [ ] **Head-to-head comparison** — pick two players, compare stats side by side `#feature` _(2026-03-16)_
 - [ ] **Export game history** — CSV/PDF download `#feature` _(2026-03-16)_
 - [ ] **Auto-save: persist undo history** — undo stack lost on app close/resume `#autosave` _(2026-03-15)_
