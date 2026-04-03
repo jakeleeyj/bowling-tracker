@@ -161,14 +161,14 @@ export default async function GameDetailPage({
                               className={
                                 f.roll_2 === 10
                                   ? "font-bold text-green"
-                                  : f.is_spare
+                                  : f.is_spare && f.roll_1 !== 10
                                     ? "font-bold text-gold"
                                     : "text-text-secondary"
                               }
                             >
                               {f.roll_2 === 10
                                 ? "X"
-                                : f.is_spare
+                                : f.is_spare && f.roll_1 !== 10
                                   ? "/"
                                   : f.roll_2 === 0
                                     ? "-"

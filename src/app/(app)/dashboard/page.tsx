@@ -8,7 +8,7 @@ import type {
   SessionWithGamesFramesAndProfile,
   PlayerLP,
 } from "@/lib/queries";
-import SessionCard from "@/components/SessionCard";
+import RecentActivity from "@/components/RecentActivity";
 import Avatar from "@/components/Avatar";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import RankEmblem from "@/components/RankEmblem";
@@ -89,15 +89,17 @@ export default async function DashboardPage() {
   const displayName = profile?.display_name ?? "Bowler";
 
   // Track which sessions include calibration games (per user)
-  // Sessions are newest-first, so walk in reverse to count chronologically
+  // Walk newest-first, subtracting each session's games from the known total
   const gamesBeforeSession: Record<string, Record<string, number>> = {};
-  const userRunning: Record<string, number> = {};
-  for (const s of [...(sessions ?? [])].reverse()) {
+  const userRemaining: Record<string, number> = {};
+  for (const s of sessions ?? []) {
     const u = s.user_id;
-    userRunning[u] = userRunning[u] ?? 0;
+    if (!(u in userRemaining)) {
+      userRemaining[u] = userGameCounts[u] ?? 0;
+    }
+    userRemaining[u] -= s.games.length;
     gamesBeforeSession[u] = gamesBeforeSession[u] ?? {};
-    gamesBeforeSession[u][s.id] = userRunning[u];
-    userRunning[u] += s.games.length;
+    gamesBeforeSession[u][s.id] = userRemaining[u];
   }
 
   return (
@@ -225,81 +227,17 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      {(!sessions || sessions.length === 0) && (
-        <div className="glass p-8 text-center">
-          <p className="text-sm text-text-muted">
-            No games yet. Log your first session!
-          </p>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-2">
-        {sessions?.map((session) => {
-          const gamesBefore =
-            gamesBeforeSession[session.user_id]?.[session.id] ?? 0;
-          const isCalibrationSession = gamesBefore < CALIBRATION_GAMES;
-          const sessionProfile = session.profiles;
-          const sessionGames = [...session.games].sort(
-            (a, b) => a.game_number - b.game_number,
-          );
-          const isOwnSession = session.user_id === user?.id;
-          const name = isOwnSession
-            ? "You"
-            : (sessionProfile?.display_name ?? "Unknown");
-          const realName = sessionProfile?.display_name ?? "Unknown";
-          const avg =
-            sessionGames.length > 0
-              ? Math.floor(
-                  sessionGames.reduce((s, g) => s + g.total_score, 0) /
-                    sessionGames.length,
-                )
-              : 0;
-
-          const createdAt = new Date(session.created_at);
-          const dateLabel = createdAt.toLocaleDateString("en-SG", {
-            month: "short",
-            day: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-            timeZone: "Asia/Singapore",
-          });
-
-          return (
-            <SessionCard
-              key={session.id}
-              sessionId={session.id}
-              name={name}
-              realName={realName}
-              dateLabel={dateLabel}
-              avg={avg}
-              totalPins={session.total_pins}
-              venue={session.venue}
-              eventLabel={session.event_label}
-              games={sessionGames}
-              avatarUrl={sessionProfile?.avatar_url}
-              isOwn={isOwnSession}
-              lpChange={sessionLpChange[session.id]}
-              isCalibrationSession={isCalibrationSession}
-              rankLabel={
-                userRanks[session.user_id] &&
-                (userGameCounts[session.user_id] ?? 0) >= CALIBRATION_GAMES
-                  ? `${userRanks[session.user_id].name}${userRanks[session.user_id].division ? ` ${userRanks[session.user_id].division}` : ""}`
-                  : undefined
-              }
-              rankColor={
-                (userGameCounts[session.user_id] ?? 0) >= CALIBRATION_GAMES
-                  ? userRanks[session.user_id]?.color
-                  : undefined
-              }
-              rankTierName={
-                (userGameCounts[session.user_id] ?? 0) >= CALIBRATION_GAMES
-                  ? userRanks[session.user_id]?.name
-                  : undefined
-              }
-            />
-          );
-        })}
-      </div>
+      <RecentActivity
+        initialSessions={(sessions ?? []).map((s) => ({
+          session: s,
+          lpChange: sessionLpChange[s.id],
+        }))}
+        initialHasMore={(sessions ?? []).length === 10}
+        userId={uid}
+        userRanks={userRanks}
+        userGameCounts={userGameCounts}
+        gamesBeforeSession={gamesBeforeSession}
+      />
     </div>
   );
 }

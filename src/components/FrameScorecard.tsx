@@ -143,10 +143,11 @@ export default function FrameScorecard({
                               frame.roll2 === 10
                                 ? "font-bold text-green"
                                 : frame.isSpare &&
+                                    frame.roll1 !== 10 &&
                                     frame.pinsRemaining &&
                                     isSplit(frame.pinsRemaining)
                                   ? "font-bold text-red"
-                                  : frame.isSpare
+                                  : frame.isSpare && frame.roll1 !== 10
                                     ? "font-bold text-gold"
                                     : "text-text-secondary"
                             }

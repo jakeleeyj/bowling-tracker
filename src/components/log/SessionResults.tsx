@@ -151,6 +151,12 @@ export default function SessionResults({ data }: { data: ResultsData }) {
               <AnimatedCounter from={0} to={data.newLp} />
               <span className="text-lg text-text-muted"> LP</span>
             </div>
+            <div
+              className={`mt-1 text-sm font-semibold ${lpDiff > 0 ? "text-green" : lpDiff < 0 ? "text-red" : "text-text-muted"}`}
+            >
+              {lpDiff > 0 ? "+" : ""}
+              {lpDiff} LP
+            </div>
           </div>
         </>
       ) : (
