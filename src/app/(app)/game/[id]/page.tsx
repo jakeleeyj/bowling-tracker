@@ -8,6 +8,7 @@ import DeleteSessionButton from "@/components/DeleteSessionButton";
 import FramePinDetail from "@/components/FramePinDetail";
 import EditGameScore from "@/components/EditGameScore";
 import BackButton from "@/components/BackButton";
+import { isSplit } from "@/lib/bowling";
 
 export default async function GameDetailPage({
   params,
@@ -159,14 +160,14 @@ export default async function GameDetailPage({
                           <>
                             <span
                               className={
-                                f.roll_2 === 10
+                                f.roll_1 === 10 && f.roll_2 === 10
                                   ? "font-bold text-green"
                                   : f.is_spare && f.roll_1 !== 10
                                     ? "font-bold text-gold"
                                     : "text-text-secondary"
                               }
                             >
-                              {f.roll_2 === 10
+                              {f.roll_1 === 10 && f.roll_2 === 10
                                 ? "X"
                                 : f.is_spare && f.roll_1 !== 10
                                   ? "/"
@@ -182,9 +183,16 @@ export default async function GameDetailPage({
                                     : f.roll_1 === 10 &&
                                         f.roll_2 !== null &&
                                         f.roll_2 !== 10 &&
-                                        f.roll_2 + f.roll_3 === 10
-                                      ? "font-bold text-gold"
-                                      : "text-text-secondary"
+                                        f.roll_2 + f.roll_3 === 10 &&
+                                        f.pins_remaining !== null &&
+                                        isSplit(f.pins_remaining)
+                                      ? "font-bold text-red"
+                                      : f.roll_1 === 10 &&
+                                          f.roll_2 !== null &&
+                                          f.roll_2 !== 10 &&
+                                          f.roll_2 + f.roll_3 === 10
+                                        ? "font-bold text-gold"
+                                        : "text-text-secondary"
                                 }
                               >
                                 {f.roll_3 === 10
