@@ -165,57 +165,59 @@ function LogPage() {
 
 export default function LogPageWrapper() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin">
-            <svg viewBox="0 0 32 32" fill="none">
-              <circle
-                cx="16"
-                cy="16"
-                r="14"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeOpacity="0.15"
-              />
-              <circle
-                cx="16"
-                cy="16"
-                r="14"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeDasharray="60 28"
-                strokeLinecap="round"
-                className="text-blue"
-              />
-              <circle
-                cx="13"
-                cy="11"
-                r="1.5"
-                fill="currentColor"
-                fillOpacity="0.3"
-              />
-              <circle
-                cx="18"
-                cy="11"
-                r="1.5"
-                fill="currentColor"
-                fillOpacity="0.3"
-              />
-              <circle
-                cx="15.5"
-                cy="15"
-                r="1.5"
-                fill="currentColor"
-                fillOpacity="0.3"
-              />
-            </svg>
+    <div className="lg:mx-auto lg:max-w-[480px]">
+      <Suspense
+        fallback={
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="h-8 w-8 animate-spin">
+              <svg viewBox="0 0 32 32" fill="none">
+                <circle
+                  cx="16"
+                  cy="16"
+                  r="14"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeOpacity="0.15"
+                />
+                <circle
+                  cx="16"
+                  cy="16"
+                  r="14"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeDasharray="60 28"
+                  strokeLinecap="round"
+                  className="text-blue"
+                />
+                <circle
+                  cx="13"
+                  cy="11"
+                  r="1.5"
+                  fill="currentColor"
+                  fillOpacity="0.3"
+                />
+                <circle
+                  cx="18"
+                  cy="11"
+                  r="1.5"
+                  fill="currentColor"
+                  fillOpacity="0.3"
+                />
+                <circle
+                  cx="15.5"
+                  cy="15"
+                  r="1.5"
+                  fill="currentColor"
+                  fillOpacity="0.3"
+                />
+              </svg>
+            </div>
+            <p className="mt-3 text-sm text-text-muted">Loading...</p>
           </div>
-          <p className="mt-3 text-sm text-text-muted">Loading...</p>
-        </div>
-      }
-    >
-      <LogPage />
-    </Suspense>
+        }
+      >
+        <LogPage />
+      </Suspense>
+    </div>
   );
 }

@@ -50,7 +50,7 @@ export default function BottomNav() {
   }, [pathname]);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px] overflow-visible">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px] overflow-visible lg:hidden">
       {/* Floating circle — above the notch */}
       <button
         onClick={() => handleNav("/log")}

@@ -71,7 +71,7 @@ export default function LoginPage() {
       </div>
 
       {/* Form card */}
-      <div className="glass-strong relative z-10 w-full max-w-sm p-6">
+      <div className="glass-strong relative z-10 w-full max-w-sm lg:max-w-md p-6">
         <form onSubmit={handleLogin} className="flex flex-col gap-3">
           <input
             type="email"
