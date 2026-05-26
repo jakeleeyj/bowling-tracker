@@ -19,6 +19,7 @@ import { EVENT_LABELS } from "@/lib/ranking";
 import ShareCard from "@/components/ShareCard";
 import { shareSession } from "@/lib/shareSession";
 import { getFrame10ShotPins } from "@/lib/bowling";
+import { PRESET_VENUES as DEFAULT_VENUES } from "@/lib/venues";
 
 interface FrameInfo {
   frame_number: number;
@@ -63,14 +64,6 @@ interface SessionCardProps {
   rankColor?: string;
   rankTierName?: string;
 }
-
-const DEFAULT_VENUES = [
-  "Planet Bowl",
-  "SuperBowl - Toa Payoh",
-  "SuperBowl - Mt Faber",
-  "Westwood Bowl",
-  "Sonic Bowl - Punggol",
-];
 
 const EVENT_COLORS: Record<string, string> = {
   League: "bg-blue/12 text-blue",

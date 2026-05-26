@@ -2,15 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MapPin } from "lucide-react";
-
-const PRESET_VENUES = [
-  "Planet Bowl",
-  "SuperBowl - Toa Payoh",
-  "SuperBowl - Mt Faber",
-  "SuperBowl - Khatib",
-  "Westwood Bowl",
-  "Sonic Bowl - Punggol",
-];
+import { PRESET_VENUES } from "@/lib/venues";
 
 interface VenueComboboxProps {
   value: string;
