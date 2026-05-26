@@ -293,11 +293,13 @@ function Frame10MicroPin({ frame }: { frame: FrameInfo }) {
         }`}
       >
         R{shot}
-        {canCycle && <span className="ml-[1px] opacity-70">↻</span>}
+        {canCycle && (
+          <span className="opacity-70">/{availableShots.length}</span>
+        )}
       </span>
       <div className="flex h-[19px] flex-col items-center justify-center gap-[1px]">
         {isStrikeShot ? (
-          <span className="text-[14px] font-extrabold leading-none text-green">
+          <span className="text-[10px] font-extrabold leading-none text-green">
             X
           </span>
         ) : (
