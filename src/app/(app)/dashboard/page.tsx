@@ -11,6 +11,7 @@ import type {
 import RecentActivity from "@/components/RecentActivity";
 import Avatar from "@/components/Avatar";
 import NotificationPrompt from "@/components/NotificationPrompt";
+import SeasonBanner from "@/components/SeasonBanner";
 import RankEmblem from "@/components/RankEmblem";
 import {
   getRank,
@@ -112,6 +113,8 @@ export default async function DashboardPage() {
         </div>
         <Avatar name={displayName} avatarUrl={profile?.avatar_url} size="md" />
       </div>
+
+      <SeasonBanner />
 
       {/* Notification prompt — shows once for new users */}
       <NotificationPrompt />

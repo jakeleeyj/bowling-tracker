@@ -75,3 +75,33 @@ export function formatDaysLeft(days: number): string {
   if (days === 1) return "1 day left";
   return `${days} days left`;
 }
+
+export type SeasonMilestone = "30d" | "7d" | "started";
+
+function daysSince(date: Date): number {
+  return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+// Banner-side: continuous threshold — banner stays visible the whole window.
+// Priority: 'started' wins over countdown if both ever overlap.
+export function getActiveBannerMilestone(
+  season: Season,
+): SeasonMilestone | null {
+  if (season.number > 1 && daysSince(season.start) < 7) return "started";
+  const daysLeft = getSeasonDaysLeft(season);
+  if (daysLeft <= 7) return "7d";
+  if (daysLeft <= 30) return "30d";
+  return null;
+}
+
+// Cron-side: which milestones have been reached (regardless of whether they
+// were already sent — the cron checks the season_notifications table for
+// idempotency). Returns all currently-applicable milestones.
+export function getReachedMilestones(season: Season): SeasonMilestone[] {
+  const reached: SeasonMilestone[] = [];
+  const daysLeft = getSeasonDaysLeft(season);
+  if (daysLeft <= 30) reached.push("30d");
+  if (daysLeft <= 7) reached.push("7d");
+  if (season.number > 1 && daysSince(season.start) < 7) reached.push("started");
+  return reached;
+}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Swords, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import RankInfoModal from "@/components/RankInfoModal";
 import RankEmblem from "@/components/RankEmblem";
+import SeasonBanner from "@/components/SeasonBanner";
 import type { ProfileRow } from "@/lib/queries";
 import Avatar from "@/components/Avatar";
 import { getRank, formatLP, CALIBRATION_GAMES } from "@/lib/ranking";
@@ -82,6 +83,7 @@ export default async function LeaderboardPage() {
 
   return (
     <div>
+      <SeasonBanner />
       {(() => {
         const season = getCurrentSeason();
         const daysLeft = getSeasonDaysLeft(season);
