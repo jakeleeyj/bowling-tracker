@@ -140,6 +140,7 @@ export interface Database {
           is_spare: boolean;
           pins_remaining: number[] | null;
           pins_remaining_roll2: number[] | null;
+          pins_remaining_roll3: number[] | null;
           spare_converted: boolean;
           frame_score: number;
         };
@@ -154,6 +155,7 @@ export interface Database {
           is_spare?: boolean;
           pins_remaining?: number[] | null;
           pins_remaining_roll2?: number[] | null;
+          pins_remaining_roll3?: number[] | null;
           spare_converted?: boolean;
           frame_score?: number;
         };
@@ -168,6 +170,7 @@ export interface Database {
           is_spare?: boolean;
           pins_remaining?: number[] | null;
           pins_remaining_roll2?: number[] | null;
+          pins_remaining_roll3?: number[] | null;
           spare_converted?: boolean;
           frame_score?: number;
         };

@@ -396,6 +396,7 @@ export function useSessionState() {
             is_spare: f.isSpare,
             pins_remaining: f.pinsRemaining,
             pins_remaining_roll2: f.pinsRemainingRoll2,
+            pins_remaining_roll3: f.pinsRemainingRoll3,
             spare_converted: f.spareConverted,
             frame_score: frameScores[fi] ?? 0,
           });
@@ -635,6 +636,8 @@ export function useSessionState() {
               pinsRemaining: f.pins_remaining as number[] | null,
               pinsRemainingRoll2:
                 (f.pins_remaining_roll2 as number[] | null) ?? null,
+              pinsRemainingRoll3:
+                (f.pins_remaining_roll3 as number[] | null) ?? null,
               spareConverted: f.spare_converted as boolean,
             }),
           );
@@ -722,20 +725,26 @@ export function useSessionState() {
         newFrames = newFrames.filter((f) => f.frameNumber !== currentFrame);
       }
     }
-    // Clear frame 10 when re-editing — it has multi-roll state that
-    // handle10thFrameRoll checks incrementally (roll2 === null, etc.)
-    if (frameNumber === 10) {
-      newFrames = newFrames.filter((f) => f.frameNumber !== 10);
-    }
+    // Frame 10: keep prior roll data in place so the per-shot toggle can show
+    // what was thrown before. handle10thFrameRoll detects a re-edit when
+    // currentRoll is 1 but the frame already has later-shot data, and
+    // overwrites accordingly.
+    const targetData = newFrames.find((f) => f.frameNumber === frameNumber);
     setFrames(newFrames);
     setCurrentFrame(frameNumber);
 
     // For frames 1-9 with existing data, show roll 1 with previous
     // pin state so the user can see/adjust what was entered before
-    const targetData = newFrames.find((f) => f.frameNumber === frameNumber);
     setCurrentRoll(1);
     if (
       frameNumber <= 9 &&
+      targetData &&
+      !targetData.isStrike &&
+      targetData.pinsRemaining
+    ) {
+      setStandingPins([...targetData.pinsRemaining]);
+    } else if (
+      frameNumber === 10 &&
       targetData &&
       !targetData.isStrike &&
       targetData.pinsRemaining
@@ -857,6 +866,7 @@ export function useSessionState() {
         isSpare: false,
         pinsRemaining: null,
         pinsRemainingRoll2: null,
+        pinsRemainingRoll3: null,
         spareConverted: false,
       };
       const newFrames = upsertFrame(frames, frame);
@@ -906,6 +916,7 @@ export function useSessionState() {
           isSpare: false,
           pinsRemaining: getAllPins(),
           pinsRemainingRoll2: null,
+          pinsRemainingRoll3: null,
           spareConverted: false,
         };
         setFrames(upsertFrame(frames, frame));
@@ -961,6 +972,7 @@ export function useSessionState() {
           isSpare: false,
           pinsRemaining: [...standingPins],
           pinsRemainingRoll2: null,
+          pinsRemainingRoll3: null,
           spareConverted: false,
         };
         setFrames(upsertFrame(frames, frame));
@@ -1013,9 +1025,16 @@ export function useSessionState() {
 
   function handle10thFrameRoll(pins: number) {
     const existing = frames.find((f) => f.frameNumber === 10);
+    // Re-edit detection: the user is back on R1 of frame 10 with prior data
+    // still present (from handleFrameTap not wiping the frame). Treat the
+    // incoming roll as a fresh R1 that overwrites the later shots.
+    const isReedit =
+      !!existing &&
+      currentRoll === 1 &&
+      (existing.roll2 !== null || existing.roll3 !== null);
 
-    if (!existing) {
-      // Roll 1 of 10th frame
+    if (!existing || isReedit) {
+      // Roll 1 of 10th frame (fresh entry OR re-edit overwrite)
       const isStrike = pins === 10;
       const frame: FrameData = {
         frameNumber: 10,
@@ -1030,6 +1049,7 @@ export function useSessionState() {
             ? [...standingPins]
             : getAllPins(),
         pinsRemainingRoll2: null,
+        pinsRemainingRoll3: null,
         spareConverted: false,
       };
       setFrames(upsertFrame(frames, frame));
@@ -1083,9 +1103,24 @@ export function useSessionState() {
       }
     } else {
       // Roll 3 of 10th frame
+      // Capture post-R3 pin state. The user's standingPins is only the after-
+      // state for the pin-marking entry path; the strike/spare/gutter button
+      // shortcuts call this with their own counts while standingPins still
+      // holds pre-shot. Derive from the pre-R3 rack instead.
+      const preR3Pins: number[] =
+        (existing.pinsRemainingRoll2 ?? []).length === 0
+          ? getAllPins()
+          : [...existing.pinsRemainingRoll2!];
+      const pinsRemainingRoll3: number[] =
+        pins === preR3Pins.length
+          ? [] // strike/spare cleared the rack
+          : pins === 0
+            ? preR3Pins // gutter — nothing fell
+            : [...standingPins]; // partial — user marked the leave
       const updatedFrame: FrameData = {
         ...existing,
         roll3: pins,
+        pinsRemainingRoll3,
       };
       const newFrames = frames.map((f) =>
         f.frameNumber === 10 ? updatedFrame : f,
@@ -1385,6 +1420,7 @@ export function useSessionState() {
             is_spare: f.isSpare,
             pins_remaining: f.pinsRemaining,
             pins_remaining_roll2: f.pinsRemainingRoll2,
+            pins_remaining_roll3: f.pinsRemainingRoll3,
             spare_converted: f.spareConverted,
             frame_score: frameScores[fi] ?? 0,
           });
@@ -1576,6 +1612,7 @@ export function useSessionState() {
         is_spare: f.isSpare,
         pins_remaining: f.pinsRemaining,
         pins_remaining_roll2: f.pinsRemainingRoll2,
+        pins_remaining_roll3: f.pinsRemainingRoll3,
         spare_converted: f.spareConverted,
         frame_score: frameScores[fi] ?? 0,
       }));

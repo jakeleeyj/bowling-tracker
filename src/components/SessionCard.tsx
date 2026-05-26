@@ -18,6 +18,7 @@ import { isSplit } from "@/lib/bowling";
 import { EVENT_LABELS } from "@/lib/ranking";
 import ShareCard from "@/components/ShareCard";
 import { shareSession } from "@/lib/shareSession";
+import { getFrame10ShotPins } from "@/lib/bowling";
 
 interface FrameInfo {
   frame_number: number;
@@ -29,6 +30,7 @@ interface FrameInfo {
   frame_score: number;
   pins_remaining: number[] | null;
   pins_remaining_roll2: number[] | null;
+  pins_remaining_roll3: number[] | null;
 }
 
 interface SessionGame {
@@ -207,6 +209,142 @@ function MicroPinDiagram({
   );
 }
 
+function Frame10MicroPin({ frame }: { frame: FrameInfo }) {
+  const hasR2 = frame.roll_2 !== null;
+  const hasR3 = frame.roll_3 !== null;
+  const availableShots: (1 | 2 | 3)[] = [
+    1,
+    ...(hasR2 ? [2 as const] : []),
+    ...(hasR3 ? [3 as const] : []),
+  ];
+  const [shot, setShot] = useState<1 | 2 | 3>(1);
+
+  const data = getFrame10ShotPins(
+    shot,
+    frame.pins_remaining,
+    frame.pins_remaining_roll2,
+    frame.roll_1,
+    frame.roll_2,
+    frame.roll_3,
+    frame.pins_remaining_roll3,
+  );
+  const cycle = () => {
+    const idx = availableShots.indexOf(shot);
+    setShot(availableShots[(idx + 1) % availableShots.length]);
+  };
+  const canCycle = availableShots.length > 1;
+
+  // Rack the bowler faced going into this shot. R1: always all 10. R2: fresh
+  // rack if R1 was a strike, else R1's leave. R3: fresh rack if R2 cleared
+  // everything (strike or spare), else R2's leave.
+  const allPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const preShotRack: number[] =
+    shot === 1
+      ? allPins
+      : shot === 2
+        ? frame.roll_1 === 10
+          ? allPins
+          : (frame.pins_remaining ?? allPins)
+        : (frame.pins_remaining_roll2 ?? []).length === 0
+          ? allPins
+          : frame.pins_remaining_roll2!;
+
+  const standing = data.pins;
+  const knockedThisShot = preShotRack.filter((p) => !standing.includes(p));
+
+  // A strike on this shot: cleared a full 10-pin rack on this throw.
+  const isStrikeShot =
+    data.precise &&
+    data.knocked === 10 &&
+    preShotRack.length === 10 &&
+    standing.length === 0;
+  // A spare on this shot: cleared the pins that were left from a previous
+  // shot (not the full rack). Highlights those cleared pins in gold.
+  const isSpareShot =
+    data.precise &&
+    standing.length === 0 &&
+    (data.knocked ?? 0) > 0 &&
+    !isStrikeShot;
+  // Split context — matches MicroPinDiagram convention: red when the leave
+  // the bowler faced on this shot is a split. R1 always faces a full rack;
+  // for R2/R3, "faced" means whatever was standing going into the shot.
+  const splitContext =
+    shot === 1
+      ? isSplit(data.pins)
+      : shot === 2
+        ? frame.roll_1 === 10
+          ? false
+          : isSplit(frame.pins_remaining ?? [])
+        : (frame.pins_remaining_roll2 ?? []).length === 0
+          ? false
+          : isSplit(frame.pins_remaining_roll2!);
+
+  return (
+    <button
+      onClick={canCycle ? cycle : undefined}
+      disabled={!canCycle}
+      className="flex flex-col items-center gap-[2px] py-[2px]"
+    >
+      <span
+        className={`rounded-sm border px-[3px] py-[0.5px] text-[7px] font-bold leading-none ${
+          canCycle
+            ? "border-blue/40 bg-blue/20 text-blue"
+            : "border-text-muted/30 bg-surface-light/50 text-text-muted"
+        }`}
+      >
+        R{shot}
+        {canCycle && <span className="ml-[1px] opacity-70">↻</span>}
+      </span>
+      <div className="flex h-[19px] flex-col items-center justify-center gap-[1px]">
+        {isStrikeShot ? (
+          <span className="text-[14px] font-extrabold leading-none text-green">
+            X
+          </span>
+        ) : (
+          MICRO_PINS.map((row, ri) => (
+            <div key={ri} className="flex gap-[1px]">
+              {row.map((pin) => {
+                const isStanding = standing.includes(pin);
+                const isKnockedThisShot = knockedThisShot.includes(pin);
+                // Non-precise R3: we know the count but not which pins fell.
+                // Show the rack as a neutral "uncertain" state instead of
+                // pretending they're all still standing.
+                // The faded-this-shot tint only makes sense when there are
+                // earlier knocked pins to contrast with — otherwise (R1, or
+                // any shot starting from a fresh rack) treat all knocks as
+                // history-level "bg-white/10" so the diagram doesn't look
+                // like the R2 spare-attempt highlight.
+                const hasEarlierKnocks = preShotRack.length < 10;
+                const color = !data.precise
+                  ? "bg-blue/40"
+                  : isStanding
+                    ? splitContext
+                      ? "bg-red"
+                      : "bg-blue"
+                    : isSpareShot && isKnockedThisShot
+                      ? splitContext
+                        ? "bg-red"
+                        : "bg-gold"
+                      : isKnockedThisShot && hasEarlierKnocks
+                        ? splitContext
+                          ? "bg-red/30"
+                          : "bg-blue/30"
+                        : "bg-white/10";
+                return (
+                  <div
+                    key={pin}
+                    className={`h-[4px] w-[4px] rounded-full ${color}`}
+                  />
+                );
+              })}
+            </div>
+          ))
+        )}
+      </div>
+    </button>
+  );
+}
+
 function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
   const sorted = [...frames].sort((a, b) => a.frame_number - b.frame_number);
 
@@ -222,12 +360,16 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
               className="flex flex-1 items-center justify-center border-r border-border/30 last:border-r-0"
             >
               {frame ? (
-                <MicroPinDiagram
-                  pinsRemaining={frame.pins_remaining}
-                  pinsRemainingRoll2={frame.pins_remaining_roll2}
-                  isStrike={frame.is_strike}
-                  isSpare={frame.is_spare}
-                />
+                frame.frame_number === 10 ? (
+                  <Frame10MicroPin frame={frame} />
+                ) : (
+                  <MicroPinDiagram
+                    pinsRemaining={frame.pins_remaining}
+                    pinsRemainingRoll2={frame.pins_remaining_roll2}
+                    isStrike={frame.is_strike}
+                    isSpare={frame.is_spare}
+                  />
+                )
               ) : (
                 <span className="py-[2px] text-[8px] text-text-muted/30">
                   &mdash;

@@ -9,6 +9,7 @@ export interface FrameData {
   isSpare: boolean;
   pinsRemaining: number[] | null;
   pinsRemainingRoll2: number[] | null;
+  pinsRemainingRoll3: number[] | null; // 10th frame only
   spareConverted: boolean;
 }
 
@@ -137,6 +138,7 @@ export function calculateMaxPossible(frames: FrameData[]): number {
       isSpare: false,
       pinsRemaining: null,
       pinsRemainingRoll2: null,
+      pinsRemainingRoll3: null,
       spareConverted: false,
     });
   }
@@ -196,6 +198,61 @@ export function countSpares(frames: FrameData[]): number {
 // Returns all 10 pin positions initially
 export function getAllPins(): number[] {
   return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+}
+
+// Returns the pin state to visualize for a given shot of frame 10.
+// `precise` is true when the returned pins are exactly the state after the
+// shot; false means we know how many fell but not which (R3 partial cases),
+// so the diagram should be labelled as "going into" rather than "after".
+export interface Frame10ShotPins {
+  pins: number[];
+  precise: boolean;
+  knocked: number | null;
+}
+
+export function getFrame10ShotPins(
+  shot: 1 | 2 | 3,
+  pinsAfterR1: number[] | null,
+  pinsAfterR2: number[] | null,
+  roll1: number,
+  roll2: number | null,
+  roll3: number | null,
+  pinsAfterR3: number[] | null = null,
+): Frame10ShotPins {
+  if (shot === 1) {
+    // Frame 10 quirk: when R1 is a strike followed by a non-strike R2, the
+    // logging hook overwrites pins_remaining with the R2 leave so the pin
+    // diagram in live entry shows what's left to bowl. Treat any strike R1
+    // as a cleared rack regardless of what's stored.
+    if (roll1 === 10) {
+      return { pins: [], precise: true, knocked: 10 };
+    }
+    return { pins: pinsAfterR1 ?? [], precise: true, knocked: roll1 };
+  }
+  if (shot === 2) {
+    return { pins: pinsAfterR2 ?? [], precise: true, knocked: roll2 };
+  }
+  // shot === 3
+  if (roll3 === null) {
+    return { pins: [], precise: false, knocked: null };
+  }
+  // Prefer stored R3 leave when present (new games). Falls through to
+  // inference for older games where this field was never written.
+  if (pinsAfterR3 !== null) {
+    return { pins: pinsAfterR3, precise: true, knocked: roll3 };
+  }
+  if (roll3 === 10) {
+    return { pins: [], precise: true, knocked: 10 };
+  }
+  // Determine rack going into R3: fresh if R2 was a strike or R1+R2 was a spare,
+  // otherwise continue from pinsAfterR2.
+  const afterR2 = pinsAfterR2 ?? [];
+  const beforeR3 = afterR2.length === 0 ? getAllPins() : afterR2;
+  if (roll3 === 0) return { pins: beforeR3, precise: true, knocked: 0 };
+  if (roll3 === beforeR3.length)
+    return { pins: [], precise: true, knocked: roll3 };
+  // Partial: we know the count but not which pins fell.
+  return { pins: beforeR3, precise: false, knocked: roll3 };
 }
 
 // Pin layout (viewed from bowler's perspective):

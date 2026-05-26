@@ -1,14 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { Check, Undo2, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   type FrameData,
   isCleanGame,
   calculateFrameScores,
+  getFrame10ShotPins,
 } from "@/lib/bowling";
 import PinDiagram from "@/components/PinDiagram";
 import FrameScorecard from "@/components/FrameScorecard";
+import FramePinDetail from "@/components/FramePinDetail";
 import type { GameData, EntryMode } from "@/hooks/useSessionState";
 
 interface GameEntryProps {
@@ -68,6 +71,16 @@ interface GameEntryProps {
 
 export default function GameEntry(props: GameEntryProps) {
   const router = useRouter();
+  // The user's pick is tied to the (game, frame, roll) it was made in so any
+  // advance or game switch implicitly returns the view to the live shot.
+  const [viewOverride, setViewOverride] = useState<{
+    key: string;
+    shot: 1 | 2 | 3;
+  } | null>(null);
+  const liveKey = `${props.currentGameIndex}-${props.currentFrame}-${props.currentRoll}`;
+  const frame10ViewShot: 1 | 2 | 3 | null =
+    viewOverride && viewOverride.key === liveKey ? viewOverride.shot : null;
+
   const {
     editMode,
     editOriginalScore,
@@ -200,11 +213,27 @@ export default function GameEntry(props: GameEntryProps) {
             <div className="flex flex-col gap-3">
               {completedGame.entryType === "detailed" &&
               completedGame.frames.length > 0 ? (
-                <FrameScorecard
-                  frames={completedGame.frames}
-                  currentFrame={0}
-                  currentRoll={1}
-                />
+                <>
+                  <FrameScorecard
+                    frames={completedGame.frames}
+                    currentFrame={0}
+                    currentRoll={1}
+                  />
+                  <FramePinDetail
+                    frames={completedGame.frames.map((f) => ({
+                      frame_number: f.frameNumber,
+                      roll_1: f.roll1,
+                      roll_2: f.roll2,
+                      roll_3: f.roll3,
+                      is_strike: f.isStrike,
+                      is_spare: f.isSpare,
+                      pins_remaining: f.pinsRemaining,
+                      pins_remaining_roll2: f.pinsRemainingRoll2,
+                      pins_remaining_roll3: f.pinsRemainingRoll3,
+                      spare_converted: f.spareConverted,
+                    }))}
+                  />
+                </>
               ) : null}
 
               <div className="glass p-4 text-center">
@@ -378,13 +407,93 @@ export default function GameEntry(props: GameEntryProps) {
                   ` | ${availablePins.length} pins in play`}
               </p>
 
-              {/* Pin diagram */}
-              <PinDiagram
-                standingPins={standingPins}
-                availablePins={availablePins}
-                onPinToggle={handlePinToggle}
-                label="Tap pins left standing"
-              />
+              {(() => {
+                const isFrame10 = currentFrame === 10;
+                const frame10 = isFrame10
+                  ? sortedFrames.find((f) => f.frameNumber === 10)
+                  : null;
+                const hasPastShot = (s: 1 | 2 | 3) => {
+                  if (!frame10) return false;
+                  if (s === 1) return false; // R1 is always "live" or already covered by R2/R3 buttons
+                  if (s === 2) return frame10.roll2 !== null;
+                  return frame10.roll3 !== null;
+                };
+                const showToggle =
+                  isFrame10 &&
+                  (currentRoll > 1 || hasPastShot(2) || hasPastShot(3));
+                const activeShot: 1 | 2 | 3 =
+                  frame10ViewShot ?? (currentRoll as 1 | 2 | 3);
+                const viewingPast =
+                  frame10ViewShot !== null && frame10ViewShot !== currentRoll;
+
+                const pastShotData =
+                  viewingPast && frame10
+                    ? getFrame10ShotPins(
+                        activeShot,
+                        frame10.pinsRemaining,
+                        frame10.pinsRemainingRoll2,
+                        frame10.roll1,
+                        frame10.roll2,
+                        frame10.roll3,
+                        frame10.pinsRemainingRoll3,
+                      )
+                    : null;
+
+                return (
+                  <>
+                    {showToggle && (
+                      <div className="flex rounded-lg bg-surface-light p-[3px]">
+                        {([1, 2, 3] as const).map((shot) => {
+                          const isLive = shot === currentRoll;
+                          const visible =
+                            isLive || shot <= currentRoll || hasPastShot(shot);
+                          if (!visible) return null;
+                          const active = activeShot === shot;
+                          return (
+                            <button
+                              key={shot}
+                              onClick={() =>
+                                setViewOverride(
+                                  isLive ? null : { key: liveKey, shot },
+                                )
+                              }
+                              className={`flex-1 rounded-md py-[5px] text-[12px] transition-colors ${
+                                active
+                                  ? "bg-blue font-semibold text-white"
+                                  : "text-text-muted"
+                              }`}
+                            >
+                              Shot {shot}
+                              {isLive && (
+                                <span className="ml-1 text-[10px] opacity-70">
+                                  live
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Pin diagram */}
+                    <PinDiagram
+                      standingPins={
+                        pastShotData ? pastShotData.pins : standingPins
+                      }
+                      availablePins={pastShotData ? undefined : availablePins}
+                      onPinToggle={handlePinToggle}
+                      disabled={!!pastShotData}
+                      label={
+                        pastShotData
+                          ? pastShotData.precise
+                            ? `Standing after R${activeShot}`
+                            : `Going into R${activeShot} — knocked ${pastShotData.knocked ?? "-"}`
+                          : "Tap pins left standing"
+                      }
+                    />
+                  </>
+                );
+              })()}
 
               {/* Action buttons */}
               <div className="flex gap-2">
