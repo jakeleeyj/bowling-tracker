@@ -1,6 +1,6 @@
 // Season configuration
-// Season 1: Mar 19 2026 → Dec 31 2026 (inaugural season)
-// After that: 6-month cycles (Jan 1–Jun 30, Jul 1–Dec 31)
+// Season 1: Mar 19 2026 → Jun 30 2026 (partial inaugural season)
+// Season 2+: 6-month calendar halves (H1 Jan 1–Jun 30, H2 Jul 1–Dec 31)
 
 export interface Season {
   number: number;
@@ -16,7 +16,7 @@ const SEASONS: Season[] = [
     name: "Season 1",
     shortName: "S1",
     start: new Date("2026-03-19T00:00:00+08:00"),
-    end: new Date("2026-12-31T23:59:59+08:00"),
+    end: new Date("2026-06-30T23:59:59+08:00"),
   },
 ];
 
@@ -47,14 +47,12 @@ export function getCurrentSeason(): Season {
     if (now >= s.start && now <= s.end) return s;
   }
 
-  // Generate future seasons: S2 = H1 2027, S3 = H2 2027, etc.
+  // Generate calendar-half seasons from H2 2026 onward.
+  // Numbering: H2 2026 = S2, H1 2027 = S3, H2 2027 = S4, ...
   const year = now.getFullYear();
   const month = now.getMonth(); // 0-indexed
   const half = month < 6 ? "H1" : "H2";
-
-  // Season numbering: S1 ends Dec 2026, S2 = H1 2027, S3 = H2 2027, ...
-  const yearOffset = year - 2027;
-  const num = 2 + yearOffset * 2 + (half === "H2" ? 1 : 0);
+  const num = 2 * (year - 2026) + (half === "H1" ? 1 : 2);
 
   return generateSeason(half, year, num);
 }
