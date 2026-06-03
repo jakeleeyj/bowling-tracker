@@ -2,7 +2,7 @@ export const revalidate = 300; // revalidate every 5 minutes
 
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
-import { ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronRight, Dices } from "lucide-react";
 import type {
   ProfileRow,
   SessionWithGamesFramesAndProfile,
@@ -220,6 +220,23 @@ export default async function DashboardPage() {
         className="mb-5 block rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-center text-base font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97]"
       >
         Log a Session
+      </Link>
+
+      {/* Minigames entry */}
+      <Link
+        href="/minigames"
+        className="glass mb-5 flex items-center gap-3 p-3 active:scale-[0.98]"
+      >
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple/15 text-purple">
+          <Dices size={20} />
+        </div>
+        <div className="flex-1">
+          <div className="text-sm font-bold">Minigames</div>
+          <p className="text-[11px] text-text-muted">
+            Casual side-game scoring — 2-2-3 and more
+          </p>
+        </div>
+        <ChevronRight size={14} className="shrink-0 text-text-muted/30" />
       </Link>
 
       {/* Activity Feed */}
