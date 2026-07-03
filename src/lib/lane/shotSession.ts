@@ -30,9 +30,7 @@ export class ShotSession {
     if (hit) {
       this.path.push({ ...hit, tMs });
       this.lastSeenMs = tMs;
-      const startFeet = this.path[0].feet;
-      const travelled = hit.feet - startFeet;
-      if (travelled >= END_FEET) return this.finish();
+      if (hit.feet >= END_FEET) return this.finish();
       return { type: "tracking", path: this.path };
     }
 

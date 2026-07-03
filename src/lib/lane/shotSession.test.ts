@@ -17,6 +17,7 @@ describe("ShotSession", () => {
       if (e.type === "complete") {
         expect(e.stats.releaseBoard).toBeCloseTo(12, 1);
         expect(e.stats.speedMph).toBeGreaterThan(10);
+        break;
       }
     }
     expect(lastType).toBe("complete");
@@ -43,9 +44,22 @@ describe("ShotSession", () => {
 
   it("returns to idle and can track a second shot", () => {
     const s = new ShotSession();
-    for (let i = 0; i <= 30; i++) s.onFrame({ board: 12, feet: 2 + (56 * i) / 30 }, i * 80);
+    for (let i = 0; i <= 30; i++) {
+      const e = s.onFrame({ board: 12, feet: 2 + (56 * i) / 30 }, i * 80);
+      if (e.type === "complete") break;
+    }
     expect(s.onFrame(null, 5000).type).toBe("idle");
     const e = s.onFrame({ board: 20, feet: 3 }, 6000);
     expect(e.type).toBe("tracking");
+  });
+
+  it("completes by position even when tracking starts mid-lane", () => {
+    const s = new ShotSession();
+    let completed = false;
+    for (let i = 0; i <= 20; i++) {
+      const e = s.onFrame({ board: 10, feet: 20 + (37 * i) / 20 }, i * 80);
+      if (e.type === "complete") completed = true;
+    }
+    expect(completed).toBe(true);
   });
 });
