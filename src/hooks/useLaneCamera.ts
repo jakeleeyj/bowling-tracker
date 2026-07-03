@@ -22,9 +22,33 @@ export function useLaneCamera(
   const onFrameRef = useRef(onFrame);
   onFrameRef.current = onFrame;
   const [status, setStatus] = useState<CameraStatus>("idle");
+  const statusRef = useRef<CameraStatus>("idle");
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
-  const recorderChunksRef = useRef<{ blob: Blob; t: number }[]>([]);
+  const mimeTypeRef = useRef<string | null>(null);
+  const prevSegmentChunksRef = useRef<Blob[]>([]);
+  const currentSegmentChunksRef = useRef<Blob[]>([]);
+  const rotationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startSegment = useCallback(() => {
+    const stream = streamRef.current;
+    const mimeType = mimeTypeRef.current;
+    if (!stream || !mimeType) return;
+    const recorder = new MediaRecorder(stream, { mimeType });
+    const chunks: Blob[] = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+    recorder.onstop = () => {
+      prevSegmentChunksRef.current = chunks;
+    };
+    recorderRef.current = recorder;
+    currentSegmentChunksRef.current = chunks;
+    recorder.start(1000);
+  }, []);
 
   const stop = useCallback((skipStatus = false) => {
     cancelAnimationFrame(rafRef.current);
@@ -32,22 +56,30 @@ export function useLaneCamera(
     streamRef.current = null;
     wakeLockRef.current?.release().catch(() => undefined);
     wakeLockRef.current = null;
+    if (rotationTimerRef.current !== null) {
+      clearInterval(rotationTimerRef.current);
+      rotationTimerRef.current = null;
+    }
     if (recorderRef.current && recorderRef.current.state !== "inactive") {
+      recorderRef.current.onstop = null;
       recorderRef.current.stop();
     }
     recorderRef.current = null;
-    recorderChunksRef.current = [];
+    mimeTypeRef.current = null;
+    prevSegmentChunksRef.current = [];
+    currentSegmentChunksRef.current = [];
     if (!skipStatus) setStatus("idle");
   }, []);
 
   const getReplayBlob = useCallback((): Blob | null => {
-    const chunks = recorderChunksRef.current;
+    const chunks = [...prevSegmentChunksRef.current, ...currentSegmentChunksRef.current];
     if (chunks.length === 0) return null;
-    const type = chunks[0].blob.type;
-    return new Blob(chunks.map((c) => c.blob), { type });
+    const type = mimeTypeRef.current ?? chunks[0].type;
+    return new Blob(chunks, { type });
   }, []);
 
   const start = useCallback(async () => {
+    if (statusRef.current === "starting" || statusRef.current === "live") return;
     setStatus("starting");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -94,25 +126,21 @@ export function useLaneCamera(
             ? "video/webm"
             : null;
         if (mimeType) {
-          const recorder = new MediaRecorder(stream, { mimeType });
-          recorderRef.current = recorder;
-          recorderChunksRef.current = [];
-          recorder.ondataavailable = (e) => {
-            if (e.data.size === 0) return;
-            recorderChunksRef.current.push({ blob: e.data, t: performance.now() });
-            const cutoff = performance.now() - 8000;
-            while (
-              recorderChunksRef.current.length > 1 &&
-              recorderChunksRef.current[0].t < cutoff
-            ) {
-              recorderChunksRef.current.shift();
+          mimeTypeRef.current = mimeType;
+          startSegment();
+          rotationTimerRef.current = setInterval(() => {
+            const recorder = recorderRef.current;
+            if (recorder && recorder.state !== "inactive") {
+              recorder.stop();
             }
-          };
-          recorder.start(1000);
+            startSegment();
+          }, 8000);
         }
       } catch {
         recorderRef.current = null;
-        recorderChunksRef.current = [];
+        mimeTypeRef.current = null;
+        prevSegmentChunksRef.current = [];
+        currentSegmentChunksRef.current = [];
       }
 
       setStatus("live");
@@ -134,7 +162,7 @@ export function useLaneCamera(
       stop(true);
       setStatus(denied ? "denied" : "error");
     }
-  }, [stop]);
+  }, [stop, startSegment]);
 
   useEffect(() => stop, [stop]);
 

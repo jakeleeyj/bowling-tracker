@@ -26,6 +26,8 @@ export default function LaneTracker() {
   const [result, setResult] = useState<ShotStats | null>(null);
   const [resultPath, setResultPath] = useState<Pt[]>([]);
   const [calibrationError, setCalibrationError] = useState(false);
+  const [calibrationAttempt, setCalibrationAttempt] = useState(0);
+  const [frameReady, setFrameReady] = useState(false);
   const [replayBlob, setReplayBlob] = useState<Blob | null>(null);
 
   const homographyRef = useRef<number[] | null>(null);
@@ -51,6 +53,7 @@ export default function LaneTracker() {
       if (!detectorRef.current) {
         detectorRef.current = new BallDetector(w, h);
         setFrameSize({ w, h });
+        setFrameReady(true);
       }
       const hit = detectorRef.current.detect(gray);
       if (phaseRef.current !== "live" || !homographyRef.current) return;
@@ -96,6 +99,7 @@ export default function LaneTracker() {
     } catch {
       homographyRef.current = null;
       setCalibrationError(true);
+      setCalibrationAttempt((n) => n + 1);
       changePhase("calibrate");
     }
   }
@@ -139,11 +143,18 @@ export default function LaneTracker() {
       />
       {phase === "calibrate" && (
         <>
-          <CalibrationOverlay
-            width={frameSize.w}
-            height={frameSize.h}
-            onDone={handleCalibrated}
-          />
+          {frameReady ? (
+            <CalibrationOverlay
+              key={calibrationAttempt}
+              width={frameSize.w}
+              height={frameSize.h}
+              onDone={handleCalibrated}
+            />
+          ) : (
+            <div className="absolute inset-x-3 top-3 rounded-xl bg-black/50 px-3 py-2 text-center text-xs font-semibold text-white">
+              Starting camera…
+            </div>
+          )}
           {calibrationError && (
             <div className="absolute inset-x-3 top-3 rounded-xl bg-red-500/80 px-3 py-2 text-center text-xs font-semibold text-white">
               Those points don&apos;t form a valid lane. Try again.
