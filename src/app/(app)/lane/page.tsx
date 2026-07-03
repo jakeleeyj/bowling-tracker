@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Video } from "lucide-react";
+import ShotHistory from "@/components/lane/ShotHistory";
 
 const LaneTracker = dynamic(() => import("@/components/lane/LaneTracker"), {
   ssr: false,
@@ -27,6 +28,7 @@ export default function LanePage() {
         </div>
       </header>
       <LaneTracker />
+      <ShotHistory />
     </div>
   );
 }
