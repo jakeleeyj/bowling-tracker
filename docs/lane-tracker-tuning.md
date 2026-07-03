@@ -3,6 +3,21 @@
 Live QA/tuning notes for the camera ball tracker (`/lane`, branch `feat/lane-tracker`).
 Workflow: bowl → note symptom below → change ONE constant → push → refresh preview on phone.
 
+## What a shot produces (table: `tracked_shots`, one row per saved shot)
+
+| Field | Meaning |
+|---|---|
+| `speed_mph` | Ball speed, foul line → pins (numeric, 1 decimal) |
+| `release_board` | Board at first tracked point (board 1 = right edge, 39 = left edge) |
+| `arrows_board` | Board crossing the arrows (15 ft) |
+| `breakpoint_board` | Furthest-out board (max deviation from release board) |
+| `entry_board` | Board at the pins (~17.5 = righty pocket) |
+| `path` | Full line: ≤60 points of `{board, feet, tMs}` (jsonb) — redraws the shot |
+| `session_id` / `game_number` / `frame_number` | Link to scoring session — always null in v1 (v1.1 wiring) |
+| `user_id`, `created_at` | Owner + timestamp; RLS owner-only |
+
+UI per shot: speed + the 4 boards over a looping video replay with the traced line. Rev rate is NOT in v1 (needs slow-mo import, v1.5).
+
 ## Current preview
 
 https://bowling-tracker-53bvkzk0f-jakeleeyj-6210s-projects.vercel.app
