@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase-browser";
 import type { ShotStats } from "./shotStats";
+import { thinPath } from "./pathThinning";
 
 function round1(n: number): number {
   return Math.round(n * 10) / 10;
@@ -24,9 +25,7 @@ export async function saveTrackedShot(
     breakpoint_board: round1(stats.breakpointBoard),
     entry_board: round1(stats.entryBoard),
     // Thin the path to ~60 points max to keep rows small
-    path: stats.path.filter(
-      (_, i) => i % Math.max(1, Math.ceil(stats.path.length / 60)) === 0,
-    ),
+    path: thinPath(stats.path),
   });
   return { error: error ? error.message : null };
 }
