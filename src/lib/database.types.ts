@@ -216,6 +216,66 @@ export interface Database {
           },
         ];
       };
+      tracked_shots: {
+        Row: {
+          id: string;
+          user_id: string;
+          session_id: string | null;
+          game_number: number | null;
+          frame_number: number | null;
+          speed_mph: number;
+          release_board: number;
+          arrows_board: number;
+          breakpoint_board: number;
+          entry_board: number;
+          path: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          session_id?: string | null;
+          game_number?: number | null;
+          frame_number?: number | null;
+          speed_mph: number;
+          release_board: number;
+          arrows_board: number;
+          breakpoint_board: number;
+          entry_board: number;
+          path?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          session_id?: string | null;
+          game_number?: number | null;
+          frame_number?: number | null;
+          speed_mph?: number;
+          release_board?: number;
+          arrows_board?: number;
+          breakpoint_board?: number;
+          entry_board?: number;
+          path?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tracked_shots_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tracked_shots_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "sessions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -285,6 +345,8 @@ export type Frame = Database["public"]["Tables"]["frames"]["Row"];
 
 export type PushSubscription =
   Database["public"]["Tables"]["push_subscriptions"]["Row"];
+
+export type TrackedShot = Database["public"]["Tables"]["tracked_shots"]["Row"];
 
 export type SessionWithGames = Session & {
   games: Game[];
