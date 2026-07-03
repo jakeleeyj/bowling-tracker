@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Camera, RefreshCw } from "lucide-react";
 import { useLaneCamera } from "@/hooks/useLaneCamera";
 import CalibrationOverlay from "@/components/lane/CalibrationOverlay";
@@ -31,9 +31,17 @@ export default function LaneTracker() {
   const sessionRef = useRef(new ShotSession());
   const pixelPathRef = useRef<Pt[]>([]);
   const phaseRef = useRef(phase);
-  useEffect(() => {
-    phaseRef.current = phase;
-  }, [phase]);
+
+  const changePhase = useCallback((next: Phase) => {
+    phaseRef.current = next;
+    setPhase(next);
+  }, []);
+
+  const resetTracking = useCallback(() => {
+    sessionRef.current = new ShotSession();
+    pixelPathRef.current = [];
+    setLivePath([]);
+  }, []);
 
   const onFrame = useCallback(
     (gray: Uint8ClampedArray, tMs: number, w: number, h: number) => {
@@ -45,41 +53,42 @@ export default function LaneTracker() {
       if (phaseRef.current !== "live" || !homographyRef.current) return;
 
       const lane = hit ? pixelToLane(homographyRef.current, hit) : null;
-      if (hit && lane) pixelPathRef.current.push({ x: hit.x, y: hit.y });
       const event = sessionRef.current.onFrame(lane, tMs);
 
       if (event.type === "tracking") {
+        if (hit) pixelPathRef.current.push({ x: hit.x, y: hit.y });
         setLivePath([...pixelPathRef.current]);
       } else if (event.type === "complete") {
         setResult(event.stats);
         setResultPath([...pixelPathRef.current]);
         pixelPathRef.current = [];
         setLivePath([]);
-        setPhase("result");
+        changePhase("result");
       } else if (event.type === "discarded") {
         pixelPathRef.current = [];
         setLivePath([]);
       }
     },
-    [],
+    [changePhase],
   );
 
   const { videoRef, status, start } = useLaneCamera(onFrame);
 
   async function begin() {
     await start();
-    setPhase("calibrate");
+    changePhase("calibrate");
   }
 
   function handleCalibrated(cal: Calibration) {
     try {
       homographyRef.current = computeHomography(cal);
       setCalibrationError(false);
-      setPhase("live");
+      resetTracking();
+      changePhase("live");
     } catch {
       homographyRef.current = null;
       setCalibrationError(true);
-      setPhase("calibrate");
+      changePhase("calibrate");
     }
   }
 
@@ -141,7 +150,10 @@ export default function LaneTracker() {
             Tracking — bowl when ready
           </div>
           <button
-            onClick={() => setPhase("calibrate")}
+            onClick={() => {
+              resetTracking();
+              changePhase("calibrate");
+            }}
             aria-label="Re-calibrate"
             className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white"
           >
@@ -156,7 +168,8 @@ export default function LaneTracker() {
             stats={result}
             onNext={() => {
               setResult(null);
-              setPhase("live");
+              resetTracking();
+              changePhase("live");
             }}
           />
         </>
