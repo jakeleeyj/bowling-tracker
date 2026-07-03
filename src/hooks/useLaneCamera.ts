@@ -75,8 +75,8 @@ export function useLaneCamera(
     return new Blob(chunks, { type });
   }, []);
 
-  const start = useCallback(async () => {
-    if (statusRef.current === "starting" || statusRef.current === "live") return;
+  const start = useCallback(async (): Promise<boolean> => {
+    if (statusRef.current === "starting" || statusRef.current === "live") return false;
     setStatus("starting");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -156,10 +156,12 @@ export function useLaneCamera(
         rafRef.current = requestAnimationFrame(loop);
       };
       rafRef.current = requestAnimationFrame(loop);
+      return true;
     } catch (e) {
       const denied = e instanceof DOMException && e.name === "NotAllowedError";
       stop(true);
       setStatus(denied ? "denied" : "error");
+      return false;
     }
   }, [stop, startSegment]);
 

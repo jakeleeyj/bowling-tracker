@@ -86,8 +86,8 @@ export default function LaneTracker() {
   }, [getReplayBlob]);
 
   async function begin() {
-    await start();
-    changePhase("calibrate");
+    const ok = await start();
+    if (ok) changePhase("calibrate");
   }
 
   function handleCalibrated(cal: Calibration) {
@@ -104,97 +104,96 @@ export default function LaneTracker() {
     }
   }
 
-  if (phase === "start") {
-    return (
-      <div className="glass flex flex-col items-center gap-4 p-6 text-center">
-        <p className="text-sm text-text-muted">
-          Put your phone on a tripod behind the approach, framing the whole
-          lane from foul line to pins. Keep the screen on while tracking.
-        </p>
-        <button
-          onClick={begin}
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark px-6 py-3 text-base font-bold text-white shadow-lg shadow-blue/25 active:scale-[0.97]"
-        >
-          <Camera size={18} /> Start camera
-        </button>
-        {status === "denied" && (
-          <p className="text-xs text-red-400">
-            Camera access was denied. Allow it in Settings → Safari → Camera,
-            then try again.
-          </p>
-        )}
-        {status === "error" && (
-          <p className="text-xs text-red-400">
-            Couldn&apos;t start the camera. Close other camera apps and retry.
-          </p>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="relative overflow-hidden rounded-2xl">
-      <video
-        ref={videoRef}
-        playsInline
-        muted
-        className="w-full"
-        aria-label="Live lane camera"
-      />
-      {phase === "calibrate" && (
-        <>
-          {frameReady ? (
-            <CalibrationOverlay
-              key={calibrationAttempt}
-              width={frameSize.w}
-              height={frameSize.h}
-              onDone={handleCalibrated}
-            />
-          ) : (
-            <div className="absolute inset-x-3 top-3 rounded-xl bg-black/50 px-3 py-2 text-center text-xs font-semibold text-white">
-              Starting camera…
-            </div>
-          )}
-          {calibrationError && (
-            <div className="absolute inset-x-3 top-3 rounded-xl bg-red-500/80 px-3 py-2 text-center text-xs font-semibold text-white">
-              Those points don&apos;t form a valid lane. Try again.
-            </div>
-          )}
-        </>
-      )}
-      {phase === "live" && (
-        <>
-          <PathOverlay points={livePath} width={frameSize.w} height={frameSize.h} />
-          <div className="absolute left-3 top-3 rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white">
-            Tracking — bowl when ready
-          </div>
+      {phase === "start" && (
+        <div className="glass flex flex-col items-center gap-4 p-6 text-center">
+          <p className="text-sm text-text-muted">
+            Put your phone on a tripod behind the approach, framing the whole
+            lane from foul line to pins. Keep the screen on while tracking.
+          </p>
           <button
-            onClick={() => {
-              resetTracking();
-              changePhase("calibrate");
-            }}
-            aria-label="Re-calibrate"
-            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white"
+            onClick={begin}
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark px-6 py-3 text-base font-bold text-white shadow-lg shadow-blue/25 active:scale-[0.97]"
           >
-            <RefreshCw size={16} />
+            <Camera size={18} /> Start camera
           </button>
-        </>
+          {status === "denied" && (
+            <p className="text-xs text-red-400">
+              Camera access was denied. Allow it in Settings → Safari → Camera,
+              then try again.
+            </p>
+          )}
+          {status === "error" && (
+            <p className="text-xs text-red-400">
+              Couldn&apos;t start the camera. Close other camera apps and retry.
+            </p>
+          )}
+        </div>
       )}
-      {phase === "result" && result && (
-        <>
-          {replayBlob && <ReplayPlayer blob={replayBlob} />}
-          <PathOverlay points={resultPath} width={frameSize.w} height={frameSize.h} />
-          <ShotResult
-            stats={result}
-            onNext={() => {
-              setResult(null);
-              setReplayBlob(null);
-              resetTracking();
-              changePhase("live");
-            }}
-          />
-        </>
-      )}
+      <div className={phase === "start" ? "hidden" : "relative"}>
+        <video
+          ref={videoRef}
+          playsInline
+          muted
+          className="w-full"
+          aria-label="Live lane camera"
+        />
+        {phase === "calibrate" && (
+          <>
+            {frameReady ? (
+              <CalibrationOverlay
+                key={calibrationAttempt}
+                width={frameSize.w}
+                height={frameSize.h}
+                onDone={handleCalibrated}
+              />
+            ) : (
+              <div className="absolute inset-x-3 top-3 rounded-xl bg-black/50 px-3 py-2 text-center text-xs font-semibold text-white">
+                Starting camera…
+              </div>
+            )}
+            {calibrationError && (
+              <div className="absolute inset-x-3 top-3 rounded-xl bg-red-500/80 px-3 py-2 text-center text-xs font-semibold text-white">
+                Those points don&apos;t form a valid lane. Try again.
+              </div>
+            )}
+          </>
+        )}
+        {phase === "live" && (
+          <>
+            <PathOverlay points={livePath} width={frameSize.w} height={frameSize.h} />
+            <div className="absolute left-3 top-3 rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white">
+              Tracking — bowl when ready
+            </div>
+            <button
+              onClick={() => {
+                resetTracking();
+                changePhase("calibrate");
+              }}
+              aria-label="Re-calibrate"
+              className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white"
+            >
+              <RefreshCw size={16} />
+            </button>
+          </>
+        )}
+        {phase === "result" && result && (
+          <>
+            {replayBlob && <ReplayPlayer blob={replayBlob} />}
+            <PathOverlay points={resultPath} width={frameSize.w} height={frameSize.h} />
+            <ShotResult
+              stats={result}
+              onNext={() => {
+                setResult(null);
+                setReplayBlob(null);
+                resetTracking();
+                changePhase("live");
+              }}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }
