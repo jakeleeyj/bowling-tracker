@@ -30,13 +30,21 @@ export default function CalibrationOverlay({
       x: ((e.clientX - rect.left) / rect.width) * width,
       y: ((e.clientY - rect.top) / rect.height) * height,
     };
+    // Reject taps within 12 frame-pixels of any existing point
+    const isDuplicate = points.some((existing) => {
+      const dx = p.x - existing.x;
+      const dy = p.y - existing.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      return distance <= 12;
+    });
+    if (isDuplicate) return;
     setPoints((prev) => [...prev, p]);
   }
 
   const done = points.length === 4;
 
   return (
-    <div className="absolute inset-0 z-10" onPointerDown={handleTap}>
+    <div className="absolute inset-0 z-10 touch-none" onPointerDown={handleTap}>
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="h-full w-full"
