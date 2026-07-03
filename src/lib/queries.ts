@@ -138,3 +138,18 @@ export interface PlayerLP {
 }
 
 export type StatsFilter = "last10" | "last50" | "ytd" | "custom" | "all";
+
+export interface TrackedShotRow {
+  id: string;
+  user_id: string;
+  session_id: string | null;
+  game_number: number | null;
+  frame_number: number | null;
+  speed_mph: number;
+  release_board: number;
+  arrows_board: number;
+  breakpoint_board: number;
+  entry_board: number;
+  path: { board: number; feet: number; tMs: number }[];
+  created_at: string;
+}
