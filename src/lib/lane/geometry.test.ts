@@ -59,3 +59,15 @@ describe("pixelToLane", () => {
     expect(pixelToLane(h, { x: 150, y: 300 }).board).toBe(1);
   });
 });
+
+describe("computeHomography", () => {
+  it("throws on degenerate calibration points", () => {
+    const cal: Calibration = {
+      foulLeft: { x: 0, y: 600 },
+      foulRight: { x: 0, y: 600 },
+      deckLeft: { x: 0, y: 0 },
+      deckRight: { x: 100, y: 0 },
+    };
+    expect(() => computeHomography(cal)).toThrow();
+  });
+});

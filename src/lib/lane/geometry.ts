@@ -21,6 +21,7 @@ function solve(a: number[][], b: number[]): number[] {
     }
     [m[col], m[pivot]] = [m[pivot], m[col]];
     const p = m[col][col];
+    if (Math.abs(p) < 1e-10) throw new Error("degenerate calibration points");
     for (let r = col + 1; r < n; r++) {
       const f = m[r][col] / p;
       for (let c = col; c <= n; c++) m[r][c] -= f * m[col][c];
@@ -30,6 +31,7 @@ function solve(a: number[][], b: number[]): number[] {
   for (let r = n - 1; r >= 0; r--) {
     let s = m[r][n];
     for (let c = r + 1; c < n; c++) s -= m[r][c] * x[c];
+    if (Math.abs(m[r][r]) < 1e-10) throw new Error("degenerate calibration points");
     x[r] = s / m[r][r];
   }
   return x;
