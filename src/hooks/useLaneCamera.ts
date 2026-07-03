@@ -27,6 +27,13 @@ export function useLaneCamera(
     statusRef.current = status;
   }, [status]);
 
+  const frameCountRef = useRef(0);
+  const lastErrorRef = useRef<string | null>(null);
+  const [debug, setDebug] = useState<{ frames: number; lastError: string | null }>({
+    frames: 0,
+    lastError: null,
+  });
+
   const recorderRef = useRef<MediaRecorder | null>(null);
   const mimeTypeRef = useRef<string | null>(null);
   const prevSegmentChunksRef = useRef<Blob[]>([]);
@@ -145,14 +152,26 @@ export function useLaneCamera(
       setStatus("live");
       const loop = () => {
         if (!streamRef.current) return;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        onFrameRef.current(
-          toGrayscale(img.data, canvas.width, canvas.height),
-          performance.now(),
-          canvas.width,
-          canvas.height,
-        );
+        try {
+          if (video.readyState < 2 || video.videoWidth === 0) {
+            rafRef.current = requestAnimationFrame(loop);
+            return;
+          }
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          onFrameRef.current(
+            toGrayscale(img.data, canvas.width, canvas.height),
+            performance.now(),
+            canvas.width,
+            canvas.height,
+          );
+        } catch (e) {
+          lastErrorRef.current = e instanceof Error ? e.message : String(e);
+        }
+        frameCountRef.current += 1;
+        if (frameCountRef.current % 30 === 0) {
+          setDebug({ frames: frameCountRef.current, lastError: lastErrorRef.current });
+        }
         rafRef.current = requestAnimationFrame(loop);
       };
       rafRef.current = requestAnimationFrame(loop);
@@ -167,5 +186,5 @@ export function useLaneCamera(
 
   useEffect(() => stop, [stop]);
 
-  return { videoRef, status, start, stop, getReplayBlob };
+  return { videoRef, status, start, stop, getReplayBlob, debug };
 }

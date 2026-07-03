@@ -79,7 +79,7 @@ export default function LaneTracker() {
     [changePhase],
   );
 
-  const { videoRef, status, start, getReplayBlob } = useLaneCamera(onFrame);
+  const { videoRef, status, start, getReplayBlob, debug } = useLaneCamera(onFrame);
 
   useEffect(() => {
     getReplayBlobRef.current = getReplayBlob;
@@ -151,6 +151,11 @@ export default function LaneTracker() {
             ) : (
               <div className="absolute inset-x-3 top-3 rounded-xl bg-black/50 px-3 py-2 text-center text-xs font-semibold text-white">
                 Starting camera…
+                {/* TEMP debug */}
+                <div className="mt-1 font-normal text-white/70">
+                  status: {status} · frames: {debug.frames} · lastError:{" "}
+                  {debug.lastError ?? "none"}
+                </div>
               </div>
             )}
             {calibrationError && (
