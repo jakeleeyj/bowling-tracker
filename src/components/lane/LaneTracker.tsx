@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, RefreshCw } from "lucide-react";
 import { useLaneCamera } from "@/hooks/useLaneCamera";
 import CalibrationOverlay from "@/components/lane/CalibrationOverlay";
 import PathOverlay from "@/components/lane/PathOverlay";
+import ReplayPlayer from "@/components/lane/ReplayPlayer";
 import ShotResult from "@/components/lane/ShotResult";
 import {
   computeHomography,
@@ -25,12 +26,14 @@ export default function LaneTracker() {
   const [result, setResult] = useState<ShotStats | null>(null);
   const [resultPath, setResultPath] = useState<Pt[]>([]);
   const [calibrationError, setCalibrationError] = useState(false);
+  const [replayBlob, setReplayBlob] = useState<Blob | null>(null);
 
   const homographyRef = useRef<number[] | null>(null);
   const detectorRef = useRef<BallDetector | null>(null);
   const sessionRef = useRef(new ShotSession());
   const pixelPathRef = useRef<Pt[]>([]);
   const phaseRef = useRef(phase);
+  const getReplayBlobRef = useRef<() => Blob | null>(() => null);
 
   const changePhase = useCallback((next: Phase) => {
     phaseRef.current = next;
@@ -61,6 +64,7 @@ export default function LaneTracker() {
       } else if (event.type === "complete") {
         setResult(event.stats);
         setResultPath([...pixelPathRef.current]);
+        setReplayBlob(getReplayBlobRef.current());
         pixelPathRef.current = [];
         setLivePath([]);
         changePhase("result");
@@ -72,7 +76,11 @@ export default function LaneTracker() {
     [changePhase],
   );
 
-  const { videoRef, status, start } = useLaneCamera(onFrame);
+  const { videoRef, status, start, getReplayBlob } = useLaneCamera(onFrame);
+
+  useEffect(() => {
+    getReplayBlobRef.current = getReplayBlob;
+  }, [getReplayBlob]);
 
   async function begin() {
     await start();
@@ -163,11 +171,13 @@ export default function LaneTracker() {
       )}
       {phase === "result" && result && (
         <>
+          {replayBlob && <ReplayPlayer blob={replayBlob} />}
           <PathOverlay points={resultPath} width={frameSize.w} height={frameSize.h} />
           <ShotResult
             stats={result}
             onNext={() => {
               setResult(null);
+              setReplayBlob(null);
               resetTracking();
               changePhase("live");
             }}

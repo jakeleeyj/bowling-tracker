@@ -23,13 +23,28 @@ export function useLaneCamera(
   onFrameRef.current = onFrame;
   const [status, setStatus] = useState<CameraStatus>("idle");
 
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recorderChunksRef = useRef<{ blob: Blob; t: number }[]>([]);
+
   const stop = useCallback((skipStatus = false) => {
     cancelAnimationFrame(rafRef.current);
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     wakeLockRef.current?.release().catch(() => undefined);
     wakeLockRef.current = null;
+    if (recorderRef.current && recorderRef.current.state !== "inactive") {
+      recorderRef.current.stop();
+    }
+    recorderRef.current = null;
+    recorderChunksRef.current = [];
     if (!skipStatus) setStatus("idle");
+  }, []);
+
+  const getReplayBlob = useCallback((): Blob | null => {
+    const chunks = recorderChunksRef.current;
+    if (chunks.length === 0) return null;
+    const type = chunks[0].blob.type;
+    return new Blob(chunks.map((c) => c.blob), { type });
   }, []);
 
   const start = useCallback(async () => {
@@ -72,6 +87,34 @@ export function useLaneCamera(
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
       if (!ctx) throw new Error("canvas 2d unavailable");
 
+      try {
+        const mimeType = MediaRecorder.isTypeSupported("video/mp4")
+          ? "video/mp4"
+          : MediaRecorder.isTypeSupported("video/webm")
+            ? "video/webm"
+            : null;
+        if (mimeType) {
+          const recorder = new MediaRecorder(stream, { mimeType });
+          recorderRef.current = recorder;
+          recorderChunksRef.current = [];
+          recorder.ondataavailable = (e) => {
+            if (e.data.size === 0) return;
+            recorderChunksRef.current.push({ blob: e.data, t: performance.now() });
+            const cutoff = performance.now() - 8000;
+            while (
+              recorderChunksRef.current.length > 1 &&
+              recorderChunksRef.current[0].t < cutoff
+            ) {
+              recorderChunksRef.current.shift();
+            }
+          };
+          recorder.start(1000);
+        }
+      } catch {
+        recorderRef.current = null;
+        recorderChunksRef.current = [];
+      }
+
       setStatus("live");
       const loop = () => {
         if (!streamRef.current) return;
@@ -95,5 +138,5 @@ export function useLaneCamera(
 
   useEffect(() => stop, [stop]);
 
-  return { videoRef, status, start, stop };
+  return { videoRef, status, start, stop, getReplayBlob };
 }
