@@ -42,9 +42,6 @@ export function useLaneCamera(
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunks.push(e.data);
     };
-    recorder.onstop = () => {
-      prevSegmentChunksRef.current = chunks;
-    };
     recorderRef.current = recorder;
     currentSegmentChunksRef.current = chunks;
     recorder.start(1000);
@@ -130,7 +127,9 @@ export function useLaneCamera(
           startSegment();
           rotationTimerRef.current = setInterval(() => {
             const recorder = recorderRef.current;
+            prevSegmentChunksRef.current = currentSegmentChunksRef.current;
             if (recorder && recorder.state !== "inactive") {
+              recorder.onstop = null;
               recorder.stop();
             }
             startSegment();
