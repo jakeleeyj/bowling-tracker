@@ -49,6 +49,16 @@ export function useLaneCamera(
       video.srcObject = stream;
       await video.play();
 
+      if (video.videoWidth === 0) {
+        await new Promise<void>((resolve) => {
+          video.addEventListener("loadedmetadata", () => resolve(), { once: true });
+        });
+      }
+
+      if (video.videoWidth === 0) {
+        throw new Error("camera reported zero size");
+      }
+
       if ("wakeLock" in navigator) {
         wakeLockRef.current = await navigator.wakeLock
           .request("screen")
