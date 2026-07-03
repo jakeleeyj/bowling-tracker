@@ -1,6 +1,8 @@
 "use client";
 
 import { Suspense } from "react";
+import Link from "next/link";
+import { Video } from "lucide-react";
 import { useSessionState } from "@/hooks/useSessionState";
 import SessionSetup from "@/components/log/SessionSetup";
 import GameEntry from "@/components/log/GameEntry";
@@ -100,16 +102,26 @@ function LogPage() {
   // Setup screen
   if (session.step === "setup") {
     return (
-      <SessionSetup
-        venue={session.venue}
-        onVenueChange={session.setVenue}
-        pastVenues={session.pastVenues}
-        eventLabel={session.eventLabel}
-        onEventLabelChange={session.setEventLabel}
-        gameCount={session.gameCount}
-        onGameCountChange={session.setGameCount}
-        onStart={session.startSession}
-      />
+      <div>
+        <div className="mb-2 flex justify-end">
+          <Link
+            href="/lane"
+            className="flex items-center gap-1.5 text-xs font-semibold text-blue"
+          >
+            <Video size={14} /> Track shot
+          </Link>
+        </div>
+        <SessionSetup
+          venue={session.venue}
+          onVenueChange={session.setVenue}
+          pastVenues={session.pastVenues}
+          eventLabel={session.eventLabel}
+          onEventLabelChange={session.setEventLabel}
+          gameCount={session.gameCount}
+          onGameCountChange={session.setGameCount}
+          onStart={session.startSession}
+        />
+      </div>
     );
   }
 

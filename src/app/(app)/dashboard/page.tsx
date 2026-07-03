@@ -2,7 +2,13 @@ export const revalidate = 300; // revalidate every 5 minutes
 
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
-import { ChevronUp, ChevronDown, ChevronRight, Dices } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  ChevronRight,
+  Dices,
+  Video,
+} from "lucide-react";
 import type {
   ProfileRow,
   SessionWithGamesFramesAndProfile,
@@ -234,6 +240,23 @@ export default async function DashboardPage() {
           <div className="text-sm font-bold">Minigames</div>
           <p className="text-[11px] text-text-muted">
             Casual side-game scoring — 2-2-3 and more
+          </p>
+        </div>
+        <ChevronRight size={14} className="shrink-0 text-text-muted/30" />
+      </Link>
+
+      {/* Lane Tracker entry */}
+      <Link
+        href="/lane"
+        className="glass mb-5 flex items-center gap-3 p-3 active:scale-[0.98]"
+      >
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue/15 text-blue">
+          <Video size={20} />
+        </div>
+        <div className="flex-1">
+          <div className="text-sm font-bold">Lane Tracker</div>
+          <p className="text-[11px] text-text-muted">
+            Track your line, speed and breakpoint with the camera
           </p>
         </div>
         <ChevronRight size={14} className="shrink-0 text-text-muted/30" />
