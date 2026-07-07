@@ -19,9 +19,10 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import ErrorCard from "@/components/ErrorCard";
-import { getRank, formatLP, CALIBRATION_GAMES } from "@/lib/ranking";
+import { getRank, CALIBRATION_GAMES } from "@/lib/ranking";
 import type { PlayerLP } from "@/lib/queries";
 import SessionCard from "@/components/SessionCard";
+import RankBanner from "@/components/RankBanner";
 import NotificationToggle from "@/components/NotificationToggle";
 import AvatarPicker from "@/components/AvatarPicker";
 import Avatar from "@/components/Avatar";
@@ -99,6 +100,9 @@ export default function ProfilePage() {
   const [statsAvg, setStatsAvg] = useState(0);
   const [statsHigh, setStatsHigh] = useState(0);
   const [statsTotalGames, setStatsTotalGames] = useState(0);
+  const [seasonAvg, setSeasonAvg] = useState(0);
+  const [seasonGames, setSeasonGames] = useState(0);
+  const [trend, setTrend] = useState<"up" | "down" | "stable">("stable");
   const [sessionLpChanges, setSessionLpChanges] = useState<
     Record<string, number>
   >({});
@@ -134,6 +138,7 @@ export default function ProfilePage() {
           lpResult,
           achieveResult,
           seasonResult,
+          rankingRowResult,
         ] = await Promise.all([
           supabase
             .from("profiles")
@@ -157,6 +162,11 @@ export default function ProfilePage() {
             )
             .eq("user_id", user.id)
             .order("season_number", { ascending: true }),
+          supabase
+            .from("player_rankings_cache")
+            .select("season_avg, season_games, trend")
+            .eq("user_id", user.id)
+            .maybeSingle(),
         ]);
 
         const profile = profileResult.data as {
@@ -187,6 +197,18 @@ export default function ProfilePage() {
         const achData = (achieveResult.data ??
           {}) as unknown as AchievementStats;
         setAchievementStats(achData);
+
+        // Season stats + trend from the rankings cache
+        const rankingRow = rankingRowResult.data as {
+          season_avg: number;
+          season_games: number;
+          trend: "up" | "down" | "stable";
+        } | null;
+        if (rankingRow) {
+          setSeasonAvg(rankingRow.season_avg);
+          setSeasonGames(rankingRow.season_games);
+          setTrend(rankingRow.trend);
+        }
 
         // Past season results
         const pastSeasons = (seasonResult.data ?? []) as {
@@ -460,64 +482,13 @@ export default function ProfilePage() {
 
       {/* Rank Card */}
       {rank && (achievementStats?.totalGames ?? 0) > 0 && (
-        <div
-          className={`glass mb-5 flex items-center gap-3 border p-3 ${(achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES ? rank.borderColor : "border-border/30"}`}
-        >
-          <div className="flex h-10 w-10 items-center justify-center">
-            <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z"
-                fill="currentColor"
-                fillOpacity={0.15}
-                stroke="currentColor"
-                strokeWidth={1.5}
-                strokeLinejoin="round"
-                className={
-                  (achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES
-                    ? rank.color
-                    : "text-text-muted"
-                }
-              />
-              <path
-                d="M12 7l3 5-3 5-3-5z"
-                fill="currentColor"
-                fillOpacity={0.4}
-                stroke="currentColor"
-                strokeWidth={0.75}
-                className={
-                  (achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES
-                    ? rank.color
-                    : "text-text-muted"
-                }
-              />
-            </svg>
-          </div>
-          <div className="flex-1">
-            {(achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES ? (
-              <>
-                <span className={`text-sm font-extrabold ${rank.color}`}>
-                  {rank.name}
-                  {rank.division ? ` ${rank.division}` : ""}
-                </span>
-                <p className="text-[10px] text-text-muted">{formatLP(lp)} LP</p>
-              </>
-            ) : (
-              <>
-                <span className="text-sm font-extrabold text-text-muted">
-                  Calibrating
-                </span>
-                <p className="text-[10px] text-text-muted">
-                  {CALIBRATION_GAMES - (achievementStats?.totalGames ?? 0)} more
-                  game
-                  {CALIBRATION_GAMES - (achievementStats?.totalGames ?? 0) !== 1
-                    ? "s"
-                    : ""}{" "}
-                  to rank
-                </p>
-              </>
-            )}
-          </div>
-        </div>
+        <RankBanner
+          lp={lp}
+          totalGames={achievementStats?.totalGames ?? 0}
+          seasonAvg={seasonAvg}
+          seasonGames={seasonGames}
+          trend={trend}
+        />
       )}
 
       {/* Quick Stats */}

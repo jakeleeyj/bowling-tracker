@@ -26,6 +26,8 @@ interface RankingRow {
   rank: string;
   division: string | null;
   progress: number;
+  season_avg: number;
+  season_games: number;
 }
 
 export default async function LeaderboardPage() {
@@ -62,9 +64,10 @@ export default async function LeaderboardPage() {
         mmr: r?.lp ?? 0,
         rank,
         progress: r?.progress ?? 0,
-        avg: r?.avg ?? 0,
+        avg: r?.season_avg ?? 0,
         high: r?.high ?? 0,
         games: totalGames,
+        seasonGames: r?.season_games ?? 0,
         trend: (r?.trend ?? "stable") as "up" | "down" | "stable",
         isCurrentUser: profile.id === user?.id,
         isCalibrating: totalGames < CALIBRATION_GAMES,
@@ -176,8 +179,15 @@ export default async function LeaderboardPage() {
                     )}
                   </div>
                   <p className="text-[11px] text-text-muted">
-                    {formatLP(currentUserEntry.mmr)} LP &bull; avg{" "}
-                    {currentUserEntry.avg} &bull; {currentUserEntry.games} games
+                    {formatLP(currentUserEntry.mmr)} LP &bull;{" "}
+                    {currentUserEntry.seasonGames > 0 ? (
+                      <>
+                        avg {currentUserEntry.avg} &bull;{" "}
+                        {currentUserEntry.seasonGames} games
+                      </>
+                    ) : (
+                      <>no games this season</>
+                    )}
                   </p>
                 </>
               )}
@@ -300,9 +310,15 @@ export default async function LeaderboardPage() {
                           {entry.rank.division && ` ${entry.rank.division}`}
                         </span>
                         {" \u2022 "}
-                        avg {entry.avg}
-                        {" \u2022 "}
-                        {entry.games} games
+                        {entry.seasonGames > 0 ? (
+                          <>
+                            avg {entry.avg}
+                            {" \u2022 "}
+                            {entry.seasonGames} games
+                          </>
+                        ) : (
+                          "no games this season"
+                        )}
                       </>
                     )}
                   </p>

@@ -15,7 +15,7 @@ import { useToast } from "@/components/Toast";
 import Avatar from "@/components/Avatar";
 import RankEmblem from "@/components/RankEmblem";
 import { isSplit } from "@/lib/bowling";
-import { EVENT_LABELS } from "@/lib/ranking";
+import { EVENT_LABELS, formatLP } from "@/lib/ranking";
 import ShareCard from "@/components/ShareCard";
 import { shareSession } from "@/lib/shareSession";
 import { getFrame10ShotPins } from "@/lib/bowling";
@@ -59,6 +59,7 @@ interface SessionCardProps {
   avatarUrl?: string | null;
   isOwn?: boolean;
   lpChange?: number;
+  lpAfter?: number;
   isCalibrationSession?: boolean;
   rankLabel?: string;
   rankColor?: string;
@@ -692,6 +693,7 @@ export default function SessionCard({
   avatarUrl,
   isOwn = false,
   lpChange,
+  lpAfter,
   isCalibrationSession = false,
   rankLabel,
   rankColor,
@@ -792,7 +794,24 @@ export default function SessionCard({
               )}
             </span>
             <p className="text-[10px] text-text-muted">
-              {dateLabel} &bull; avg {avg}
+              {dateLabel} &bull;{" "}
+              {isCalibrationSession ? (
+                <span className="font-semibold text-blue">Calibrated</span>
+              ) : lpChange !== undefined ? (
+                <>
+                  <span
+                    className={`font-semibold ${lpChange > 0 ? "text-green" : lpChange < 0 ? "text-red" : ""}`}
+                  >
+                    {lpChange > 0 ? "+" : ""}
+                    {lpChange} LP
+                  </span>
+                  {lpAfter !== undefined && (
+                    <span> &rarr; {formatLP(lpAfter)}</span>
+                  )}
+                </>
+              ) : (
+                <>avg {avg}</>
+              )}
             </p>
           </div>
         </div>
@@ -801,18 +820,9 @@ export default function SessionCard({
             <div className="text-lg font-extrabold leading-tight">
               {totalPins}
             </div>
-            {isCalibrationSession ? (
-              <div className="text-[10px] font-semibold leading-tight text-blue">
-                Calibrated
-              </div>
-            ) : lpChange !== undefined ? (
-              <div
-                className={`text-[10px] font-semibold leading-tight ${lpChange > 0 ? "text-green" : lpChange < 0 ? "text-red" : "text-text-muted"}`}
-              >
-                {lpChange > 0 ? "+" : ""}
-                {lpChange} LP
-              </div>
-            ) : null}
+            <div className="text-[10px] leading-tight text-text-muted">
+              avg {avg}
+            </div>
           </div>
           <ChevronDown
             size={14}

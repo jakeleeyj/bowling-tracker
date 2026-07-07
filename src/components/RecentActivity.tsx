@@ -18,6 +18,7 @@ interface RecentActivityProps {
   userId: string;
   userRanks: Record<string, ReturnType<typeof getRank>>;
   userGameCounts: Record<string, number>;
+  userLps: Record<string, number>;
   gamesBeforeSession: Record<string, Record<string, number>>;
 }
 
@@ -27,6 +28,7 @@ export default function RecentActivity({
   userId,
   userRanks,
   userGameCounts,
+  userLps,
   gamesBeforeSession: initialGamesBeforeSession,
 }: RecentActivityProps) {
   const [sessions, setSessions] = useState<SessionCardData[]>(initialSessions);
@@ -35,6 +37,23 @@ export default function RecentActivity({
     initialGamesBeforeSession,
   );
   const [isPending, startTransition] = useTransition();
+
+  // LP each player landed on after each session: walk the feed newest-first,
+  // starting from their current LP and backing out each session's delta.
+  // The chain stops at sessions without a cached delta (pre-season).
+  const lpAfterMap: Record<string, number> = {};
+  const lpRunning: Record<string, number | null> = {};
+  for (const { session, lpChange } of sessions) {
+    const u = session.user_id;
+    if (!(u in lpRunning)) lpRunning[u] = userLps[u] ?? null;
+    const cur = lpRunning[u];
+    if (cur !== null && lpChange !== undefined) {
+      lpAfterMap[session.id] = cur;
+      lpRunning[u] = cur - lpChange;
+    } else {
+      lpRunning[u] = null;
+    }
+  }
 
   function handleLoadMore() {
     startTransition(async () => {
@@ -124,6 +143,7 @@ export default function RecentActivity({
               avatarUrl={sessionProfile?.avatar_url}
               isOwn={isOwnSession}
               lpChange={lpChange}
+              lpAfter={lpAfterMap[session.id]}
               isCalibrationSession={isCalibrationSession}
               rankLabel={
                 userRanks[session.user_id] &&

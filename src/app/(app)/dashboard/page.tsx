@@ -2,7 +2,7 @@ export const revalidate = 300; // revalidate every 5 minutes
 
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
-import { ChevronUp, ChevronDown, ChevronRight, Dices } from "lucide-react";
+import { ChevronRight, Dices } from "lucide-react";
 import type {
   ProfileRow,
   SessionWithGamesFramesAndProfile,
@@ -12,14 +12,8 @@ import RecentActivity from "@/components/RecentActivity";
 import Avatar from "@/components/Avatar";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import SeasonBanner from "@/components/SeasonBanner";
-import RankEmblem from "@/components/RankEmblem";
-import {
-  getRank,
-  getDivisionProgress,
-  formatLP,
-  CALIBRATION_GAMES,
-} from "@/lib/ranking";
-import { getCurrentSeason } from "@/lib/seasons";
+import RankBanner from "@/components/RankBanner";
+import { getRank } from "@/lib/ranking";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -46,36 +40,36 @@ export default async function DashboardPage() {
   const profile = profileResult.data as ProfileRow | null;
   const userLpData = (userLpResult.data ?? {}) as unknown as PlayerLP;
   const sessions = sessionsResult.data as
-    | SessionWithGamesFramesAndProfile[]
-    | null;
+    SessionWithGamesFramesAndProfile[] | null;
   const allRankings = (allRankingsResult.data ?? []) as unknown as {
     user_id: string;
     lp: number;
     total_games: number;
     rank: string;
     division: string | null;
+    season_avg: number;
+    season_games: number;
   }[];
 
   // Index rankings by user_id for feed rank badges
   const userRanks: Record<string, ReturnType<typeof getRank>> = {};
   const userGameCounts: Record<string, number> = {};
+  const userLps: Record<string, number> = {};
   for (const r of allRankings) {
     userRanks[r.user_id] = getRank(r.lp);
     userGameCounts[r.user_id] = r.total_games;
+    userLps[r.user_id] = r.lp;
   }
 
   const totalGames = userLpData.total_games ?? 0;
   const avgScore = userLpData.avg ?? 0;
   const highScore = userLpData.high ?? 0;
   const lp = userLpData.lp ?? 0;
-  const rank = getRank(lp);
 
   // Trend from rankings data
   const myRanking = allRankings.find((r) => r.user_id === uid);
   const trend = ((myRanking as { trend?: string })?.trend ?? "stable") as
-    | "up"
-    | "down"
-    | "stable";
+    "up" | "down" | "stable";
 
   // Phase 2: compute session LP deltas via Postgres function
   const sessionIds = sessions?.map((s) => s.id) ?? [];
@@ -121,75 +115,14 @@ export default async function DashboardPage() {
 
       {/* Rank Card */}
       {totalGames > 0 && (
-        <Link
+        <RankBanner
+          lp={lp}
+          totalGames={totalGames}
+          seasonAvg={myRanking?.season_avg ?? 0}
+          seasonGames={myRanking?.season_games ?? 0}
+          trend={trend}
           href="/leaderboard"
-          className={`glass mb-5 flex items-center gap-3 border p-3 ${totalGames >= CALIBRATION_GAMES ? rank.borderColor : "border-border/30"} active:scale-[0.98]`}
-        >
-          {totalGames >= CALIBRATION_GAMES ? (
-            <RankEmblem tierName={rank.name} size={40} />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center text-text-muted">
-              <svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7L12 2z"
-                  fill="currentColor"
-                  fillOpacity={0.1}
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-          )}
-          <div className="flex-1">
-            {totalGames >= CALIBRATION_GAMES ? (
-              <>
-                <div className="flex items-center gap-1">
-                  <span className="rounded bg-blue/15 px-1.5 py-0.5 text-[9px] font-bold text-blue">
-                    {getCurrentSeason().shortName}
-                  </span>
-                  <span className={`text-sm font-extrabold ${rank.color}`}>
-                    {rank.name}
-                    {rank.division ? ` ${rank.division}` : ""}
-                  </span>
-                  {trend === "up" && (
-                    <ChevronUp size={14} className="text-green" />
-                  )}
-                  {trend === "down" && (
-                    <ChevronDown size={14} className="text-red" />
-                  )}
-                </div>
-                <div className="mt-1 flex items-center gap-2">
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-light">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-blue to-green"
-                      style={{ width: `${getDivisionProgress(lp)}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] text-text-muted">
-                    {formatLP(lp)} LP
-                  </span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-1">
-                  <span className="rounded bg-blue/15 px-1.5 py-0.5 text-[9px] font-bold text-blue">
-                    {getCurrentSeason().shortName}
-                  </span>
-                  <span className="text-sm font-extrabold text-text-muted">
-                    Calibrating
-                  </span>
-                </div>
-                <p className="text-[10px] text-text-muted">
-                  {CALIBRATION_GAMES - totalGames} more game
-                  {CALIBRATION_GAMES - totalGames !== 1 ? "s" : ""} to rank
-                </p>
-              </>
-            )}
-          </div>
-          <ChevronRight size={14} className="shrink-0 text-text-muted/30" />
-        </Link>
+        />
       )}
 
       {/* Quick Stats */}
@@ -256,6 +189,7 @@ export default async function DashboardPage() {
         userId={uid}
         userRanks={userRanks}
         userGameCounts={userGameCounts}
+        userLps={userLps}
         gamesBeforeSession={gamesBeforeSession}
       />
     </div>
