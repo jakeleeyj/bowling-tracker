@@ -813,6 +813,23 @@ export default function SessionCard({
                 <>avg {avg}</>
               )}
             </p>
+            {(venue || eventLabel) && (
+              <span className="mt-0.5 flex items-center gap-1.5">
+                {venue && (
+                  <span className="flex items-center gap-1 text-[10px] text-text-secondary">
+                    <PinIcon />
+                    {venue}
+                  </span>
+                )}
+                {eventLabel && (
+                  <span
+                    className={`rounded px-1.5 py-0.5 text-[9px] font-semibold ${EVENT_COLORS[eventLabel] ?? "bg-surface-light text-text-muted"}`}
+                  >
+                    {eventLabel}
+                  </span>
+                )}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -830,25 +847,6 @@ export default function SessionCard({
           />
         </div>
       </button>
-
-      {/* Venue + Event */}
-      {(venue || eventLabel) && (
-        <div className="flex items-center gap-1.5 px-3 pb-1 pl-[52px]">
-          {venue && (
-            <span className="flex items-center gap-1 text-[10px] text-text-secondary">
-              <PinIcon />
-              {venue}
-            </span>
-          )}
-          {eventLabel && (
-            <span
-              className={`rounded px-1.5 py-0.5 text-[9px] font-semibold ${EVENT_COLORS[eventLabel] ?? "bg-surface-light text-text-muted"}`}
-            >
-              {eventLabel}
-            </span>
-          )}
-        </div>
-      )}
 
       {/* Game score boxes (always visible) */}
       <div className="flex gap-1 px-3 pb-3 pl-[52px]">
