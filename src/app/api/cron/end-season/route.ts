@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { getCurrentSeason } from "@/lib/seasons";
+import { getPreviousSeason } from "@/lib/seasons";
 
 export const dynamic = "force-dynamic";
 
@@ -16,15 +16,13 @@ export async function GET(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const season = getCurrentSeason();
-  const now = new Date();
-
-  // Only end the season if we're past the end date
-  if (now < season.end) {
-    return NextResponse.json({
-      message: `Season ${season.number} still active`,
-      endsAt: season.end.toISOString(),
-    });
+  // A season can only be closed out after it has ended — i.e. once we're in
+  // the next season. Check the previous season, not the current one (the
+  // current season's end date is always in the future, so the old check
+  // could never pass).
+  const season = getPreviousSeason();
+  if (!season) {
+    return NextResponse.json({ message: "No previous season to end" });
   }
 
   // Check if this season was already ended

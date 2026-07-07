@@ -57,6 +57,24 @@ export function getCurrentSeason(): Season {
   return generateSeason(half, year, num);
 }
 
+export function getSeasonByNumber(num: number): Season | null {
+  if (num < 1) return null;
+  const hardcoded = SEASONS.find((s) => s.number === num);
+  if (hardcoded) return hardcoded;
+  if (num < 2) return null;
+  // Generated seasons: S2 = H2 2026, S3 = H1 2027, S4 = H2 2027, ...
+  if (num % 2 === 0) {
+    return generateSeason("H2", 2026 + (num - 2) / 2, num);
+  }
+  return generateSeason("H1", 2026 + (num - 1) / 2, num);
+}
+
+// The season immediately before the current one — the one the end-season
+// cron needs to close out after a rollover.
+export function getPreviousSeason(): Season | null {
+  return getSeasonByNumber(getCurrentSeason().number - 1);
+}
+
 export function getSeasonDaysLeft(season: Season): number {
   const now = new Date();
   const diff = season.end.getTime() - now.getTime();
