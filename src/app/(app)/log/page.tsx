@@ -5,7 +5,6 @@ import { useSessionState } from "@/hooks/useSessionState";
 import SessionSetup from "@/components/log/SessionSetup";
 import GameEntry from "@/components/log/GameEntry";
 import SessionResults from "@/components/log/SessionResults";
-import QuickSwitchPill from "@/components/QuickSwitchPill";
 
 function LogPage() {
   const session = useSessionState();
@@ -116,54 +115,51 @@ function LogPage() {
 
   // Game entry
   return (
-    <>
-      <QuickSwitchPill to="minigames" />
-      <GameEntry
-        editMode={session.editMode}
-        editOriginalScore={session.editOriginalScore}
-        editOriginalFrames={session.editOriginalFrames}
-        currentGameIndex={session.currentGameIndex}
-        gameCount={session.gameCount}
-        games={session.games}
-        entryMode={session.entryMode}
-        quickScore={session.quickScore}
-        frames={session.frames}
-        currentFrame={session.currentFrame}
-        currentRoll={session.currentRoll}
-        standingPins={session.standingPins}
-        saving={session.saving}
-        history={session.history}
-        sortedFrames={session.sortedFrames}
-        currentScore={session.currentScore}
-        maxPossible={session.maxPossible}
-        availablePins={session.availablePins}
-        isFreshRack={session.isFreshRack}
-        showStrikeButton={session.showStrikeButton}
-        currentGameComplete={session.currentGameComplete}
-        setEntryMode={session.setEntryMode}
-        setQuickScore={session.setQuickScore}
-        setGameCount={session.setGameCount}
-        setStep={session.setStep}
-        handleStrike={session.handleStrike}
-        handleSpare={session.handleSpare}
-        handleGutter={session.handleGutter}
-        handlePinToggle={session.handlePinToggle}
-        confirmPinSelection={session.confirmPinSelection}
-        handleUndo={session.handleUndo}
-        handleFrameTap={session.handleFrameTap}
-        switchToGame={session.switchToGame}
-        editCurrentGame={session.editCurrentGame}
-        deleteCurrentGame={session.deleteCurrentGame}
-        completeQuickGame={session.completeQuickGame}
-        saveSession={session.saveSession}
-        updateExistingGame={session.updateExistingGame}
-        saveHistory={session.saveHistory}
-        setHasUnsaved={session.setHasUnsaved}
-        setGames={session.setGames}
-        discardSession={session.discardSession}
-        getGameTabScore={session.getGameTabScore}
-      />
-    </>
+    <GameEntry
+      editMode={session.editMode}
+      editOriginalScore={session.editOriginalScore}
+      editOriginalFrames={session.editOriginalFrames}
+      currentGameIndex={session.currentGameIndex}
+      gameCount={session.gameCount}
+      games={session.games}
+      entryMode={session.entryMode}
+      quickScore={session.quickScore}
+      frames={session.frames}
+      currentFrame={session.currentFrame}
+      currentRoll={session.currentRoll}
+      standingPins={session.standingPins}
+      saving={session.saving}
+      history={session.history}
+      sortedFrames={session.sortedFrames}
+      currentScore={session.currentScore}
+      maxPossible={session.maxPossible}
+      availablePins={session.availablePins}
+      isFreshRack={session.isFreshRack}
+      showStrikeButton={session.showStrikeButton}
+      currentGameComplete={session.currentGameComplete}
+      setEntryMode={session.setEntryMode}
+      setQuickScore={session.setQuickScore}
+      setGameCount={session.setGameCount}
+      setStep={session.setStep}
+      handleStrike={session.handleStrike}
+      handleSpare={session.handleSpare}
+      handleGutter={session.handleGutter}
+      handlePinToggle={session.handlePinToggle}
+      confirmPinSelection={session.confirmPinSelection}
+      handleUndo={session.handleUndo}
+      handleFrameTap={session.handleFrameTap}
+      switchToGame={session.switchToGame}
+      editCurrentGame={session.editCurrentGame}
+      deleteCurrentGame={session.deleteCurrentGame}
+      completeQuickGame={session.completeQuickGame}
+      saveSession={session.saveSession}
+      updateExistingGame={session.updateExistingGame}
+      saveHistory={session.saveHistory}
+      setHasUnsaved={session.setHasUnsaved}
+      setGames={session.setGames}
+      discardSession={session.discardSession}
+      getGameTabScore={session.getGameTabScore}
+    />
   );
 }
 
