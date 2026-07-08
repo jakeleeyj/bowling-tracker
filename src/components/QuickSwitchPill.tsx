@@ -86,7 +86,7 @@ export default function QuickSwitchPill({ to }: { to: "log" | "minigames" }) {
   return (
     <Link
       href={`/${to}`}
-      className="glass fixed bottom-[72px] right-3 z-40 flex items-center gap-2 rounded-full border border-border bg-surface/95 py-1.5 pl-2 pr-3 shadow-lg backdrop-blur-md active:scale-95"
+      className="glass fixed bottom-[calc(64px+env(safe-area-inset-bottom))] right-3 z-40 flex items-center gap-2 rounded-full border border-border bg-surface/95 py-1.5 pl-2 pr-3 shadow-lg backdrop-blur-md active:scale-95"
     >
       {to === "minigames" ? (
         <>

@@ -19,7 +19,7 @@ export default function MinigameWinnerPicker({
   const gameNumber = currentGameIndex(state) + 1;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 p-4 backdrop-blur-sm sm:items-center">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 p-4 pb-[calc(76px+env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:pb-4">
       <div className="w-full max-w-[440px] animate-slide-up rounded-2xl border border-border-light bg-surface p-5 shadow-2xl shadow-black/50">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
