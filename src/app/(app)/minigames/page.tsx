@@ -6,6 +6,7 @@ import MinigameSetup from "@/components/minigame/MinigameSetup";
 import MinigameBoard from "@/components/minigame/MinigameBoard";
 import MinigameWinnerPicker from "@/components/minigame/MinigameWinnerPicker";
 import MinigameResults from "@/components/minigame/MinigameResults";
+import QuickSwitchPill from "@/components/QuickSwitchPill";
 
 export default function MinigamesPage() {
   const mg = useMinigameState();
@@ -20,6 +21,7 @@ export default function MinigamesPage() {
 
   return (
     <div>
+      <QuickSwitchPill to="log" />
       <header className="mb-5 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple/15 text-purple">
           <Dices size={22} />
