@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, RefreshCw } from "lucide-react";
+import { Camera, RefreshCw, Upload } from "lucide-react";
 import { useLaneCamera } from "@/hooks/useLaneCamera";
 import CalibrationOverlay from "@/components/lane/CalibrationOverlay";
 import PathOverlay from "@/components/lane/PathOverlay";
@@ -36,6 +36,7 @@ export default function LaneTracker() {
   const pixelPathRef = useRef<Pt[]>([]);
   const phaseRef = useRef(phase);
   const getReplayBlobRef = useRef<() => Blob | null>(() => null);
+  const pauseFileRef = useRef<() => void>(() => {});
 
   const changePhase = useCallback((next: Phase) => {
     phaseRef.current = next;
@@ -65,6 +66,7 @@ export default function LaneTracker() {
         if (hit) pixelPathRef.current.push({ x: hit.x, y: hit.y });
         setLivePath([...pixelPathRef.current]);
       } else if (event.type === "complete") {
+        pauseFileRef.current();
         setResult(event.stats);
         setResultPath([...pixelPathRef.current]);
         setReplayBlob(getReplayBlobRef.current());
@@ -79,14 +81,34 @@ export default function LaneTracker() {
     [changePhase],
   );
 
-  const { videoRef, status, start, getReplayBlob, debug } = useLaneCamera(onFrame);
+  const {
+    videoRef,
+    status,
+    start,
+    startFile,
+    playFile,
+    restartFile,
+    isFileMode,
+    fileEnded,
+    getReplayBlob,
+    debug,
+  } = useLaneCamera(onFrame);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     getReplayBlobRef.current = getReplayBlob;
-  }, [getReplayBlob]);
+    pauseFileRef.current = () => {
+      if (isFileMode()) videoRef.current?.pause();
+    };
+  }, [getReplayBlob, isFileMode, videoRef]);
 
   async function begin() {
     const ok = await start();
+    if (ok) changePhase("calibrate");
+  }
+
+  async function beginFile(file: File) {
+    const ok = await startFile(file);
     if (ok) changePhase("calibrate");
   }
 
@@ -96,6 +118,7 @@ export default function LaneTracker() {
       setCalibrationError(false);
       resetTracking();
       changePhase("live");
+      playFile(); // no-op in camera mode
     } catch {
       homographyRef.current = null;
       setCalibrationError(true);
@@ -118,6 +141,23 @@ export default function LaneTracker() {
           >
             <Camera size={18} /> Start camera
           </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 rounded-xl border border-border px-6 py-2.5 text-sm font-semibold text-text-secondary active:scale-[0.97]"
+          >
+            <Upload size={15} /> Upload a video
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="video/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) beginFile(file);
+              e.target.value = "";
+            }}
+          />
           {status === "denied" && (
             <p className="text-xs text-red-400">
               Camera access was denied. Allow it in Settings → Safari → Camera,
@@ -167,10 +207,30 @@ export default function LaneTracker() {
         )}
         {phase === "live" && (
           <>
-            <PathOverlay points={livePath} width={frameSize.w} height={frameSize.h} />
+            <PathOverlay
+              points={livePath}
+              width={frameSize.w}
+              height={frameSize.h}
+            />
             <div className="absolute left-3 top-3 rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white">
-              Tracking — bowl when ready
+              {isFileMode() ? "Tracking video…" : "Tracking — bowl when ready"}
             </div>
+            {fileEnded && (
+              <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 rounded-xl bg-black/70 px-3 py-2">
+                <span className="text-xs font-semibold text-white">
+                  Video ended — no shot detected
+                </span>
+                <button
+                  onClick={() => {
+                    resetTracking();
+                    restartFile();
+                  }}
+                  className="rounded-lg bg-blue px-3 py-1.5 text-xs font-bold text-white active:scale-95"
+                >
+                  Play again
+                </button>
+              </div>
+            )}
             <button
               onClick={() => {
                 resetTracking();
@@ -186,7 +246,11 @@ export default function LaneTracker() {
         {phase === "result" && result && (
           <>
             {replayBlob && <ReplayPlayer blob={replayBlob} />}
-            <PathOverlay points={resultPath} width={frameSize.w} height={frameSize.h} />
+            <PathOverlay
+              points={resultPath}
+              width={frameSize.w}
+              height={frameSize.h}
+            />
             <ShotResult
               stats={result}
               onNext={() => {
@@ -194,6 +258,7 @@ export default function LaneTracker() {
                 setReplayBlob(null);
                 resetTracking();
                 changePhase("live");
+                playFile(); // file mode: resume for the next shot in the video
               }}
             />
           </>
