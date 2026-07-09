@@ -13,7 +13,8 @@ import {
   type Calibration,
   type Pt,
 } from "@/lib/lane/geometry";
-import { BallDetector } from "@/lib/lane/ballDetector";
+import { BallDetector, toGrayscale } from "@/lib/lane/ballDetector";
+import { medianPlate, suggestLaneEdges } from "@/lib/lane/edgeDetect";
 import { ShotSession } from "@/lib/lane/shotSession";
 import type { ShotStats } from "@/lib/lane/shotStats";
 
@@ -32,6 +33,8 @@ export default function LaneTracker() {
   // File mode: temporarily hide the result to watch the rest of the video
   const [watching, setWatching] = useState(false);
   const frameSizeRef = useRef({ w: 0, h: 0 });
+  const [detecting, setDetecting] = useState(false);
+  const [detectMsg, setDetectMsg] = useState<string | null>(null);
 
   const homographyRef = useRef<number[] | null>(null);
   const detectorRef = useRef<BallDetector | null>(null);
@@ -131,6 +134,79 @@ export default function LaneTracker() {
     resetTracking();
     const ok = await startFile(file);
     if (ok) changePhase("calibrate");
+  }
+
+  // BETA: sample frames across the video, median them into a clean plate
+  // (the bowler and ball vanish), and look for the dark gutter lines. Any
+  // confidently found corner pre-places its handle; the rest stay put.
+  async function autoDetectCorners() {
+    const video = videoRef.current;
+    if (!video || !isFileMode() || detecting) return;
+    setDetecting(true);
+    setDetectMsg(null);
+    try {
+      video.pause();
+      const t0 = video.currentTime;
+      const w = frameSizeRef.current.w || 320;
+      const h = frameSizeRef.current.h || 240;
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) throw new Error("canvas 2d unavailable");
+
+      const frames: Uint8ClampedArray[] = [];
+      const dur = video.duration || 5;
+      for (let i = 0; i < 7; i++) {
+        await new Promise<void>((resolve) => {
+          const onSeek = () => {
+            video.removeEventListener("seeked", onSeek);
+            resolve();
+          };
+          video.addEventListener("seeked", onSeek);
+          video.currentTime = (dur * (i + 0.5)) / 7;
+          setTimeout(() => {
+            video.removeEventListener("seeked", onSeek);
+            resolve();
+          }, 1500);
+        });
+        ctx.drawImage(video, 0, 0, w, h);
+        const img = ctx.getImageData(0, 0, w, h);
+        frames.push(toGrayscale(img.data, w, h));
+      }
+      video.currentTime = t0;
+
+      const plate = medianPlate(frames, w * h);
+      const s = suggestLaneEdges(plate, w, h);
+      const found = [s.foulLeft, s.foulRight, s.deckLeft, s.deckRight].filter(
+        Boolean,
+      ).length;
+      if (found === 0) {
+        setDetectMsg("No lane edges found — drag the corners manually");
+      } else {
+        const base = lastCalPoints ?? [
+          { x: w * 0.15, y: h * 0.88 },
+          { x: w * 0.85, y: h * 0.88 },
+          { x: w * 0.38, y: h * 0.18 },
+          { x: w * 0.62, y: h * 0.18 },
+        ];
+        setLastCalPoints([
+          s.foulLeft ?? base[0],
+          s.foulRight ?? base[1],
+          s.deckLeft ?? base[2],
+          s.deckRight ?? base[3],
+        ]);
+        setCalibrationAttempt((n) => n + 1); // remount overlay with new spots
+        setDetectMsg(
+          found === 4
+            ? "Found all 4 corners — check and adjust"
+            : `Found ${found}/4 corners — drag the rest into place`,
+        );
+      }
+    } catch {
+      setDetectMsg("Detection failed — drag the corners manually");
+    }
+    setDetecting(false);
   }
 
   function handleCalibrated(cal: Calibration) {
@@ -241,6 +317,22 @@ export default function LaneTracker() {
             {calibrationError && (
               <div className="absolute inset-x-3 top-3 rounded-xl bg-red-500/80 px-3 py-2 text-center text-xs font-semibold text-white">
                 Those points don&apos;t form a valid lane. Try again.
+              </div>
+            )}
+            {isFileMode() && frameReady && (
+              <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-1.5">
+                {detectMsg && (
+                  <div className="rounded-lg bg-black/70 px-2.5 py-1 text-center text-[10px] font-semibold text-white">
+                    {detectMsg}
+                  </div>
+                )}
+                <button
+                  onClick={autoDetectCorners}
+                  disabled={detecting}
+                  className="whitespace-nowrap rounded-full bg-black/70 px-4 py-2 text-xs font-bold text-white active:scale-95 disabled:opacity-60"
+                >
+                  {detecting ? "Detecting…" : "✨ Auto-detect (beta)"}
+                </button>
               </div>
             )}
           </>

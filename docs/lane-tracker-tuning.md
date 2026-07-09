@@ -107,6 +107,11 @@ harness for tuning against clips lives in the session scratchpad
 
 ## v2.1 backlog (tracker quality)
 
+- Auto-detect corners (SHIPPED as beta, file mode): median clean-plate + dark-gutter
+  line fit with slope sanity gate; places only confidently-found corners.
+  On the reference clip: left edge found (~9px), right edge correctly rejected
+  (occluded by ball return). Needs more alleys/clips to improve.
+
 - Backfill the ball track's pre-designation history into the session (recovers
   the first ~10-15 ft of the path; release board currently reads mid-lane).
 - Smooth the entry segment before computing entry board/angle (board numbers
