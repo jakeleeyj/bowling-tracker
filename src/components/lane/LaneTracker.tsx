@@ -37,6 +37,7 @@ export default function LaneTracker() {
   const phaseRef = useRef(phase);
   const getReplayBlobRef = useRef<() => Blob | null>(() => null);
   const pauseFileRef = useRef<() => void>(() => {});
+  const laneQuadRef = useRef<Pt[] | null>(null);
   const [lastCalPoints, setLastCalPoints] = useState<Pt[] | undefined>(
     undefined,
   );
@@ -48,6 +49,7 @@ export default function LaneTracker() {
 
   const resetTracking = useCallback(() => {
     sessionRef.current = new ShotSession();
+    detectorRef.current?.resetTrack();
     pixelPathRef.current = [];
     setLivePath([]);
   }, []);
@@ -56,6 +58,9 @@ export default function LaneTracker() {
     (gray: Uint8ClampedArray, tMs: number, w: number, h: number) => {
       if (!detectorRef.current) {
         detectorRef.current = new BallDetector(w, h);
+        if (laneQuadRef.current) {
+          detectorRef.current.setLaneMask(laneQuadRef.current);
+        }
         setFrameSize({ w, h });
         setFrameReady(true);
       }
@@ -63,7 +68,7 @@ export default function LaneTracker() {
       if (phaseRef.current !== "live" || !homographyRef.current) return;
 
       const lane = hit ? pixelToLane(homographyRef.current, hit) : null;
-      const event = sessionRef.current.onFrame(lane, tMs);
+      const event = sessionRef.current.onFrame(lane, tMs, hit?.trackId);
 
       if (event.type === "tracking") {
         if (hit) pixelPathRef.current.push({ x: hit.x, y: hit.y });
@@ -124,6 +129,14 @@ export default function LaneTracker() {
         cal.deckLeft,
         cal.deckRight,
       ]);
+      // Winding order for the mask polygon: foul L → foul R → deck R → deck L
+      laneQuadRef.current = [
+        cal.foulLeft,
+        cal.foulRight,
+        cal.deckRight,
+        cal.deckLeft,
+      ];
+      detectorRef.current?.setLaneMask(laneQuadRef.current);
       setCalibrationError(false);
       resetTracking();
       changePhase("live");
