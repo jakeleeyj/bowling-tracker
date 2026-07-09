@@ -37,6 +37,9 @@ export default function LaneTracker() {
   const phaseRef = useRef(phase);
   const getReplayBlobRef = useRef<() => Blob | null>(() => null);
   const pauseFileRef = useRef<() => void>(() => {});
+  const [lastCalPoints, setLastCalPoints] = useState<Pt[] | undefined>(
+    undefined,
+  );
 
   const changePhase = useCallback((next: Phase) => {
     phaseRef.current = next;
@@ -115,6 +118,12 @@ export default function LaneTracker() {
   function handleCalibrated(cal: Calibration) {
     try {
       homographyRef.current = computeHomography(cal);
+      setLastCalPoints([
+        cal.foulLeft,
+        cal.foulRight,
+        cal.deckLeft,
+        cal.deckRight,
+      ]);
       setCalibrationError(false);
       resetTracking();
       changePhase("live");
@@ -171,12 +180,16 @@ export default function LaneTracker() {
           )}
         </div>
       )}
-      <div className={phase === "start" ? "hidden" : "relative"}>
+      <div
+        className={
+          phase === "start" ? "hidden" : "relative mx-auto w-fit max-w-full"
+        }
+      >
         <video
           ref={videoRef}
           playsInline
           muted
-          className="w-full"
+          className="max-h-[62dvh] w-auto max-w-full"
           aria-label="Live lane camera"
         />
         {phase === "calibrate" && (
@@ -187,6 +200,7 @@ export default function LaneTracker() {
                 width={frameSize.w}
                 height={frameSize.h}
                 onDone={handleCalibrated}
+                initial={lastCalPoints}
               />
             ) : (
               <div className="absolute inset-x-3 top-3 rounded-xl bg-black/50 px-3 py-2 text-center text-xs font-semibold text-white">
