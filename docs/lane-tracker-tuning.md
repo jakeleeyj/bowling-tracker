@@ -97,6 +97,8 @@ harness for tuning against clips lives in the session scratchpad
 - 2026-07-08: alley test — v1 detector produced no usable lines (bowler/scoreboard motion swamped the centroid). Video upload mode added for offline tuning.
 - 2026-07-09: detector v2 (blobs + lane mask + multi-track + ball designation). First complete tracked shot from real footage.
 - 2026-07-09b: file mode no longer pauses on completion (video plays through the pin hit, result overlays). LOST_MS 700→1000, MISS_LIMIT 10→15 to hold the tiny downlane ball longer.
+- 2026-07-09c: adaptive per-pixel motion threshold (fixes dark ball on dark reflections); motion limits + seed zone scale with lane pixel height; each video frame processed exactly once regardless of display Hz (fixed browser-vs-offline divergence); crowd veto so a walking bowler's shirt can't be designated the ball. Verified: IMG_2912 14.0mph (house 14.6), IMG_3273 ~19-21mph both offline and in-browser. Far-back concourse clips (IMG_0048/2518) out of spec: downlane ball ~2px.
+- STATUS on pause (Jake, 2026-07-09): tracker works on behind-approach clips in testing; Jake still saw shirt-tracking on his own runs before the crowd veto shipped — next session should start by having him retest IMG_3273 on the preview, then check WHEN a wrong line appears (approach vs post-release).
 
 ## Before merge (after tuning is done)
 
