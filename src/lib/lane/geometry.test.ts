@@ -53,10 +53,10 @@ describe("pixelToLane", () => {
     expect(pixelToLane(h, midLeftPx).board).toBeCloseTo(39, 3);
   });
 
-  it("clamps board into [1, 39]", () => {
+  it("clamps board into [0, 40] (one board of gutter slack per side)", () => {
     const h = computeHomography(flatCal);
-    expect(pixelToLane(h, { x: -50, y: 300 }).board).toBe(39);
-    expect(pixelToLane(h, { x: 150, y: 300 }).board).toBe(1);
+    expect(pixelToLane(h, { x: -500, y: 300 }).board).toBe(40);
+    expect(pixelToLane(h, { x: 800, y: 300 }).board).toBe(0);
   });
 });
 

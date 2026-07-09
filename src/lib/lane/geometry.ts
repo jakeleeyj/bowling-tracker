@@ -31,7 +31,8 @@ function solve(a: number[][], b: number[]): number[] {
   for (let r = n - 1; r >= 0; r--) {
     let s = m[r][n];
     for (let c = r + 1; c < n; c++) s -= m[r][c] * x[c];
-    if (Math.abs(m[r][r]) < 1e-10) throw new Error("degenerate calibration points");
+    if (Math.abs(m[r][r]) < 1e-10)
+      throw new Error("degenerate calibration points");
     x[r] = s / m[r][r];
   }
   return x;
@@ -67,7 +68,13 @@ export function pixelToLane(h: number[], p: Pt): LanePoint {
   const u = (h[0] * p.x + h[1] * p.y + h[2]) / w;
   const v = (h[3] * p.x + h[4] * p.y + h[5]) / w;
   // u=0 is the LEFT edge => board 39; u=1 is the RIGHT edge => board 1.
-  const board = Math.max(1, Math.min(LANE_BOARDS, LANE_BOARDS - u * (LANE_BOARDS - 1)));
+  // Allow one board of slack past each gutter (0..40): a ball riding the
+  // edge keeps its real shape instead of drawing a fake straight line
+  // pinned at board 1/39. 0 or 40 reads as "in the gutter".
+  const board = Math.max(
+    0,
+    Math.min(LANE_BOARDS + 1, LANE_BOARDS - u * (LANE_BOARDS - 1)),
+  );
   const feet = v * LANE_FEET;
   return { board, feet };
 }

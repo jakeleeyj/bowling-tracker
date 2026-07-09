@@ -14,7 +14,11 @@ const MIN_BLOB_PIXELS = 5; // below this, noise
 const MAX_BLOB_PIXELS = 600; // above this, a person / sweep, not a ball
 const MIN_FILL = 0.25; // blob pixels / bounding-box area (compactness)
 const MAX_ASPECT = 3; // bounding-box w/h or h/w beyond this = limb, not ball
-const LANE_MASK_SCALE = 1.12; // grow the lane quad so edge shots stay inside
+const LANE_MASK_SCALE_X = 1.12; // lateral margin: enough that a ball riding
+// the gutter keeps most of its blob inside the mask without inviting the
+// bowler's slide foot / gutter reflections in (1.22 was tried — it let
+// left-gutter junk hijack the track on the reference clip)
+const LANE_MASK_SCALE_Y = 1.04; // small vertical margin only
 const SEARCH_RADIUS = 20; // px: max step a track accepts (ball moves ~1-3px/frame;
 // anything further is a different object trying to steal the track)
 const MAX_UP_STEP = 8; // px: max plausible per-frame movement toward the deck —
@@ -111,8 +115,8 @@ export class BallDetector {
     const cx = quad.reduce((s, p) => s + p.x, 0) / quad.length;
     const cy = quad.reduce((s, p) => s + p.y, 0) / quad.length;
     const poly = quad.map((p) => ({
-      x: cx + (p.x - cx) * LANE_MASK_SCALE,
-      y: cy + (p.y - cy) * LANE_MASK_SCALE,
+      x: cx + (p.x - cx) * LANE_MASK_SCALE_X,
+      y: cy + (p.y - cy) * LANE_MASK_SCALE_Y,
     }));
     const mask = new Uint8Array(this.size);
     for (let y = 0; y < this.height; y++) {
