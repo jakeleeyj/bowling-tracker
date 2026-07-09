@@ -39,7 +39,6 @@ export default function LaneTracker() {
   const pixelPathRef = useRef<Pt[]>([]);
   const phaseRef = useRef(phase);
   const getReplayBlobRef = useRef<() => Blob | null>(() => null);
-  const pauseFileRef = useRef<() => void>(() => {});
   const laneQuadRef = useRef<Pt[] | null>(null);
   const [lastCalPoints, setLastCalPoints] = useState<Pt[] | undefined>(
     undefined,
@@ -84,7 +83,8 @@ export default function LaneTracker() {
         if (hit) pixelPathRef.current.push({ x: hit.x, y: hit.y });
         setLivePath([...pixelPathRef.current]);
       } else if (event.type === "complete") {
-        pauseFileRef.current();
+        // File mode: keep the video playing so the pin hit stays visible;
+        // the result renders on top.
         setResult(event.stats);
         setResultPath([...pixelPathRef.current]);
         setReplayBlob(getReplayBlobRef.current());
@@ -116,10 +116,7 @@ export default function LaneTracker() {
 
   useEffect(() => {
     getReplayBlobRef.current = getReplayBlob;
-    pauseFileRef.current = () => {
-      if (isFileMode()) videoRef.current?.pause();
-    };
-  }, [getReplayBlob, isFileMode, videoRef]);
+  }, [getReplayBlob]);
 
   async function begin() {
     const ok = await start();
@@ -325,11 +322,11 @@ export default function LaneTracker() {
                     <button
                       onClick={() => {
                         setWatching(true);
-                        playFile();
+                        restartFile(); // rewatch the clip, no re-tracking
                       }}
                       className="whitespace-nowrap rounded-full bg-black/70 px-3 py-1.5 text-[11px] font-bold text-white active:scale-95"
                     >
-                      ▶ Play on
+                      ▶ Watch
                     </button>
                     <button
                       onClick={() => {

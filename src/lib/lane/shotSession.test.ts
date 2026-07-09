@@ -28,8 +28,8 @@ describe("ShotSession", () => {
     for (let i = 0; i <= 15; i++) {
       s.onFrame({ board: 12, feet: 2 + (30 * i) / 15 }, i * 80);
     }
-    // 700ms of nothing
-    const e = s.onFrame(null, 15 * 80 + 750);
+    // over LOST_MS (1000ms) of nothing
+    const e = s.onFrame(null, 15 * 80 + 1050);
     expect(e.type).toBe("complete");
   });
 
@@ -38,7 +38,7 @@ describe("ShotSession", () => {
     for (let i = 0; i <= 5; i++) {
       s.onFrame({ board: 12, feet: 2 + i }, i * 80);
     }
-    const e = s.onFrame(null, 5 * 80 + 750);
+    const e = s.onFrame(null, 5 * 80 + 1050);
     expect(e.type).toBe("discarded");
   });
 

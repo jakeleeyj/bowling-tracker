@@ -14,7 +14,7 @@ export type ShotEvent =
 const START_FEET = 1; // ignore motion before the foul line
 const MAX_START_FEET = 30; // a shot must be first seen in the front half
 const END_FEET = 55; // ball considered at the pins
-const LOST_MS = 700; // no detection for this long while tracking => finish
+const LOST_MS = 1000; // no detection for this long while tracking => finish
 const STALL_MS = 900; // no down-lane progress for this long => finish
 const PROGRESS_FEET = 0.5; // minimum feet gain that counts as progress
 // Physically impossible moves are contamination (pin scatter, sweep, another

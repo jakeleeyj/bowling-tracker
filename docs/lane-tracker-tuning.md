@@ -70,7 +70,7 @@ harness for tuning against clips lives in the session scratchpad
 | Ball rolls, no line at all          | Detector can't see ball vs lane (dim light / dark ball) | `DIFF_THRESHOLD` in `src/lib/lane/ballDetector.ts`: 40 → 25                                                |
 | Line flickers, shots end mid-lane   | Detections dropping out                                 | Lower `DIFF_THRESHOLD`; and/or `LOST_MS` in `src/lib/lane/shotSession.ts`: 700 → 1000                      |
 | Line follows a foot / wrong object  | Ball designation lost a race                            | Raise `BALL_SWITCH_MARGIN` down / check `BALL_NET_UP` in `ballDetector.ts`                                 |
-| Track dies mid-lane                 | Ball blob too small downlane                            | Lower `MIN_BLOB_PIXELS` (5) or raise `MISS_LIMIT` (10)                                                     |
+| Track dies mid-lane                 | Ball blob too small downlane                            | Lower `MIN_BLOB_PIXELS` (5) or raise `MISS_LIMIT` (15)                                                     |
 | Shot never completes (no replay)    | Ball lost before 55 ft                                  | `END_FEET` in `shotSession.ts`: 55 → 50                                                                    |
 | Speed/boards look wrong             | Sloppy calibration corners                              | Re-drag the 4 corners — board accuracy is very sensitive to them                                           |
 | Replay black / won't loop on iPhone | Known MediaRecorder risk                                | Report it — fallback plan exists (segment restart is already in; next step is sequential-segment playback) |
@@ -87,7 +87,7 @@ harness for tuning against clips lives in the session scratchpad
 | BALL_SWITCH_MARGIN | src/lib/lane/ballDetector.ts | 15      |
 | START/MAX_START    | src/lib/lane/shotSession.ts  | 1/30    |
 | END_FEET           | src/lib/lane/shotSession.ts  | 55      |
-| LOST_MS / STALL_MS | src/lib/lane/shotSession.ts  | 700/900 |
+| LOST_MS / STALL_MS | src/lib/lane/shotSession.ts  | 1000/900 |
 
 (Update this table whenever a constant changes, with a dated note below.)
 
@@ -96,6 +96,7 @@ harness for tuning against clips lives in the session scratchpad
 - 2026-07-03: initial values, untested at alley. Camera-start bugs fixed on-device (video mount ordering + frame-loop hardening).
 - 2026-07-08: alley test — v1 detector produced no usable lines (bowler/scoreboard motion swamped the centroid). Video upload mode added for offline tuning.
 - 2026-07-09: detector v2 (blobs + lane mask + multi-track + ball designation). First complete tracked shot from real footage.
+- 2026-07-09b: file mode no longer pauses on completion (video plays through the pin hit, result overlays). LOST_MS 700→1000, MISS_LIMIT 10→15 to hold the tiny downlane ball longer.
 
 ## Before merge (after tuning is done)
 

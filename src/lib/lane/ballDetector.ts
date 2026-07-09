@@ -19,7 +19,8 @@ const SEARCH_RADIUS = 20; // px: max step a track accepts (ball moves ~1-3px/fra
 // anything further is a different object trying to steal the track)
 const MAX_UP_STEP = 8; // px: max plausible per-frame movement toward the deck —
 // an arm swing crosses the frame far faster than any rolling ball can
-const MISS_LIMIT = 10; // consecutive misses before a track dies
+const MISS_LIMIT = 15; // consecutive misses before a track dies (the ball blob
+// is tiny downlane and drops out for stretches — give it time to reappear)
 const MAX_TRACKS = 5; // simultaneous tracks (ball + feet + flicker is plenty)
 const HISTORY = 8; // positions kept per track for behaviour checks
 const BALL_MIN_FRAMES = 4; // history needed before a track can be the ball
