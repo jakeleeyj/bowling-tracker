@@ -170,13 +170,19 @@ export function useLaneCamera(
       }
 
       setStatus("live");
+      let lastMediaTime = -1;
       const loop = () => {
         if (!streamRef.current) return;
         try {
-          if (video.readyState < 2 || video.videoWidth === 0) {
+          if (
+            video.readyState < 2 ||
+            video.videoWidth === 0 ||
+            video.currentTime === lastMediaTime // camera frame not new yet
+          ) {
             rafRef.current = requestAnimationFrame(loop);
             return;
           }
+          lastMediaTime = video.currentTime;
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
           onFrameRef.current(
@@ -243,10 +249,19 @@ export function useLaneCamera(
         if (!ctx) throw new Error("canvas 2d unavailable");
 
         setStatus("live");
+        let lastMediaTime = -1;
         const loop = () => {
           if (modeRef.current !== "file") return;
           try {
-            if (video.readyState >= 2 && video.videoWidth > 0) {
+            // Process each VIDEO frame exactly once: the display refreshes at
+            // 60-120Hz but the clip is ~30fps, and duplicate frames poison the
+            // detector's noise model and halve its frame-count windows.
+            if (
+              video.readyState >= 2 &&
+              video.videoWidth > 0 &&
+              video.currentTime !== lastMediaTime
+            ) {
+              lastMediaTime = video.currentTime;
               ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
               const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
               onFrameRef.current(
