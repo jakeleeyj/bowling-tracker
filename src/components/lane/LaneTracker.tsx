@@ -29,6 +29,9 @@ export default function LaneTracker() {
   const [calibrationAttempt, setCalibrationAttempt] = useState(0);
   const [frameReady, setFrameReady] = useState(false);
   const [replayBlob, setReplayBlob] = useState<Blob | null>(null);
+  // File mode: temporarily hide the result to watch the rest of the video
+  const [watching, setWatching] = useState(false);
+  const frameSizeRef = useRef({ w: 0, h: 0 });
 
   const homographyRef = useRef<number[] | null>(null);
   const detectorRef = useRef<BallDetector | null>(null);
@@ -49,14 +52,21 @@ export default function LaneTracker() {
 
   const resetTracking = useCallback(() => {
     sessionRef.current = new ShotSession();
-    detectorRef.current?.resetTrack();
+    // Recreate the detector: its background model re-seeds from the next
+    // frame, so re-running a video (or re-calibrating) starts clean.
+    detectorRef.current = null;
     pixelPathRef.current = [];
     setLivePath([]);
   }, []);
 
   const onFrame = useCallback(
     (gray: Uint8ClampedArray, tMs: number, w: number, h: number) => {
-      if (!detectorRef.current) {
+      if (
+        !detectorRef.current ||
+        frameSizeRef.current.w !== w ||
+        frameSizeRef.current.h !== h
+      ) {
+        frameSizeRef.current = { w, h };
         detectorRef.current = new BallDetector(w, h);
         if (laneQuadRef.current) {
           detectorRef.current.setLaneMask(laneQuadRef.current);
@@ -98,6 +108,7 @@ export default function LaneTracker() {
     restartFile,
     isFileMode,
     fileEnded,
+    stop,
     getReplayBlob,
     debug,
   } = useLaneCamera(onFrame);
@@ -116,6 +127,11 @@ export default function LaneTracker() {
   }
 
   async function beginFile(file: File) {
+    stop(); // clear any camera stream or previously loaded video
+    setResult(null);
+    setReplayBlob(null);
+    setWatching(false);
+    resetTracking();
     const ok = await startFile(file);
     if (ok) changePhase("calibrate");
   }
@@ -140,7 +156,7 @@ export default function LaneTracker() {
       setCalibrationError(false);
       resetTracking();
       changePhase("live");
-      playFile(); // no-op in camera mode
+      restartFile(); // file mode: re-run from the start; no-op for camera
     } catch {
       homographyRef.current = null;
       setCalibrationError(true);
@@ -151,6 +167,17 @@ export default function LaneTracker() {
 
   return (
     <div className="relative overflow-hidden rounded-2xl">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="video/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) beginFile(file);
+          e.target.value = "";
+        }}
+      />
       {phase === "start" && (
         <div className="glass flex flex-col items-center gap-4 p-6 text-center">
           <p className="text-sm text-text-muted">
@@ -169,17 +196,6 @@ export default function LaneTracker() {
           >
             <Upload size={15} /> Upload a video
           </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="video/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) beginFile(file);
-              e.target.value = "";
-            }}
-          />
           {status === "denied" && (
             <p className="text-xs text-red-400">
               Camera access was denied. Allow it in Settings → Safari → Camera,
@@ -243,19 +259,36 @@ export default function LaneTracker() {
               {isFileMode() ? "Tracking video…" : "Tracking — bowl when ready"}
             </div>
             {fileEnded && (
-              <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 rounded-xl bg-black/70 px-3 py-2">
+              <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2 rounded-xl bg-black/70 px-3 py-2.5">
                 <span className="text-xs font-semibold text-white">
                   Video ended — no shot detected
                 </span>
-                <button
-                  onClick={() => {
-                    resetTracking();
-                    restartFile();
-                  }}
-                  className="rounded-lg bg-blue px-3 py-1.5 text-xs font-bold text-white active:scale-95"
-                >
-                  Play again
-                </button>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => {
+                      resetTracking();
+                      restartFile();
+                    }}
+                    className="flex-1 rounded-lg bg-blue px-3 py-1.5 text-xs font-bold text-white active:scale-95"
+                  >
+                    Re-run
+                  </button>
+                  <button
+                    onClick={() => {
+                      resetTracking();
+                      changePhase("calibrate");
+                    }}
+                    className="flex-1 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white active:scale-95"
+                  >
+                    Corners
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white active:scale-95"
+                  >
+                    New video
+                  </button>
+                </div>
               </div>
             )}
             <button
@@ -272,22 +305,75 @@ export default function LaneTracker() {
         )}
         {phase === "result" && result && (
           <>
-            {replayBlob && <ReplayPlayer blob={replayBlob} />}
+            {replayBlob && !watching && <ReplayPlayer blob={replayBlob} />}
             <PathOverlay
               points={resultPath}
               width={frameSize.w}
               height={frameSize.h}
             />
-            <ShotResult
-              stats={result}
-              onNext={() => {
-                setResult(null);
-                setReplayBlob(null);
-                resetTracking();
-                changePhase("live");
-                playFile(); // file mode: resume for the next shot in the video
-              }}
-            />
+            {watching ? (
+              <button
+                onClick={() => setWatching(false)}
+                className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-xs font-bold text-white active:scale-95"
+              >
+                Back to result
+              </button>
+            ) : (
+              <>
+                {isFileMode() && (
+                  <div className="absolute inset-x-2 top-2 flex justify-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        setWatching(true);
+                        playFile();
+                      }}
+                      className="whitespace-nowrap rounded-full bg-black/70 px-3 py-1.5 text-[11px] font-bold text-white active:scale-95"
+                    >
+                      ▶ Play on
+                    </button>
+                    <button
+                      onClick={() => {
+                        setResult(null);
+                        setReplayBlob(null);
+                        resetTracking();
+                        changePhase("live");
+                        restartFile();
+                      }}
+                      className="whitespace-nowrap rounded-full bg-black/70 px-3 py-1.5 text-[11px] font-bold text-white active:scale-95"
+                    >
+                      Re-run
+                    </button>
+                    <button
+                      onClick={() => {
+                        setResult(null);
+                        setReplayBlob(null);
+                        resetTracking();
+                        changePhase("calibrate");
+                      }}
+                      className="whitespace-nowrap rounded-full bg-black/70 px-3 py-1.5 text-[11px] font-bold text-white active:scale-95"
+                    >
+                      Corners
+                    </button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="whitespace-nowrap rounded-full bg-black/70 px-3 py-1.5 text-[11px] font-bold text-white active:scale-95"
+                    >
+                      New video
+                    </button>
+                  </div>
+                )}
+                <ShotResult
+                  stats={result}
+                  onNext={() => {
+                    setResult(null);
+                    setReplayBlob(null);
+                    resetTracking();
+                    changePhase("live");
+                    playFile(); // file mode: resume for the next shot in the video
+                  }}
+                />
+              </>
+            )}
           </>
         )}
       </div>
