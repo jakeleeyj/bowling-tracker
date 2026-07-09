@@ -50,6 +50,10 @@ const MAX_AGE_UNQUALIFIED = 30; // frames a track may live without ever making
 const RELEASE_FRAMES = 20; // designated ball loses its status after this many
 // frames without NEW down-lane progress — a rolling ball never stops gaining,
 // a swaying leg peaks once during a step and then goes nowhere
+const CROWD_RADIUS_FRAC = 0.18; // of lane pixel height: neighbourhood in which
+// other moving blobs count as "crowd" — a walking bowler sheds fragments all
+// around his torso, a rolling ball is alone on the lane
+const CROWD_LIMIT = 1.5; // max crowd EMA for a track to be designated the ball
 
 export function toGrayscale(
   rgba: Uint8ClampedArray,
@@ -87,6 +91,7 @@ interface Track {
   area: number;
   bestUp: number;
   sinceProgress: number;
+  crowd: number;
 }
 
 export class BallDetector {
@@ -100,6 +105,7 @@ export class BallDetector {
   private seedMinY = 0;
   private searchRadius = SEARCH_RADIUS_DEFAULT;
   private maxUpStep = MAX_UP_STEP_DEFAULT;
+  private laneHeightPx = 200; // fallback when no calibration yet
 
   // scratch buffers reused across frames
   private mask: Uint8Array;
@@ -172,6 +178,7 @@ export class BallDetector {
     this.seedMinY = minY + (maxY - minY) * 0.35;
     // Scale motion limits to the lane's on-screen size.
     const laneHeight = maxY - minY;
+    this.laneHeightPx = laneHeight;
     this.maxUpStep = Math.max(6, laneHeight * 0.08);
     this.searchRadius = Math.max(12, laneHeight * 0.1);
   }
@@ -330,6 +337,18 @@ export class BallDetector {
       }
     }
 
+    // 1b. Crowd measure: how many other moving blobs surround each track.
+    // A bowler's fragments travel in a pack; the ball rolls alone.
+    const crowdRadius = CROWD_RADIUS_FRAC * this.laneHeightPx;
+    for (const t of this.tracks) {
+      let neighbours = 0;
+      for (const c of candidates) {
+        const d = Math.hypot(c.x - t.pos.x, c.y - t.pos.y);
+        if (d > 0.5 && d < crowdRadius) neighbours++;
+      }
+      t.crowd = t.crowd * 0.7 + neighbours * 0.3;
+    }
+
     // 2. Kill dead tracks: too many misses, going nowhere, or old without
     // ever making ball-like progress (a bowler's body jiggles forever but a
     // real ball qualifies within a handful of frames).
@@ -385,6 +404,7 @@ export class BallDetector {
         area: c.area,
         bestUp: 0,
         sinceProgress: 0,
+        crowd: 0,
       });
     }
 
@@ -397,6 +417,7 @@ export class BallDetector {
     for (const t of this.tracks) {
       if (t.history.length < BALL_MIN_FRAMES) continue;
       if (netUp(t) < BALL_NET_UP) continue;
+      if (t.crowd > CROWD_LIMIT) continue; // travelling in a pack = a person
       if (!best || netUp(t) > netUp(best)) best = t;
     }
     const current = this.tracks.find((t) => t.id === this.ballId) ?? null;
