@@ -8,8 +8,17 @@
 // making consistent progress toward the pin deck. Feet sway in place and
 // deck flicker goes nowhere — only the ball travels.
 
-const DIFF_THRESHOLD = 40; // gray levels a pixel must change to count as motion
+// Per-pixel adaptive motion threshold: each pixel's threshold tracks its own
+// noise level, so stable matte wood becomes sensitive enough to catch a dark
+// ball crossing dark mural reflections, while shimmering reflective zones and
+// handheld jitter stay conservative.
+const MIN_THRESHOLD = 18; // floor for perfectly stable pixels
+const NOISE_K = 3; // threshold = max(floor, K * pixel sigma)
+const INITIAL_VARIANCE = 256; // start conservative (sigma 16 → threshold 48)
 const BG_ALPHA = 0.05; // background running-average rate
+const VAR_ALPHA_MASKED = 0.02; // variance keeps learning (slowly) on moving
+// pixels too, so persistent shimmer/shake self-suppresses while a briefly
+// transiting ball barely raises it
 const MIN_BLOB_PIXELS = 5; // below this, noise
 const MAX_BLOB_PIXELS = 600; // above this, a person / sweep, not a ball
 const MIN_FILL = 0.25; // blob pixels / bounding-box area (compactness)
@@ -19,13 +28,16 @@ const LANE_MASK_SCALE_X = 1.12; // lateral margin: enough that a ball riding
 // bowler's slide foot / gutter reflections in (1.22 was tried — it let
 // left-gutter junk hijack the track on the reference clip)
 const LANE_MASK_SCALE_Y = 1.04; // small vertical margin only
-const SEARCH_RADIUS = 20; // px: max step a track accepts (ball moves ~1-3px/frame;
-// anything further is a different object trying to steal the track)
-const MAX_UP_STEP = 8; // px: max plausible per-frame movement toward the deck —
-// an arm swing crosses the frame far faster than any rolling ball can
+// Motion limits scale with the lane's pixel height (set at calibration):
+// a close-up camera sees the same ball cross many more pixels per frame
+// than a far-back one. Values below are fallbacks with no calibration.
+const SEARCH_RADIUS_DEFAULT = 20; // px: max step a track accepts
+const MAX_UP_STEP_DEFAULT = 8; // px: max per-frame movement toward the deck
+// (an arm swing crosses the frame far faster than any rolling ball)
 const MISS_LIMIT = 15; // consecutive misses before a track dies (the ball blob
 // is tiny downlane and drops out for stretches — give it time to reappear)
-const MAX_TRACKS = 5; // simultaneous tracks (ball + feet + flicker is plenty)
+const MAX_TRACKS = 8; // simultaneous tracks — a bowler standing in the lane
+// corridor fragments into several movers; the ball still needs a free slot
 const HISTORY = 8; // positions kept per track for behaviour checks
 const BALL_MIN_FRAMES = 4; // history needed before a track can be the ball
 const BALL_NET_UP = 8; // px net travel toward the deck since birth to qualify
@@ -33,6 +45,11 @@ const BALL_SWITCH_MARGIN = 15; // px lead a challenger needs to steal ball statu
 // (a sliding foot nets ~10px toward the deck; the ball nets its whole journey)
 const STAGNANT_TRAVEL = 1.5; // px net travel below which a track goes nowhere
 const STAGNANT_LIMIT = 15; // stagnant frames before dropping a track
+const MAX_AGE_UNQUALIFIED = 30; // frames a track may live without ever making
+// ball-like progress — recycles slots hogged by a bowler standing in frame
+const RELEASE_FRAMES = 20; // designated ball loses its status after this many
+// frames without NEW down-lane progress — a rolling ball never stops gaining,
+// a swaying leg peaks once during a step and then goes nowhere
 
 export function toGrayscale(
   rgba: Uint8ClampedArray,
@@ -66,7 +83,10 @@ interface Track {
   history: Pt[];
   miss: number;
   stagnant: number;
+  age: number;
   area: number;
+  bestUp: number;
+  sinceProgress: number;
 }
 
 export class BallDetector {
@@ -78,6 +98,8 @@ export class BallDetector {
   // new tracks may only seed below this row, so pin-deck flicker can't
   // steal the track before the shot.
   private seedMinY = 0;
+  private searchRadius = SEARCH_RADIUS_DEFAULT;
+  private maxUpStep = MAX_UP_STEP_DEFAULT;
 
   // scratch buffers reused across frames
   private mask: Uint8Array;
@@ -97,12 +119,15 @@ export class BallDetector {
     ballId: null as number | null,
   };
 
+  private bgVar: Float32Array;
+
   constructor(
     private width: number,
     private height: number,
   ) {
     this.size = width * height;
     this.bg = new Float32Array(this.size);
+    this.bgVar = new Float32Array(this.size).fill(INITIAL_VARIANCE);
     this.mask = new Uint8Array(this.size);
     this.labels = new Int32Array(this.size);
     this.stack = new Int32Array(this.size);
@@ -137,8 +162,18 @@ export class BallDetector {
       }
     }
     this.laneMask = mask;
+    // Seed zone: the lower ~65% of the quad. Perspective compresses the far
+    // lane, so the pixel midpoint sits much deeper than half the lane —
+    // spawning must stay possible where the ball first becomes a separate
+    // blob after clearing the bowler.
     const ys = quad.map((p) => p.y);
-    this.seedMinY = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    this.seedMinY = minY + (maxY - minY) * 0.35;
+    // Scale motion limits to the lane's on-screen size.
+    const laneHeight = maxY - minY;
+    this.maxUpStep = Math.max(6, laneHeight * 0.08);
+    this.searchRadius = Math.max(12, laneHeight * 0.1);
   }
 
   resetTrack(): void {
@@ -158,14 +193,19 @@ export class BallDetector {
       return null;
     }
 
-    // 1. Motion mask (lane-limited) + background update on static pixels
-    const { mask, bg, laneMask } = this;
+    // 1. Motion mask (lane-limited) with per-pixel adaptive threshold;
+    // background mean + variance update on static pixels only.
+    const { mask, bg, bgVar, laneMask } = this;
     for (let i = 0; i < this.size; i++) {
       const diff = Math.abs(gray[i] - bg[i]);
-      if (diff <= DIFF_THRESHOLD) {
+      const thr = Math.max(MIN_THRESHOLD, NOISE_K * Math.sqrt(bgVar[i]));
+      if (diff <= thr) {
         bg[i] = bg[i] * (1 - BG_ALPHA) + gray[i] * BG_ALPHA;
+        bgVar[i] = bgVar[i] * (1 - BG_ALPHA) + diff * diff * BG_ALPHA;
         mask[i] = 0;
       } else {
+        bgVar[i] =
+          bgVar[i] * (1 - VAR_ALPHA_MASKED) + diff * diff * VAR_ALPHA_MASKED;
         mask[i] = laneMask === null || laneMask[i] === 1 ? 1 : 0;
       }
     }
@@ -257,10 +297,10 @@ export class BallDetector {
     for (const t of this.tracks) {
       const pred = { x: t.pos.x + t.vel.x, y: t.pos.y + t.vel.y };
       let best: Blob | null = null;
-      let bestD = SEARCH_RADIUS;
+      let bestD = this.searchRadius;
       for (const c of candidates) {
         if (used.has(c)) continue;
-        if (t.pos.y - c.y > MAX_UP_STEP) continue; // faster than any ball
+        if (t.pos.y - c.y > this.maxUpStep) continue; // faster than any ball
         const d = Math.hypot(c.x - pred.x, c.y - pred.y);
         if (d < bestD) {
           bestD = d;
@@ -290,9 +330,33 @@ export class BallDetector {
       }
     }
 
-    // 2. Kill dead tracks (too many misses, or going nowhere).
+    // 2. Kill dead tracks: too many misses, going nowhere, or old without
+    // ever making ball-like progress (a bowler's body jiggles forever but a
+    // real ball qualifies within a handful of frames).
+    const up = (t: Track) => t.born.y - t.pos.y;
+    for (const t of this.tracks) {
+      t.age++;
+      const nu = up(t);
+      if (nu > t.bestUp + 1) {
+        t.bestUp = nu;
+        t.sinceProgress = 0;
+      } else {
+        t.sinceProgress++;
+      }
+    }
+    // A designated ball that stopped progressing isn't a ball — release it
+    // so it becomes recyclable and something else can be designated.
+    const designated = this.tracks.find((t) => t.id === this.ballId);
+    if (designated && designated.sinceProgress > RELEASE_FRAMES) {
+      this.ballId = null;
+    }
     this.tracks = this.tracks.filter(
-      (t) => t.miss <= MISS_LIMIT && t.stagnant <= STAGNANT_LIMIT,
+      (t) =>
+        t.miss <= MISS_LIMIT &&
+        t.stagnant <= STAGNANT_LIMIT &&
+        (t.id === this.ballId ||
+          t.age <= MAX_AGE_UNQUALIFIED ||
+          up(t) >= BALL_NET_UP),
     );
     if (
       this.ballId !== null &&
@@ -301,9 +365,13 @@ export class BallDetector {
       this.ballId = null;
     }
 
-    // 3. Spawn tracks for unclaimed candidates near the foul line.
-    for (const c of candidates) {
-      if (used.has(c) || c.y < this.seedMinY) continue;
+    // 3. Spawn tracks for unclaimed candidates near the foul line — largest
+    // first: at release the ball is the biggest coherent mover in the lane,
+    // while a bowler sheds many small fragments.
+    const spawnable = candidates
+      .filter((c) => !used.has(c) && c.y >= this.seedMinY)
+      .sort((a, b) => b.area - a.area);
+    for (const c of spawnable) {
       if (this.tracks.length >= MAX_TRACKS) break;
       this.tracks.push({
         id: this.nextTrackId++,
@@ -313,7 +381,10 @@ export class BallDetector {
         history: [{ x: c.x, y: c.y }],
         miss: 0,
         stagnant: 0,
+        age: 0,
         area: c.area,
+        bestUp: 0,
+        sinceProgress: 0,
       });
     }
 
