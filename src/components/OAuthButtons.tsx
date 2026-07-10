@@ -117,15 +117,17 @@ export default function OAuthButtons() {
         <GoogleIcon />
         {loading === "google" ? "Connecting..." : "Continue with Google"}
       </button>
-      <button
-        type="button"
-        onClick={() => signIn("apple")}
-        disabled={loading !== null}
-        className="flex items-center justify-center gap-2 rounded-lg border border-border bg-surface-light py-3 text-sm font-semibold text-text-primary transition-transform active:scale-[0.97] disabled:opacity-50"
-      >
-        <AppleIcon />
-        {loading === "apple" ? "Connecting..." : "Continue with Apple"}
-      </button>
+      {process.env.NEXT_PUBLIC_ENABLE_APPLE_LOGIN === "true" && (
+        <button
+          type="button"
+          onClick={() => signIn("apple")}
+          disabled={loading !== null}
+          className="flex items-center justify-center gap-2 rounded-lg border border-border bg-surface-light py-3 text-sm font-semibold text-text-primary transition-transform active:scale-[0.97] disabled:opacity-50"
+        >
+          <AppleIcon />
+          {loading === "apple" ? "Connecting..." : "Continue with Apple"}
+        </button>
+      )}
       {error && <p className="text-center text-sm text-red">{error}</p>}
     </div>
   );

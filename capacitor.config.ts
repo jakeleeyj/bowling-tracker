@@ -5,8 +5,8 @@ const config: CapacitorConfig = {
   appName: "Spare Me",
   webDir: "public",
   server: {
-    url: "https://bowling-tracker-omega.vercel.app",
-    allowNavigation: ["bowling-tracker-omega.vercel.app", "*.supabase.co"],
+    url: "https://spareme.club",
+    allowNavigation: ["spareme.club", "*.supabase.co"],
   },
   android: {
     allowMixedContent: false,

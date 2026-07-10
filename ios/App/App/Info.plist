@@ -62,8 +62,8 @@
 	<string>Spare Me uses the camera to record your bowling throws for the lane tracker.</string>
 	<key>WKAppBoundDomains</key>
 	<array>
-		<string>bowling-tracker-omega.vercel.app</string>
-		<string>lbjuaipumwzdrtvbtfxq.supabase.co</string>
+		<string>spareme.club</string>
+		<string>supabase.co</string>
 	</array>
 </dict>
 </plist>
