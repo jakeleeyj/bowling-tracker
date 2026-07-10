@@ -3,12 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bug, Lightbulb, Send } from "lucide-react";
-import { createClient } from "@/lib/supabase-browser";
 import { useToast } from "@/components/Toast";
 import BackButton from "@/components/BackButton";
 
 export default function FeedbackPage() {
-  const supabase = createClient();
   const router = useRouter();
   const { toast } = useToast();
   const [category, setCategory] = useState<"bug" | "suggestion">("bug");
@@ -23,22 +21,17 @@ export default function FeedbackPage() {
       return;
     }
     setSending(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      setSending(false);
-      return;
-    }
-    const { error } = await supabase.from("feedback").insert({
-      user_id: user.id,
-      category,
-      message: trimmed,
-      page: document.referrer || null,
-      user_agent: navigator.userAgent,
+    const res = await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        category,
+        message: trimmed,
+        userAgent: navigator.userAgent,
+      }),
     });
     setSending(false);
-    if (error) {
+    if (!res.ok) {
       toast("Failed to send. Try again.", "error");
       return;
     }
