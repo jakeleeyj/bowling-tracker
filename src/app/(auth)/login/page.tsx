@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
+import OAuthButtons from "@/components/OAuthButtons";
 
 function Logo() {
   return (
@@ -100,6 +101,14 @@ export default function LoginPage() {
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
+
+        <div className="my-4 flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-text-muted">or</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        <OAuthButtons />
 
         <p className="mt-5 text-center text-sm text-text-muted">
           No account?{" "}

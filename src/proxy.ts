@@ -39,7 +39,9 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname === "/login" ||
     request.nextUrl.pathname === "/signup";
 
-  const isPublicApi = request.nextUrl.pathname === "/api/push/deploy-notify";
+  const isPublicApi =
+    request.nextUrl.pathname === "/api/push/deploy-notify" ||
+    request.nextUrl.pathname === "/auth/callback";
 
   const isPublicPage =
     request.nextUrl.pathname === "/privacy" ||
