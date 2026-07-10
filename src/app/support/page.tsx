@@ -17,7 +17,7 @@ export default function SupportPage() {
           small donation helps cover hosting costs and keeps it running.
         </p>
         <a
-          href="https://ko-fi.com/jakelee"
+          href="https://ko-fi.com/jakelyj45285"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block rounded-lg bg-gradient-to-r from-blue to-blue-dark px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 active:scale-[0.97]"
