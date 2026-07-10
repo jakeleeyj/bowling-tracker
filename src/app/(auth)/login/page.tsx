@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { isNativeApp } from "@/lib/platform";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
@@ -35,8 +36,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showDonate, setShowDonate] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+
+  useEffect(() => {
+    setShowDonate(!isNativeApp());
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -117,6 +123,15 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
+
+      {showDonate && (
+        <p className="relative z-10 mt-6 text-center text-xs text-text-muted">
+          Free &amp; ad-free.{" "}
+          <a href="/support" className="font-medium text-red">
+            Support Spare Me ♥
+          </a>
+        </p>
+      )}
     </div>
   );
 }

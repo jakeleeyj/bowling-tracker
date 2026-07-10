@@ -10,6 +10,11 @@ export interface Season {
   end: Date;
 }
 
+// Public deployment starts its own Season 1 in H2 2026: setting
+// NEXT_PUBLIC_SEASON_OFFSET=1 shifts numbering down by one and skips the
+// private inaugural season below.
+const SEASON_OFFSET = Number(process.env.NEXT_PUBLIC_SEASON_OFFSET ?? 0);
+
 const SEASONS: Season[] = [
   {
     number: 1,
@@ -42,9 +47,11 @@ function generateSeason(half: "H1" | "H2", year: number, num: number): Season {
 export function getCurrentSeason(): Season {
   const now = new Date();
 
-  // Check hardcoded seasons first
-  for (const s of SEASONS) {
-    if (now >= s.start && now <= s.end) return s;
+  // Check hardcoded seasons first (private deployment only)
+  if (SEASON_OFFSET === 0) {
+    for (const s of SEASONS) {
+      if (now >= s.start && now <= s.end) return s;
+    }
   }
 
   // Generate calendar-half seasons from H2 2026 onward.
@@ -52,21 +59,24 @@ export function getCurrentSeason(): Season {
   const year = now.getFullYear();
   const month = now.getMonth(); // 0-indexed
   const half = month < 6 ? "H1" : "H2";
-  const num = 2 * (year - 2026) + (half === "H1" ? 1 : 2);
+  const num = 2 * (year - 2026) + (half === "H1" ? 1 : 2) - SEASON_OFFSET;
 
   return generateSeason(half, year, num);
 }
 
 export function getSeasonByNumber(num: number): Season | null {
   if (num < 1) return null;
-  const hardcoded = SEASONS.find((s) => s.number === num);
-  if (hardcoded) return hardcoded;
-  if (num < 2) return null;
-  // Generated seasons: S2 = H2 2026, S3 = H1 2027, S4 = H2 2027, ...
-  if (num % 2 === 0) {
-    return generateSeason("H2", 2026 + (num - 2) / 2, num);
+  if (SEASON_OFFSET === 0) {
+    const hardcoded = SEASONS.find((s) => s.number === num);
+    if (hardcoded) return hardcoded;
   }
-  return generateSeason("H1", 2026 + (num - 1) / 2, num);
+  // Generated seasons (raw numbering): S2 = H2 2026, S3 = H1 2027, ...
+  const raw = num + SEASON_OFFSET;
+  if (raw < 2) return null;
+  if (raw % 2 === 0) {
+    return generateSeason("H2", 2026 + (raw - 2) / 2, num);
+  }
+  return generateSeason("H1", 2026 + (raw - 1) / 2, num);
 }
 
 // The season immediately before the current one — the one the end-season

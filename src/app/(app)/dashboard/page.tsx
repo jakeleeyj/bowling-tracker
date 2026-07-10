@@ -10,6 +10,7 @@ import type {
 import RecentActivity from "@/components/RecentActivity";
 import Avatar from "@/components/Avatar";
 import InstallPrompt from "@/components/InstallPrompt";
+import DonatePrompt from "@/components/DonatePrompt";
 import SeasonBanner from "@/components/SeasonBanner";
 import RankBanner from "@/components/RankBanner";
 import { getRank } from "@/lib/ranking";
@@ -111,6 +112,7 @@ export default async function DashboardPage() {
 
       {/* Notification prompt — shows once for new users */}
       <InstallPrompt />
+      <DonatePrompt />
 
       {/* Rank Card */}
       {totalGames > 0 && (
