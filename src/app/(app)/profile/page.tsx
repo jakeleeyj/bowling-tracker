@@ -29,7 +29,13 @@ import Avatar from "@/components/Avatar";
 import { ACHIEVEMENTS, type AchievementStats } from "@/lib/achievements";
 import { getCurrentSeason } from "@/lib/seasons";
 import { isNativeApp } from "@/lib/platform";
-import { ChevronDown, Trash2, Heart, Shield } from "lucide-react";
+import {
+  ChevronDown,
+  Trash2,
+  Heart,
+  Shield,
+  MessageSquarePlus,
+} from "lucide-react";
 
 const SESSIONS_PER_PAGE = 20;
 
@@ -487,6 +493,16 @@ export default function ProfilePage() {
           )}
 
           <NotificationToggle />
+
+          <a
+            href="/feedback"
+            className="glass flex items-center gap-3 p-4 text-left"
+          >
+            <MessageSquarePlus size={20} className="text-blue" />
+            <span className="text-sm font-semibold">
+              Report a Bug / Suggest an Idea
+            </span>
+          </a>
 
           <a
             href="/privacy"

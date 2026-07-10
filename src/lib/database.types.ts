@@ -184,6 +184,47 @@ export interface Database {
           },
         ];
       };
+      feedback: {
+        Row: {
+          id: string;
+          user_id: string;
+          category: string;
+          message: string;
+          page: string | null;
+          user_agent: string | null;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          category: string;
+          message: string;
+          page?: string | null;
+          user_agent?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          category?: string;
+          message?: string;
+          page?: string | null;
+          user_agent?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "feedback_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       push_subscriptions: {
         Row: {
           id: string;

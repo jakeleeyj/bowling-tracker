@@ -72,10 +72,10 @@ export default function PrivacyPage() {
           </h2>
           <p>
             Questions about your data? Email{" "}
-            <a href="mailto:jakeleeyj@gmail.com" className="text-blue">
-              jakeleeyj@gmail.com
+            <a href="mailto:support@spareme.club" className="text-blue">
+              support@spareme.club
             </a>
-            .
+            , or use the in-app feedback form under Profile → Settings.
           </p>
         </section>
       </div>
