@@ -43,3 +43,7 @@ next-env.d.ts
 # claude/ai artifacts
 docs/superpowers/
 .playwright-mcp/
+
+# Supabase CLI local state
+supabase/.temp/
+supabase/schema_dump.sql
