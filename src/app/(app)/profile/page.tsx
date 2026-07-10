@@ -28,7 +28,8 @@ import AvatarPicker from "@/components/AvatarPicker";
 import Avatar from "@/components/Avatar";
 import { ACHIEVEMENTS, type AchievementStats } from "@/lib/achievements";
 import { getCurrentSeason } from "@/lib/seasons";
-import { ChevronDown } from "lucide-react";
+import { isNativeApp } from "@/lib/platform";
+import { ChevronDown, Trash2, Heart, Shield } from "lucide-react";
 
 const SESSIONS_PER_PAGE = 20;
 
@@ -116,6 +117,9 @@ export default function ProfilePage() {
     }[]
   >([]);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMoreSessions, setHasMoreSessions] = useState(false);
@@ -263,6 +267,20 @@ export default function ProfilePage() {
     setSaved(true);
     toast("Settings saved");
     setTimeout(() => setSaved(false), 2000);
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteText !== "DELETE") return;
+    setDeleting(true);
+    const res = await fetch("/api/account/delete", { method: "POST" });
+    if (!res.ok) {
+      setDeleting(false);
+      toast("Failed to delete account. Try again.", "error");
+      return;
+    }
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
   }
 
   async function handleLogout() {
@@ -470,6 +488,24 @@ export default function ProfilePage() {
 
           <NotificationToggle />
 
+          <a
+            href="/privacy"
+            className="glass flex items-center gap-3 p-4 text-left"
+          >
+            <Shield size={20} className="text-blue" />
+            <span className="text-sm font-semibold">Privacy Policy</span>
+          </a>
+
+          {!isNativeApp() && (
+            <a
+              href="/support"
+              className="glass flex items-center gap-3 p-4 text-left"
+            >
+              <Heart size={20} className="text-red" />
+              <span className="text-sm font-semibold">Support Spare Me</span>
+            </a>
+          )}
+
           <button
             onClick={handleLogout}
             className="flex items-center justify-center gap-2 rounded-lg border border-red/30 py-3 text-sm font-semibold text-red active:scale-[0.97]"
@@ -477,6 +513,40 @@ export default function ProfilePage() {
             <LogOut size={16} />
             Sign Out
           </button>
+
+          <button
+            onClick={() => setShowDeleteConfirm(!showDeleteConfirm)}
+            className="flex items-center justify-center gap-2 py-2 text-xs font-semibold text-text-muted active:scale-[0.97]"
+          >
+            <Trash2 size={14} />
+            Delete Account
+          </button>
+
+          {showDeleteConfirm && (
+            <div className="glass border border-red/30 p-4">
+              <p className="mb-2 text-sm font-bold text-red">
+                This permanently deletes your account
+              </p>
+              <p className="mb-3 text-xs text-text-muted">
+                All your games, stats, rank history and profile data will be
+                erased. This cannot be undone. Type DELETE to confirm.
+              </p>
+              <input
+                type="text"
+                value={deleteText}
+                onChange={(e) => setDeleteText(e.target.value)}
+                placeholder="Type DELETE"
+                className="mb-3 w-full rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none focus:border-red"
+              />
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteText !== "DELETE" || deleting}
+                className="w-full rounded-lg bg-red py-3 text-sm font-bold text-white active:scale-[0.97] disabled:opacity-40"
+              >
+                {deleting ? "Deleting..." : "Permanently Delete Account"}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

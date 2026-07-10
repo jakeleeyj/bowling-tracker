@@ -41,7 +41,11 @@ export async function proxy(request: NextRequest) {
 
   const isPublicApi = request.nextUrl.pathname === "/api/push/deploy-notify";
 
-  if (!user && !isAuthPage && !isPublicApi) {
+  const isPublicPage =
+    request.nextUrl.pathname === "/privacy" ||
+    request.nextUrl.pathname === "/support";
+
+  if (!user && !isAuthPage && !isPublicApi && !isPublicPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
