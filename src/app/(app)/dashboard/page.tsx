@@ -9,7 +9,7 @@ import type {
 } from "@/lib/queries";
 import RecentActivity from "@/components/RecentActivity";
 import Avatar from "@/components/Avatar";
-import NotificationPrompt from "@/components/NotificationPrompt";
+import InstallPrompt from "@/components/InstallPrompt";
 import SeasonBanner from "@/components/SeasonBanner";
 import RankBanner from "@/components/RankBanner";
 import { getRank } from "@/lib/ranking";
@@ -110,7 +110,7 @@ export default async function DashboardPage() {
       <SeasonBanner />
 
       {/* Notification prompt — shows once for new users */}
-      <NotificationPrompt />
+      <InstallPrompt />
 
       {/* Rank Card */}
       {totalGames > 0 && (
