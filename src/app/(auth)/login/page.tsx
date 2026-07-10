@@ -73,7 +73,7 @@ export default function LoginPage() {
           Spare Me<span className="text-gold">?</span>
         </h1>
         <p className="mt-1 text-sm text-text-muted">
-          Track scores. Chase spares. Talk trash.
+          Track scores. Chase spares. Climb the ranks.
         </p>
       </div>
 
