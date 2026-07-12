@@ -41,7 +41,8 @@ export default function LoginPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    setShowDonate(!isNativeApp());
+    const timer = setTimeout(() => setShowDonate(!isNativeApp()), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   async function handleLogin(e: React.FormEvent) {

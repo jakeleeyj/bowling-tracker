@@ -8,22 +8,42 @@ const filterLabels: Record<FilterType, string> = {
   last10: "Last 10",
   last50: "Last 50",
   ytd: "YTD",
+  all: "Lifetime",
   custom: "Custom",
-  all: "All",
 };
+
+const EVENT_OPTIONS = [
+  { value: "", label: "All" },
+  { value: "casual", label: "Casual" },
+  { value: "League", label: "League" },
+  { value: "Tournament", label: "Tournament" },
+  { value: "Funbowl", label: "Funbowl" },
+];
 
 export default function StatsFilter({
   currentFilter,
   dateFrom,
   dateTo,
+  currentEvent,
 }: {
   currentFilter: FilterType;
   dateFrom: string;
   dateTo: string;
+  currentEvent: string;
 }) {
   const router = useRouter();
   const [localDateFrom, setLocalDateFrom] = useState(dateFrom);
   const [localDateTo, setLocalDateTo] = useState(dateTo);
+
+  function buildUrl(f: FilterType, event: string, from = "", to = "") {
+    const params = new URLSearchParams({ filter: f });
+    if (event) params.set("event", event);
+    if (f === "custom" && from && to) {
+      params.set("dateFrom", from);
+      params.set("dateTo", to);
+    }
+    return `/stats?${params.toString()}`;
+  }
 
   function handleFilterChange(f: FilterType) {
     if (f === "custom") {
@@ -33,34 +53,56 @@ export default function StatsFilter({
         new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
       setLocalDateFrom(from);
       setLocalDateTo(to);
-      router.push(`/stats?filter=custom&dateFrom=${from}&dateTo=${to}`);
+      router.push(buildUrl(f, currentEvent, from, to));
     } else {
-      router.push(`/stats?filter=${f}`);
+      router.push(buildUrl(f, currentEvent));
     }
+  }
+
+  function handleEventChange(event: string) {
+    router.push(buildUrl(currentFilter, event, localDateFrom, localDateTo));
   }
 
   function handleDateChange(from: string, to: string) {
     setLocalDateFrom(from);
     setLocalDateTo(to);
     if (from && to) {
-      router.push(`/stats?filter=custom&dateFrom=${from}&dateTo=${to}`);
+      router.push(buildUrl("custom", currentEvent, from, to));
     }
   }
 
   return (
     <>
-      <div className="mb-3 flex gap-1.5">
-        {(["last10", "last50", "ytd", "custom"] as FilterType[]).map((f) => (
+      <div className="mb-2 flex flex-wrap gap-1.5">
+        {(["last10", "last50", "ytd", "all", "custom"] as FilterType[]).map(
+          (f) => (
+            <button
+              key={f}
+              onClick={() => handleFilterChange(f)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                currentFilter === f
+                  ? "bg-blue text-white"
+                  : "bg-surface-light text-text-muted active:bg-surface-light/80"
+              }`}
+            >
+              {filterLabels[f]}
+            </button>
+          ),
+        )}
+      </div>
+
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        {EVENT_OPTIONS.map((opt) => (
           <button
-            key={f}
-            onClick={() => handleFilterChange(f)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-              currentFilter === f
-                ? "bg-blue text-white"
-                : "bg-surface-light text-text-muted active:bg-surface-light/80"
+            key={opt.value}
+            onClick={() => handleEventChange(opt.value)}
+            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+              currentEvent === opt.value
+                ? "bg-purple/20 text-purple"
+                : "bg-surface-light/60 text-text-muted active:bg-surface-light/80"
             }`}
           >
-            {filterLabels[f]}
+            {opt.label}
           </button>
         ))}
       </div>

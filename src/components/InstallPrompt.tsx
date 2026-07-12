@@ -23,17 +23,18 @@ export default function InstallPrompt() {
     if (window.matchMedia("(display-mode: standalone)").matches) return;
     if (localStorage.getItem(DISMISSED_KEY)) return;
 
-    setIsIos(
-      /iPad|iPhone|iPod/.test(navigator.userAgent) && !("MSStream" in window),
-    );
-
     const onBeforeInstall = (e: Event) => {
       e.preventDefault();
       setInstallEvent(e as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
 
-    const timer = setTimeout(() => setShow(true), 1500);
+    const timer = setTimeout(() => {
+      setIsIos(
+        /iPad|iPhone|iPod/.test(navigator.userAgent) && !("MSStream" in window),
+      );
+      setShow(true);
+    }, 1500);
     return () => {
       clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);

@@ -20,6 +20,23 @@ function TrendChart({
 }) {
   if (values.length === 0) return null;
 
+  // Long ranges (Lifetime): bucket into averaged points so the line stays
+  // readable instead of rendering hundreds of jittery dots.
+  const MAX_POINTS = 40;
+  const bucketSize = Math.ceil(values.length / MAX_POINTS);
+  const isBucketed = bucketSize > 1;
+  if (isBucketed) {
+    const bucketed: number[] = [];
+    for (let i = 0; i < values.length; i += bucketSize) {
+      const chunk = values.slice(i, i + bucketSize);
+      bucketed.push(
+        Math.round(chunk.reduce((a, b) => a + b, 0) / chunk.length),
+      );
+    }
+    values = bucketed;
+    highlights = undefined;
+  }
+
   const width = 360;
   const height = 160;
   const padding = { top: 20, right: 12, bottom: 12, left: 12 };
@@ -89,6 +106,18 @@ function TrendChart({
         strokeLinejoin="round"
         strokeLinecap="round"
       />
+
+      {isBucketed && (
+        <text
+          x={width - padding.right}
+          y={padding.top - 8}
+          textAnchor="end"
+          fontSize={7}
+          fill="#64748b"
+        >
+          each point = avg of {bucketSize} games
+        </text>
+      )}
 
       {values.map((s, i) => {
         const isHighlighted = highlights?.[i] ?? false;

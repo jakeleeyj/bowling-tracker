@@ -266,6 +266,7 @@ export interface Database {
           p_filter?: string;
           p_date_from?: string | null;
           p_date_to?: string | null;
+          p_event?: string | null;
         };
         Returns: Json;
       };
@@ -275,6 +276,7 @@ export interface Database {
           p_filter?: string;
           p_date_from?: string | null;
           p_date_to?: string | null;
+          p_event?: string | null;
         };
         Returns: Json;
       };
