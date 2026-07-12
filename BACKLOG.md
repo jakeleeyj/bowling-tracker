@@ -61,6 +61,13 @@
 - [ ] **Season history page** — View rank progression across all past seasons `#ranking` `#seasons` _(2026-03-18)_
 - [x] **LP ceiling tuning** — Resolved: base 185 + 6-month seasons keeps Challenger at ~220 avg, Master at ~210 `#ranking` `#seasons` _(2026-03-18)_
 
+## Public Version (user-requested)
+
+- [ ] **Leagues & tournaments as first-class objects** — create a league/tournament, attach sessions to it, standings per event; requested by first public user via feedback form _(2026-07-12)_
+- [ ] **Google Places venue autocomplete** — worldwide alley search to replace the hidden preset list; needs billing-enabled API key `#platform` _(2026-07-12)_
+- [ ] **Facebook login** — deferred at launch; needs Meta business verification `#auth` _(2026-07-10)_
+- [ ] **Tip-jar IAP in native apps** — store-legal donations inside iOS/Android apps (15% cut); web Ko-fi covers it for now `#platform` _(2026-07-10)_
+
 ## Low Priority
 
 - [ ] **Share to specific game** — share a single game scorecard instead of full session `#share` _(2026-03-16)_
