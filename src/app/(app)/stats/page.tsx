@@ -11,6 +11,7 @@ interface PageProps {
     filter?: string;
     dateFrom?: string;
     dateTo?: string;
+    event?: string;
   }>;
 }
 
@@ -27,10 +28,12 @@ async function StatsData({
   filter,
   dateFrom,
   dateTo,
+  event,
 }: {
   filter: StatsFilter;
   dateFrom: string;
   dateTo: string;
+  event: string;
 }) {
   const supabase = await createClient();
   const {
@@ -45,12 +48,14 @@ async function StatsData({
       p_filter: filter,
       p_date_from: dateFrom || null,
       p_date_to: dateTo || null,
+      p_event: event || null,
     }),
     supabase.rpc("get_player_leave_stats", {
       p_user_id: user.id,
       p_filter: filter,
       p_date_from: dateFrom || null,
       p_date_to: dateTo || null,
+      p_event: event || null,
     }),
   ]);
 
@@ -70,6 +75,7 @@ export default async function StatsPage({ searchParams }: PageProps) {
   const filter = (params.filter ?? "last10") as StatsFilter;
   const dateFrom = params.dateFrom ?? "";
   const dateTo = params.dateTo ?? "";
+  const event = params.event ?? "";
 
   return (
     <div>
@@ -78,12 +84,18 @@ export default async function StatsPage({ searchParams }: PageProps) {
         currentFilter={filter}
         dateFrom={dateFrom}
         dateTo={dateTo}
+        currentEvent={event}
       />
       <Suspense
-        key={`${filter}-${dateFrom}-${dateTo}`}
+        key={`${filter}-${dateFrom}-${dateTo}-${event}`}
         fallback={<StatsLoading />}
       >
-        <StatsData filter={filter} dateFrom={dateFrom} dateTo={dateTo} />
+        <StatsData
+          filter={filter}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          event={event}
+        />
       </Suspense>
     </div>
   );
