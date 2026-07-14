@@ -14,7 +14,7 @@ export default function SupportPage() {
         <h1 className="mb-2 text-2xl font-extrabold">Support Spare Me</h1>
         <p className="mb-6 text-sm text-text-secondary">
           Spare Me is free and has no ads. If it&apos;s helped your game, a
-          small donation helps cover hosting costs and keeps it running.
+          small tip helps cover hosting costs and keeps it running.
         </p>
         <a
           href="https://ko-fi.com/jakelyj45285"

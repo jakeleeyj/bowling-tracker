@@ -42,7 +42,7 @@ export default function DonatePrompt() {
       <div className="min-w-0 flex-1">
         <p className="text-[13px] font-semibold">Enjoying Spare Me?</p>
         <p className="text-[11px] text-text-muted">
-          A small donation keeps the servers rolling
+          A small tip keeps the servers rolling
         </p>
       </div>
       <a
@@ -52,7 +52,7 @@ export default function DonatePrompt() {
         onClick={handleDismiss}
         className="shrink-0 rounded-lg bg-red px-3 py-1.5 text-[11px] font-bold text-white active:scale-95"
       >
-        Donate
+        Tip
       </a>
       <button
         onClick={handleDismiss}
