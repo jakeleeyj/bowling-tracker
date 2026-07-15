@@ -44,6 +44,7 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname === "/auth/callback";
 
   const isPublicPage =
+    request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname === "/privacy" ||
     request.nextUrl.pathname === "/support";
 
