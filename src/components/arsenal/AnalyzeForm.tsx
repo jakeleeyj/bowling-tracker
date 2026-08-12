@@ -13,7 +13,7 @@ const PRESET_LABELS: Record<keyof typeof STYLE_PRESETS, string> = {
   stroker: "Smooth & accurate",
   tweener: "A bit of both",
   cranker: "Big hook",
-  "two-handed": "Two-handed",
+  "two-handed": "High revs, no thumb",
 };
 
 const FIELD_HELP: Record<string, string> = {
