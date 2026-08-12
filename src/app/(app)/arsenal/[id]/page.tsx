@@ -164,7 +164,7 @@ export default function BallPage() {
         const pap = Number.isFinite(over)
           ? { over, up: Number.isFinite(up) ? up : 0 }
           : draft.no_thumb
-            ? { over: 5, up: -2 }
+            ? { over: 5, up: -1 }
             : undefined;
         return (
           <div className="glass mb-5 p-4">
@@ -173,7 +173,13 @@ export default function BallPage() {
             </p>
             <BallLayoutDiagram
               layout={{ drillingAngle: angle, pinToPap: pin, valAngle: val }}
-              showPsa={draft.core_type !== "symmetric"}
+              system={
+                draft.no_thumb
+                  ? "2ls"
+                  : draft.core_type === "symmetric"
+                    ? "vls"
+                    : "dual"
+              }
               showThumb={!draft.no_thumb}
               pap={pap}
               hand={

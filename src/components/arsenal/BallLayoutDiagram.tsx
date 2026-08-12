@@ -6,20 +6,26 @@ import {
   type PapPosition,
   type Handedness,
 } from "@/lib/layoutGeometry";
-import type { DualAngleLayout } from "@/lib/layoutEngine";
+import {
+  dualAngleToVLS,
+  dualAngleTo2LS,
+  type DualAngleLayout,
+} from "@/lib/layoutEngine";
 
 const SIZE = BALL_RADIUS_PX * 2;
 const PAD = 24;
 
+export type DiagramSystem = "dual" | "vls" | "2ls";
+
 export default function BallLayoutDiagram({
   layout,
-  showPsa = true,
+  system = "dual",
   pap,
   hand = "right",
   showThumb = true,
 }: {
   layout: DualAngleLayout;
-  showPsa?: boolean;
+  system?: DiagramSystem;
   pap?: PapPosition;
   hand?: Handedness;
   showThumb?: boolean;
@@ -28,9 +34,16 @@ export default function BallLayoutDiagram({
   const blue = "var(--color-blue)";
   const purple = "var(--color-purple)";
   const gold = "var(--color-gold)";
+  const green = "var(--color-green)";
   const red = "var(--color-red)";
   const muted = "var(--color-text-muted)";
   const surface = "var(--color-surface-light)";
+
+  const vls = dualAngleToVLS(layout);
+  const papForCog = pap ?? { over: 4.5, up: 0 };
+  const twoLS = dualAngleTo2LS(layout, papForCog);
+  const showPsa = system !== "vls";
+  const pinNearGrip = Math.hypot(g.pin.x - g.grip.x, g.pin.y - g.grip.y) < 45;
 
   return (
     <svg
@@ -100,7 +113,7 @@ export default function BallLayoutDiagram({
         grip
       </text>
 
-      {/* pin-to-PAP line */}
+      {/* pin-to-PAP line — line 1 in every system */}
       <line
         x1={g.pap.x}
         y1={g.pap.y}
@@ -118,7 +131,30 @@ export default function BallLayoutDiagram({
         {layout.pinToPap}&quot;
       </text>
 
-      {/* pin-to-PSA line */}
+      {/* VLS: pin buffer — distance from the pin to the VAL */}
+      {system === "vls" && (
+        <>
+          <line
+            x1={g.pin.x}
+            y1={g.pin.y}
+            x2={g.pap.x}
+            y2={g.pin.y}
+            stroke={gold}
+            strokeWidth={1.5}
+            strokeDasharray="2 3"
+          />
+          <text
+            x={(g.pin.x + g.pap.x) / 2 - 8}
+            y={g.pin.y - 8}
+            fontSize={10}
+            fill={gold}
+          >
+            {vls.pinBuffer}&quot;
+          </text>
+        </>
+      )}
+
+      {/* PSA */}
       {showPsa && (
         <>
           <line
@@ -134,35 +170,70 @@ export default function BallLayoutDiagram({
           <text x={g.psa.x + 7} y={g.psa.y + 4} fontSize={11} fill={purple}>
             PSA
           </text>
+          {system === "dual" && (
+            <text
+              x={(g.pin.x + g.psa.x) / 2 + 8}
+              y={(g.pin.y + g.psa.y) / 2 - 6}
+              fontSize={10}
+              fill={purple}
+            >
+              {layout.drillingAngle}°
+            </text>
+          )}
+        </>
+      )}
+
+      {/* 2LS: PSA-to-PAP arc (line 2) and pin-to-COG arc (line 3) */}
+      {system === "2ls" && (
+        <>
+          <line
+            x1={g.psa.x}
+            y1={g.psa.y}
+            x2={g.pap.x}
+            y2={g.pap.y}
+            stroke={purple}
+            strokeWidth={1.5}
+          />
           <text
-            x={(g.pin.x + g.psa.x) / 2 + 8}
-            y={(g.pin.y + g.psa.y) / 2 - 6}
+            x={(g.psa.x + g.pap.x) / 2 + 6}
+            y={(g.psa.y + g.pap.y) / 2 + 14}
             fontSize={10}
             fill={purple}
           >
-            {layout.drillingAngle}°
+            {twoLS.psaToPap}&quot;
+          </text>
+          <line
+            x1={g.pin.x}
+            y1={g.pin.y}
+            x2={g.grip.x}
+            y2={g.grip.y}
+            stroke={green}
+            strokeWidth={1.5}
+            strokeDasharray="5 3"
+          />
+          <text
+            x={(g.pin.x + g.grip.x) / 2 - 26}
+            y={(g.pin.y + g.grip.y) / 2 - 6}
+            fontSize={10}
+            fill={green}
+          >
+            {twoLS.pinToCog}&quot;
           </text>
         </>
       )}
 
-      {/* VAL angle label at the PAP */}
-      <text x={g.pap.x - 34} y={g.pap.y - 12} fontSize={10} fill={gold}>
-        {layout.valAngle}°
-      </text>
+      {/* VAL angle label at the PAP — dual angle only */}
+      {system === "dual" && (
+        <text x={g.pap.x - 34} y={g.pap.y - 12} fontSize={10} fill={gold}>
+          {layout.valAngle}°
+        </text>
+      )}
 
       {/* pin — label flips above the dot when it sits close to the grip */}
       <circle cx={g.pin.x} cy={g.pin.y} r={5} fill={red} />
       <text
-        x={
-          Math.hypot(g.pin.x - g.grip.x, g.pin.y - g.grip.y) < 45
-            ? g.pin.x - 10
-            : g.pin.x - 26
-        }
-        y={
-          Math.hypot(g.pin.x - g.grip.x, g.pin.y - g.grip.y) < 45
-            ? g.pin.y - 10
-            : g.pin.y + 4
-        }
+        x={pinNearGrip ? g.pin.x - 10 : g.pin.x - 26}
+        y={pinNearGrip ? g.pin.y - 10 : g.pin.y + 4}
         fontSize={11}
         fill={red}
       >

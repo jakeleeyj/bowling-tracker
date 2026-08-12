@@ -3,7 +3,7 @@
 // midline, VAL vertical through the PAP, pin up-lane from the PAP.
 // Flat projection — illustrative, not drilling-accurate.
 
-import type { DualAngleLayout } from "./layoutEngine";
+import { dualAngleTo2LS, type DualAngleLayout } from "./layoutEngine";
 
 export const BALL_RADIUS_PX = 150;
 // 8.59" ball diameter mapped to the 300px circle
@@ -80,13 +80,20 @@ export function computeLayoutGeometry(
   const pin = clampToBall(rawPin);
 
   // PSA: at the pin, drillingAngle between pin→PSA and pin→PAP, rotated
-  // down-lane (clockwise); drawn at a shortened illustrative distance.
+  // down-lane (clockwise). Placed along that ray at the distance that makes
+  // |PSA−PAP| equal the true 2LS PSA-to-PAP measurement.
   const toPap = Math.atan2(pap.y - pin.y, pap.x - pin.x);
   const psaAngle = toPap + layout.drillingAngle * DEG;
-  const psaDist = 2.2 * INCH_PX;
+  const dir: Point = { x: Math.cos(psaAngle), y: Math.sin(psaAngle) };
+  const targetPsaToPap = dualAngleTo2LS(layout).psaToPap * INCH_PX;
+  const v: Point = { x: pin.x - pap.x, y: pin.y - pap.y };
+  const b = v.x * dir.x + v.y * dir.y;
+  const c = v.x * v.x + v.y * v.y - targetPsaToPap * targetPsaToPap;
+  const disc = b * b - c;
+  const psaDist = disc >= 0 ? -b + Math.sqrt(disc) : 2.2 * INCH_PX;
   const psa: Point = {
-    x: pin.x + Math.cos(psaAngle) * psaDist,
-    y: pin.y + Math.sin(psaAngle) * psaDist,
+    x: pin.x + dir.x * psaDist,
+    y: pin.y + dir.y * psaDist,
   };
 
   const valHalf = Math.sqrt(

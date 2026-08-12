@@ -26,8 +26,12 @@ export interface VLSLayout {
 export interface TwoLSLayout {
   pinToPap: number;
   psaToPap: number;
-  pinBuffer: number;
+  pinToCog: number;
 }
+
+// Storm's 2LS (2-Hand Layout System) reference PAP: 5" over, 1" down from
+// the center of the bridge.
+export const TWO_HANDED_PAP = { over: 5, up: -1 } as const;
 
 export interface LayoutRecommendation {
   dualAngle: DualAngleLayout;
@@ -149,7 +153,7 @@ export function recommendLayout(
   );
   if (style === "two-handed") {
     reasons.push(
-      'Two-handed players typically use longer pin distances for control; PAP is measured 5" over and 2" down from the bridge.',
+      'Two-handed players typically use longer pin distances for control; PAP is measured 5" over and 1" down from the bridge.',
     );
   }
 
@@ -179,16 +183,26 @@ export function dualAngleToVLS(layout: DualAngleLayout): VLSLayout {
 
 // PSA-to-PAP via spherical law of cosines with pin-to-PSA fixed at 6.75" (≈90° arc):
 // cos(psaToPap) = sin(pinToPap) · cos(drillingAngle), all as arc angles.
-export function dualAngleTo2LS(layout: DualAngleLayout): TwoLSLayout {
+// Storm 2LS notation: pin-to-PAP × PSA-to-PAP × pin-to-COG (center of grip).
+// Pin-to-COG is measured from the PAP position (default: Storm's two-handed
+// reference, 5" over / 1" down from the bridge center).
+export function dualAngleTo2LS(
+  layout: DualAngleLayout,
+  pap: { over: number; up: number } = TWO_HANDED_PAP,
+): TwoLSLayout {
   const pinArc = layout.pinToPap * DEG_PER_INCH * DEG;
   const psaArc = Math.acos(
     Math.sin(pinArc) * Math.cos(layout.drillingAngle * DEG),
   );
   const psaToPap = psaArc / DEG / DEG_PER_INCH;
-  const { pinBuffer } = dualAngleToVLS(layout);
+
+  const pinX = pap.over - layout.pinToPap * Math.sin(layout.valAngle * DEG);
+  const pinY = pap.up + layout.pinToPap * Math.cos(layout.valAngle * DEG);
+  const pinToCog = Math.hypot(pinX, pinY);
+
   return {
     pinToPap: layout.pinToPap,
     psaToPap: Math.round(psaToPap * 4) / 4,
-    pinBuffer,
+    pinToCog: Math.round(pinToCog * 4) / 4,
   };
 }

@@ -130,7 +130,27 @@ describe("dualAngleTo2LS", () => {
     // Pinel: at 90° drilling angle PSA-to-PAP stays 6.75" for any pin distance
     expect(t.psaToPap).toBeCloseTo(6.75, 1);
     expect(t.pinToPap).toBe(4.5);
-    expect(t.pinBuffer).toBeGreaterThan(0);
+    // Storm 2LS third number is pin-to-COG (center of grip), range ~2-6.5"
+    expect(t.pinToCog).toBeGreaterThanOrEqual(1);
+    expect(t.pinToCog).toBeLessThanOrEqual(7);
+  });
+
+  it("computes pin-to-COG from the two-handed 5 over / 1 down PAP", () => {
+    // PAP at (5, -1) from grip; pin 4.5" from PAP at VAL 35°:
+    // pin = (5 - 4.5·sin35, -1 + 4.5·cos35) ≈ (2.42, 2.69) → |pin-grip| ≈ 3.6"
+    const t = dualAngleTo2LS({
+      drillingAngle: 50,
+      pinToPap: 4.5,
+      valAngle: 35,
+    });
+    expect(t.pinToCog).toBeCloseTo(3.6, 0);
+  });
+
+  it("accepts a custom PAP position for the pin-to-COG measurement", () => {
+    const layout = { drillingAngle: 50, pinToPap: 4.5, valAngle: 35 };
+    const near = dualAngleTo2LS(layout, { over: 4, up: 0 });
+    const far = dualAngleTo2LS(layout, { over: 6, up: 0 });
+    expect(near.pinToCog).not.toBeCloseTo(far.pinToCog, 1);
   });
 
   it("smaller drilling angle brings the PSA closer to the PAP", () => {

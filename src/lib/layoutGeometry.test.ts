@@ -4,6 +4,7 @@ import {
   BALL_RADIUS_PX,
   INCH_PX,
 } from "./layoutGeometry";
+import { dualAngleTo2LS } from "./layoutEngine";
 
 const layout = { drillingAngle: 50, pinToPap: 4.5, valAngle: 35 };
 
@@ -33,6 +34,13 @@ describe("computeLayoutGeometry", () => {
     const custom = computeLayoutGeometry(layout, { over: 5, up: 1 });
     expect(custom.pap.x - def.grip.x).toBeCloseTo(5 * INCH_PX, 1);
     expect(def.pap.y - custom.pap.y).toBeCloseTo(1 * INCH_PX, 1);
+  });
+
+  it("places the PSA at the true PSA-to-PAP distance", () => {
+    const g = computeLayoutGeometry(layout);
+    const expected = dualAngleTo2LS(layout).psaToPap * INCH_PX;
+    const actual = Math.hypot(g.psa.x - g.pap.x, g.psa.y - g.pap.y);
+    expect(actual).toBeCloseTo(expected, 0);
   });
 
   it("mirrors the whole layout for left-handed bowlers", () => {

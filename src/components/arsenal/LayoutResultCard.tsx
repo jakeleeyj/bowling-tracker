@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { LayoutRecommendation } from "@/lib/layoutEngine";
+import {
+  dualAngleTo2LS,
+  TWO_HANDED_PAP,
+  type LayoutRecommendation,
+} from "@/lib/layoutEngine";
 import type { PapPosition, Handedness } from "@/lib/layoutGeometry";
 import BallLayoutDiagram from "@/components/arsenal/BallLayoutDiagram";
 
@@ -24,8 +28,12 @@ export default function LayoutResultCard({
   const [system, setSystem] = useState<LayoutSystem>(
     twoHanded ? "2ls" : "dual",
   );
-  // Storm's two-handed convention: PAP located 5" over, 2" down from bridge
-  const effectivePap = pap ?? (twoHanded ? { over: 5, up: -2 } : undefined);
+  // Storm's two-handed convention: PAP located 5" over, 1" down from bridge
+  const effectivePap = pap ?? (twoHanded ? { ...TWO_HANDED_PAP } : undefined);
+  const twoLS = dualAngleTo2LS(
+    layout.dualAngle,
+    effectivePap ?? { over: 4.5, up: 0 },
+  );
   const systemViews = {
     dual: {
       label: "Dual Angle",
@@ -41,9 +49,9 @@ export default function LayoutResultCard({
     },
     "2ls": {
       label: "2LS",
-      value: `${layout.twoLS.pinToPap}" × ${layout.twoLS.psaToPap}" × ${layout.twoLS.pinBuffer}"`,
-      legend: "pin-to-PAP × PSA-to-PAP × pin buffer",
-      note: "For asymmetric-core balls.",
+      value: `${twoLS.pinToPap}" × ${twoLS.psaToPap}" × ${twoLS.pinToCog}"`,
+      legend: "pin-to-PAP × PSA-to-PAP × pin-to-COG",
+      note: "Storm's 2-hand layout system, measured from the bridge center.",
     },
   } as const;
 
@@ -89,27 +97,29 @@ export default function LayoutResultCard({
           layout={layout.dualAngle}
           pap={effectivePap}
           hand={hand}
-          showPsa={system !== "vls"}
+          system={system}
           showThumb={!twoHanded}
         />
       </div>
 
-      <div className="glass p-5">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
-          Why this layout
-        </p>
-        <ul className="flex flex-col gap-2.5">
-          {layout.reasons.map((reason, i) => (
-            <li
-              key={i}
-              className="flex gap-2 text-xs leading-relaxed text-text-secondary"
-            >
-              <span className="mt-0.5 shrink-0 text-blue">•</span>
-              {reason}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {layout.reasons.length > 0 && (
+        <div className="glass p-5">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
+            Why this layout
+          </p>
+          <ul className="flex flex-col gap-2.5">
+            {layout.reasons.map((reason, i) => (
+              <li
+                key={i}
+                className="flex gap-2 text-xs leading-relaxed text-text-secondary"
+              >
+                <span className="mt-0.5 shrink-0 text-blue">•</span>
+                {reason}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
