@@ -29,11 +29,25 @@ describe("computeLayoutGeometry", () => {
     expect(g.pin.y).toBeLessThan(g.pap.y);
   });
 
-  it("uses a custom PAP position when provided", () => {
-    const def = computeLayoutGeometry(layout);
+  it("uses a custom PAP position when provided (grip moves, pin stays)", () => {
     const custom = computeLayoutGeometry(layout, { over: 5, up: 1 });
-    expect(custom.pap.x - def.grip.x).toBeCloseTo(5 * INCH_PX, 1);
-    expect(def.pap.y - custom.pap.y).toBeCloseTo(1 * INCH_PX, 1);
+    expect(custom.pap.x - custom.grip.x).toBeCloseTo(5 * INCH_PX, 1);
+    expect(custom.grip.y - custom.pap.y).toBeCloseTo(1 * INCH_PX, 1);
+  });
+
+  it("keeps the pin anchored at the same spot across different layouts", () => {
+    const a = computeLayoutGeometry({
+      drillingAngle: 30,
+      pinToPap: 3,
+      valAngle: 25,
+    });
+    const b = computeLayoutGeometry({
+      drillingAngle: 70,
+      pinToPap: 5.5,
+      valAngle: 60,
+    });
+    expect(a.pin.x).toBeCloseTo(b.pin.x, 5);
+    expect(a.pin.y).toBeCloseTo(b.pin.y, 5);
   });
 
   it("places the PSA at the true PSA-to-PAP distance", () => {

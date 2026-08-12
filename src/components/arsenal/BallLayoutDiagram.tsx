@@ -52,6 +52,12 @@ export default function BallLayoutDiagram({
       role="img"
       aria-label={`Layout diagram: ${layout.drillingAngle}° drilling angle, ${layout.pinToPap} inch pin to PAP, ${layout.valAngle}° VAL angle`}
     >
+      <defs>
+        <clipPath id="ball-face">
+          <circle cx={g.center.x} cy={g.center.y} r={BALL_RADIUS_PX - 2} />
+        </clipPath>
+      </defs>
+
       {/* ball */}
       <circle
         cx={g.center.x}
@@ -86,28 +92,30 @@ export default function BallLayoutDiagram({
         VAL
       </text>
 
-      {/* grip holes */}
-      {g.fingers.map((f, i) => (
-        <circle
-          key={i}
-          cx={f.x}
-          cy={f.y}
-          r={9}
-          fill="none"
-          stroke={muted}
-          strokeWidth={1.5}
-        />
-      ))}
-      {showThumb && (
-        <circle
-          cx={g.thumb.x}
-          cy={g.thumb.y}
-          r={12}
-          fill="none"
-          stroke={muted}
-          strokeWidth={1.5}
-        />
-      )}
+      {/* grip holes — clipped at the silhouette; on a real ball they wrap around */}
+      <g clipPath="url(#ball-face)">
+        {g.fingers.map((f, i) => (
+          <circle
+            key={i}
+            cx={f.x}
+            cy={f.y}
+            r={9}
+            fill="none"
+            stroke={muted}
+            strokeWidth={1.5}
+          />
+        ))}
+        {showThumb && (
+          <circle
+            cx={g.thumb.x}
+            cy={g.thumb.y}
+            r={12}
+            fill="none"
+            stroke={muted}
+            strokeWidth={1.5}
+          />
+        )}
+      </g>
       <circle cx={g.grip.x} cy={g.grip.y} r={2.5} fill={muted} />
       <text x={g.grip.x - 8} y={g.grip.y + 16} fontSize={10} fill={muted}>
         grip

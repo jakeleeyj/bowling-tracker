@@ -11,6 +11,8 @@ import {
   recommendLayout,
   dualAngleToVLS,
   dualAngleTo2LS,
+  vlsToDualAngle,
+  twoLSToDualAngle,
   TWO_HANDED_PAP,
   type LaneCondition,
   type LayoutRecommendation,
@@ -41,9 +43,17 @@ export default function LayoutPage() {
   const [lane, setLane] = useState<LaneCondition>("medium");
   const [hand, setHand] = useState<Handedness>("right");
   const [twoHanded, setTwoHanded] = useState(false);
+  const [customSystem, setCustomSystem] = useState<"dual" | "vls" | "2ls">(
+    "dual",
+  );
   const [customDrill, setCustomDrill] = useState("50");
   const [customPin, setCustomPin] = useState("4.5");
   const [customVal, setCustomVal] = useState("35");
+  const [customBuffer, setCustomBuffer] = useState("2.5");
+  const [customPsa, setCustomPsa] = useState("4.25");
+  const [customCog, setCustomCog] = useState("3.5");
+  const [customPapOver, setCustomPapOver] = useState("");
+  const [customPapUp, setCustomPapUp] = useState("");
   const [ballName, setBallName] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -82,20 +92,41 @@ export default function LayoutPage() {
 
   const isTwoHanded = latest?.style === "two-handed" || twoHanded;
 
+  const papOverNum = parseFloat(customPapOver);
+  const papUpNum = parseFloat(customPapUp);
+  const customPap = Number.isFinite(papOverNum)
+    ? { over: papOverNum, up: Number.isFinite(papUpNum) ? papUpNum : 0 }
+    : isTwoHanded
+      ? { ...TWO_HANDED_PAP }
+      : { over: 4.5, up: 0 };
+
   let layout: LayoutRecommendation | null = null;
   if (mode === "custom") {
-    const dualAngle = {
-      drillingAngle: clamp(parseFloat(customDrill) || 50, 10, 90),
-      pinToPap: clamp(parseFloat(customPin) || 4.5, 0.75, 6),
-      valAngle: clamp(parseFloat(customVal) || 35, 20, 90),
-    };
+    const pinToPap = clamp(parseFloat(customPin) || 4.5, 0.75, 6);
+    const dualAngle =
+      customSystem === "vls"
+        ? vlsToDualAngle({
+            pinToPap,
+            pinBuffer: clamp(parseFloat(customBuffer) || 2.5, 0, 6),
+          })
+        : customSystem === "2ls"
+          ? twoLSToDualAngle(
+              {
+                pinToPap,
+                psaToPap: clamp(parseFloat(customPsa) || 4.25, 0.5, 8.5),
+                pinToCog: clamp(parseFloat(customCog) || 3.5, 0.5, 8),
+              },
+              customPap,
+            )
+          : {
+              drillingAngle: clamp(parseFloat(customDrill) || 50, 10, 90),
+              pinToPap,
+              valAngle: clamp(parseFloat(customVal) || 35, 20, 90),
+            };
     layout = {
       dualAngle,
       vls: dualAngleToVLS(dualAngle),
-      twoLS: dualAngleTo2LS(
-        dualAngle,
-        isTwoHanded ? TWO_HANDED_PAP : { over: 4.5, up: 0 },
-      ),
+      twoLS: dualAngleTo2LS(dualAngle, customPap),
       reasons: [],
     };
   } else if (latest) {
@@ -250,15 +281,62 @@ export default function LayoutPage() {
       {mode === "custom" && (
         <div className="glass mb-4 p-4">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
-            Your layout (dual angle)
+            Your layout
           </p>
+          <div className="mb-3 flex rounded-lg bg-surface-light p-1">
+            {(
+              [
+                ["dual", "Dual Angle"],
+                ["vls", "VLS"],
+                ["2ls", "2LS"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                onClick={() => setCustomSystem(value)}
+                className={`flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-150 ${
+                  customSystem === value
+                    ? "bg-blue/20 text-blue"
+                    : "text-text-muted active:scale-95"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="grid grid-cols-3 gap-3">
-            {customField("Drill angle °", customDrill, setCustomDrill)}
-            {customField('Pin-to-PAP "', customPin, setCustomPin)}
-            {customField("VAL angle °", customVal, setCustomVal)}
+            {customSystem === "dual" && (
+              <>
+                {customField("Drill angle °", customDrill, setCustomDrill)}
+                {customField('Pin-to-PAP "', customPin, setCustomPin)}
+                {customField("VAL angle °", customVal, setCustomVal)}
+              </>
+            )}
+            {customSystem === "vls" && (
+              <>
+                {customField('Pin-to-PAP "', customPin, setCustomPin)}
+                {customField('Pin buffer "', customBuffer, setCustomBuffer)}
+              </>
+            )}
+            {customSystem === "2ls" && (
+              <>
+                {customField('Pin-to-PAP "', customPin, setCustomPin)}
+                {customField('PSA-to-PAP "', customPsa, setCustomPsa)}
+                {customField('Pin-to-COG "', customCog, setCustomCog)}
+              </>
+            )}
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            {customField(
+              `PAP over " (default ${isTwoHanded ? "5" : "4.5"})`,
+              customPapOver,
+              setCustomPapOver,
+            )}
+            {customField('PAP up " (− = down)', customPapUp, setCustomPapUp)}
           </div>
           <p className="mt-2 text-[10px] leading-relaxed text-text-muted">
-            The VLS and 2LS tabs below convert these numbers automatically.
+            Enter the numbers you know — the tabs below convert between all
+            three systems automatically.
           </p>
         </div>
       )}
@@ -269,6 +347,7 @@ export default function LayoutPage() {
             layout={layout}
             hand={hand}
             twoHanded={isTwoHanded}
+            pap={mode === "custom" ? customPap : undefined}
           />
 
           <div className="glass mt-4 p-4">

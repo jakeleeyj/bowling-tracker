@@ -1,7 +1,8 @@
 // 2D projection of a dual-angle layout onto a ball-face diagram, the way a
-// pro shop marks it up: grip center in the middle, PAP out to the right on the
-// midline, VAL vertical through the PAP, pin up-lane from the PAP.
-// Flat projection — illustrative, not drilling-accurate.
+// pro shop marks it up. The pin is a fixed physical marker on the ball, so it
+// stays anchored; the grip (and with it the PAP) moves as the layout changes.
+// Flat projection — illustrative, not drilling-accurate; grip parts that would
+// wrap around the ball are clipped at the silhouette.
 
 import { dualAngleTo2LS, type DualAngleLayout } from "./layoutEngine";
 
@@ -43,8 +44,25 @@ export function computeLayoutGeometry(
   hand: Handedness = "right",
 ): LayoutGeometry {
   const center: Point = { x: BALL_RADIUS_PX, y: BALL_RADIUS_PX };
-  // grip center left of ball center so the PAP fits on the right
-  const grip: Point = { x: center.x - 1.4 * INCH_PX, y: center.y };
+
+  // The pin stays put; everything else is laid out relative to it.
+  const pin: Point = {
+    x: center.x - 0.85 * INCH_PX,
+    y: center.y - 2.1 * INCH_PX,
+  };
+
+  // PAP: pinToPap from the pin, rotated valAngle off the VAL (vertical),
+  // down-lane toward the midline.
+  const pap: Point = {
+    x: pin.x + layout.pinToPap * Math.sin(layout.valAngle * DEG) * INCH_PX,
+    y: pin.y + layout.pinToPap * Math.cos(layout.valAngle * DEG) * INCH_PX,
+  };
+
+  // Grip center from the PAP: "over" back along the midline, "up" above it.
+  const grip: Point = {
+    x: pap.x - papPosition.over * INCH_PX,
+    y: pap.y + papPosition.up * INCH_PX,
+  };
   const fingerGap = 0.55 * INCH_PX;
   const fingers: [Point, Point] = [
     { x: grip.x - fingerGap, y: grip.y - 2.1 * INCH_PX },
@@ -52,14 +70,7 @@ export function computeLayoutGeometry(
   ];
   const thumb: Point = { x: grip.x, y: grip.y + 2.3 * INCH_PX };
 
-  // PAP measured from grip center: "over" along the midline, "up" above it
-  const pap: Point = {
-    x: grip.x + papPosition.over * INCH_PX,
-    y: grip.y - papPosition.up * INCH_PX,
-  };
-
-  // Keeps a point on the visible ball face — the flat projection pushes
-  // long layouts past the silhouette that would wrap around a real ball.
+  // Keeps a labeled point on the visible ball face.
   const clampToBall = (p: Point): Point => {
     const max = BALL_RADIUS_PX * 0.92;
     const d = Math.hypot(p.x - center.x, p.y - center.y);
@@ -70,14 +81,6 @@ export function computeLayoutGeometry(
       y: center.y + (p.y - center.y) * k,
     };
   };
-
-  // Pin: from the PAP, rotated valAngle off the VAL (vertical), toward the
-  // grip side, up toward the fingers.
-  const rawPin: Point = {
-    x: pap.x - layout.pinToPap * Math.sin(layout.valAngle * DEG) * INCH_PX,
-    y: pap.y - layout.pinToPap * Math.cos(layout.valAngle * DEG) * INCH_PX,
-  };
-  const pin = clampToBall(rawPin);
 
   // PSA: at the pin, drillingAngle between pin→PSA and pin→PAP, rotated
   // down-lane (clockwise). Placed along that ray at the distance that makes
@@ -91,10 +94,10 @@ export function computeLayoutGeometry(
   const c = v.x * v.x + v.y * v.y - targetPsaToPap * targetPsaToPap;
   const disc = b * b - c;
   const psaDist = disc >= 0 ? -b + Math.sqrt(disc) : 2.2 * INCH_PX;
-  const psa: Point = {
+  const psa: Point = clampToBall({
     x: pin.x + dir.x * psaDist,
     y: pin.y + dir.y * psaDist,
-  };
+  });
 
   const valHalf = Math.sqrt(
     Math.max(0, BALL_RADIUS_PX ** 2 - (pap.x - center.x) ** 2),
@@ -104,7 +107,7 @@ export function computeLayoutGeometry(
     grip,
     fingers,
     thumb,
-    pap,
+    pap: clampToBall(pap),
     pin,
     psa,
     valTop: { x: pap.x, y: center.y - valHalf },
@@ -117,7 +120,7 @@ export function computeLayoutGeometry(
       grip: mirror(grip),
       fingers: [mirror(geometry.fingers[0]), mirror(geometry.fingers[1])],
       thumb: mirror(thumb),
-      pap: mirror(pap),
+      pap: mirror(geometry.pap),
       pin: mirror(pin),
       psa: mirror(psa),
       valTop: mirror(geometry.valTop),

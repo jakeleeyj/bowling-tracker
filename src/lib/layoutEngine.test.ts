@@ -3,6 +3,8 @@ import {
   recommendLayout,
   dualAngleToVLS,
   dualAngleTo2LS,
+  vlsToDualAngle,
+  twoLSToDualAngle,
 } from "./layoutEngine";
 
 const stroker = {
@@ -165,5 +167,43 @@ describe("dualAngleTo2LS", () => {
       valAngle: 35,
     });
     expect(small.psaToPap).toBeLessThan(large.psaToPap);
+  });
+});
+
+describe("vlsToDualAngle", () => {
+  it("round-trips a VLS layout back to its VAL angle", () => {
+    const original = { drillingAngle: 45, pinToPap: 4.5, valAngle: 35 };
+    const vls = dualAngleToVLS(original);
+    const back = vlsToDualAngle(vls);
+    expect(back.pinToPap).toBe(4.5);
+    // buffer is rounded to quarter inches, so allow ±2°
+    expect(Math.abs(back.valAngle - 35)).toBeLessThan(2);
+  });
+
+  it("clamps an impossible buffer (larger than pin-to-PAP)", () => {
+    const back = vlsToDualAngle({ pinToPap: 4, pinBuffer: 5 });
+    expect(back.valAngle).toBeLessThanOrEqual(90);
+    expect(Number.isFinite(back.valAngle)).toBe(true);
+  });
+});
+
+describe("twoLSToDualAngle", () => {
+  it("round-trips a 2LS layout back to drilling and VAL angles", () => {
+    const original = { drillingAngle: 50, pinToPap: 4.5, valAngle: 35 };
+    const pap = { over: 5, up: -1 };
+    const twoLS = dualAngleTo2LS(original, pap);
+    const back = twoLSToDualAngle(twoLS, pap);
+    expect(back.pinToPap).toBe(4.5);
+    expect(back.drillingAngle).toBeCloseTo(50, -1);
+    expect(back.valAngle).toBeCloseTo(35, -1);
+  });
+
+  it("returns finite angles for out-of-reach measurements", () => {
+    const back = twoLSToDualAngle(
+      { pinToPap: 4, psaToPap: 9, pinToCog: 12 },
+      { over: 4.5, up: 0 },
+    );
+    expect(Number.isFinite(back.drillingAngle)).toBe(true);
+    expect(Number.isFinite(back.valAngle)).toBe(true);
   });
 });

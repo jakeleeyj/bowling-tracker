@@ -183,6 +183,47 @@ export function dualAngleToVLS(layout: DualAngleLayout): VLSLayout {
 
 // PSA-to-PAP via spherical law of cosines with pin-to-PSA fixed at 6.75" (≈90° arc):
 // cos(psaToPap) = sin(pinToPap) · cos(drillingAngle), all as arc angles.
+// Inverse of dualAngleToVLS: VAL angle from pin buffer. The drilling angle
+// isn't encoded in VLS (symmetric cores), so it defaults to a neutral 45°.
+export function vlsToDualAngle(vls: VLSLayout): DualAngleLayout {
+  const ratio = clamp(vls.pinBuffer / vls.pinToPap, 0, 1);
+  return {
+    drillingAngle: 45,
+    pinToPap: vls.pinToPap,
+    valAngle: Math.round((Math.asin(ratio) / DEG) * 10) / 10,
+  };
+}
+
+// Inverse of dualAngleTo2LS. VAL angle from pin-to-COG (the pin sits
+// pinToPap from the PAP; solve over·sin(v) − up·cos(v) = k on the midline
+// coordinate system), drilling angle from the PSA-to-PAP spherical relation.
+export function twoLSToDualAngle(
+  twoLS: TwoLSLayout,
+  pap: { over: number; up: number } = TWO_HANDED_PAP,
+): DualAngleLayout {
+  const p = twoLS.pinToPap;
+  const r = Math.hypot(pap.over, pap.up);
+  const k = clamp(
+    (pap.over ** 2 + pap.up ** 2 + p ** 2 - twoLS.pinToCog ** 2) / (2 * p),
+    -r,
+    r,
+  );
+  // over·sin(v) − up·cos(v) = k  →  v = asin(k/r) + atan2(up, over)
+  const phi = Math.atan2(pap.up, pap.over);
+  const valAngle = clamp((Math.asin(k / r) + phi) / DEG, 20, 90);
+
+  const pinArc = p * DEG_PER_INCH * DEG;
+  const psaArc = clamp(twoLS.psaToPap, 0.5, 8.5) * DEG_PER_INCH * DEG;
+  const cosDrill = clamp(Math.cos(psaArc) / Math.sin(pinArc), -1, 1);
+  const drillingAngle = clamp(Math.acos(cosDrill) / DEG, 10, 90);
+
+  return {
+    drillingAngle: Math.round(drillingAngle),
+    pinToPap: p,
+    valAngle: Math.round(valAngle),
+  };
+}
+
 // Storm 2LS notation: pin-to-PAP × PSA-to-PAP × pin-to-COG (center of grip).
 // Pin-to-COG is measured from the PAP position (default: Storm's two-handed
 // reference, 5" over / 1" down from the bridge center).
