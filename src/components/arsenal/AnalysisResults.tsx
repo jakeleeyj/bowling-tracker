@@ -21,7 +21,7 @@ export default function AnalysisResults({
 
   return (
     <div className="animate-slide-up flex flex-col gap-4">
-      <div className="glass-strong rounded-xl p-5">
+      <div className="glass-strong p-5">
         <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
           Your style
         </p>
@@ -47,7 +47,7 @@ export default function AnalysisResults({
         </div>
       </div>
 
-      <div className="glass rounded-xl p-5">
+      <div className="glass p-5">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
           Recommended layout
         </p>
@@ -82,7 +82,7 @@ export default function AnalysisResults({
         </div>
       </div>
 
-      <div className="glass rounded-xl p-5">
+      <div className="glass p-5">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
           Why this layout
         </p>

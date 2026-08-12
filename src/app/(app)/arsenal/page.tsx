@@ -71,7 +71,7 @@ export default function ArsenalPage() {
           </button>
 
           {balls.length === 0 ? (
-            <div className="glass rounded-xl p-6 text-center">
+            <div className="glass p-6 text-center">
               <p className="mb-1 text-sm font-bold text-text-primary">
                 No balls yet
               </p>

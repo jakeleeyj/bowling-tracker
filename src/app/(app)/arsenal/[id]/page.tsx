@@ -168,7 +168,7 @@ export default function BallPage() {
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6">
-          <div className="glass-strong animate-scale-in w-full max-w-sm rounded-xl p-5">
+          <div className="glass-strong animate-scale-in w-full max-w-sm p-5">
             <p className="mb-1 text-sm font-bold text-text-primary">
               Delete {ball.name}?
             </p>
@@ -185,7 +185,7 @@ export default function BallPage() {
               </button>
               <button
                 onClick={remove}
-                className="flex-1 rounded-lg bg-red/90 py-2.5 text-sm font-bold text-white active:scale-95"
+                className="flex-1 rounded-lg bg-red py-2.5 text-sm font-bold text-white active:scale-95"
               >
                 Delete
               </button>

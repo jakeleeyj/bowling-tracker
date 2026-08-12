@@ -111,7 +111,7 @@ export default function DrillingSpecsForm({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="glass rounded-xl p-4">
+      <div className="glass p-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
           Ball
         </p>
@@ -157,7 +157,7 @@ export default function DrillingSpecsForm({
         </div>
       </div>
 
-      <div className="glass rounded-xl p-4">
+      <div className="glass p-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
           Layout
         </p>
@@ -195,7 +195,7 @@ export default function DrillingSpecsForm({
         </div>
       </div>
 
-      <div className="glass rounded-xl p-4">
+      <div className="glass p-4">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
             Drilling specs

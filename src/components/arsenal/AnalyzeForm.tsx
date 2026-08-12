@@ -71,7 +71,7 @@ export default function AnalyzeForm({
         <button
           onClick={() => setOpenHelp(openHelp === helpKey ? null : helpKey)}
           aria-label={`Help for ${label}`}
-          className="text-text-muted active:scale-90"
+          className="-m-2 p-2 text-text-muted active:scale-90"
         >
           <HelpCircle size={12} />
         </button>
@@ -96,7 +96,7 @@ export default function AnalyzeForm({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="glass rounded-xl p-4">
+      <div className="glass p-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
           Your numbers
         </p>
@@ -179,7 +179,7 @@ export default function AnalyzeForm({
         )}
       </div>
 
-      <div className="glass rounded-xl p-4">
+      <div className="glass p-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
           Typical lane condition
         </p>
