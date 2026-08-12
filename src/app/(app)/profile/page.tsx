@@ -16,6 +16,7 @@ import {
   Target,
   Crown,
   Award,
+  CircleDot,
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import ErrorCard from "@/components/ErrorCard";
@@ -415,6 +416,14 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
+
+          <button
+            onClick={() => router.push("/arsenal")}
+            className="glass flex items-center gap-3 p-4 text-left"
+          >
+            <CircleDot size={20} className="text-purple" />
+            <span className="text-sm font-semibold">My Arsenal</span>
+          </button>
 
           <button
             onClick={() => setShowInstall(!showInstall)}
