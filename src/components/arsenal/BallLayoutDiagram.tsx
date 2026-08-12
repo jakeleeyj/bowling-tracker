@@ -134,7 +134,12 @@ export default function BallLayoutDiagram({
           <text x={g.psa.x + 7} y={g.psa.y + 4} fontSize={11} fill={purple}>
             PSA
           </text>
-          <text x={g.pin.x + 12} y={g.pin.y + 18} fontSize={10} fill={purple}>
+          <text
+            x={(g.pin.x + g.psa.x) / 2 + 8}
+            y={(g.pin.y + g.psa.y) / 2 - 6}
+            fontSize={10}
+            fill={purple}
+          >
             {layout.drillingAngle}°
           </text>
         </>
@@ -145,9 +150,22 @@ export default function BallLayoutDiagram({
         {layout.valAngle}°
       </text>
 
-      {/* pin */}
+      {/* pin — label flips above the dot when it sits close to the grip */}
       <circle cx={g.pin.x} cy={g.pin.y} r={5} fill={red} />
-      <text x={g.pin.x - 26} y={g.pin.y + 4} fontSize={11} fill={red}>
+      <text
+        x={
+          Math.hypot(g.pin.x - g.grip.x, g.pin.y - g.grip.y) < 45
+            ? g.pin.x - 10
+            : g.pin.x - 26
+        }
+        y={
+          Math.hypot(g.pin.x - g.grip.x, g.pin.y - g.grip.y) < 45
+            ? g.pin.y - 10
+            : g.pin.y + 4
+        }
+        fontSize={11}
+        fill={red}
+      >
         pin
       </text>
 
