@@ -34,10 +34,12 @@ export interface AnalyzeInput {
   speedUnit: SpeedUnit;
   pap?: PapPosition;
   hand: Handedness;
+  twoHanded: boolean;
 }
 
 const SPEED_UNIT_KEY = "spare-me-speed-unit";
 export const HAND_KEY = "spare-me-hand";
+export const GRIP_KEY = "spare-me-grip";
 
 export default function AnalyzeForm({
   onAnalyze,
@@ -55,9 +57,11 @@ export default function AnalyzeForm({
   const [papOver, setPapOver] = useState("");
   const [papUp, setPapUp] = useState("");
   const [hand, setHand] = useState<Handedness>("right");
+  const [twoHanded, setTwoHanded] = useState(false);
 
   useEffect(() => {
     if (localStorage.getItem(HAND_KEY) === "left") setHand("left");
+    if (localStorage.getItem(GRIP_KEY) === "two") setTwoHanded(true);
     const saved = localStorage.getItem(SPEED_UNIT_KEY);
     if (saved === "kmh") {
       setSpeedUnit("kmh");
@@ -100,7 +104,19 @@ export default function AnalyzeForm({
       mode === "manual" && Number.isFinite(over)
         ? { over, up: Number.isFinite(up) ? up : 0 }
         : undefined;
-    onAnalyze({ specs, speedUnit, pap, hand });
+    onAnalyze({
+      specs,
+      speedUnit,
+      pap,
+      hand,
+      twoHanded: twoHanded || (mode === "preset" && preset === "two-handed"),
+    });
+  }
+
+  function switchGrip(two: boolean) {
+    setTwoHanded(two);
+    localStorage.setItem(GRIP_KEY, two ? "two" : "one");
+    if (two && mode === "preset") setPreset("two-handed");
   }
 
   function switchHand(h: Handedness) {
@@ -151,6 +167,29 @@ export default function AnalyzeForm({
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
           Your numbers
         </p>
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-xs text-text-muted">Grip</span>
+          <div className="flex gap-1">
+            {(
+              [
+                [false, "One-handed"],
+                [true, "Two-handed"],
+              ] as const
+            ).map(([two, label]) => (
+              <button
+                key={label}
+                onClick={() => switchGrip(two)}
+                className={`rounded px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
+                  twoHanded === two
+                    ? "bg-blue/20 text-blue"
+                    : "bg-surface-light text-text-muted active:scale-95"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="mb-3 flex items-center justify-between">
           <span className="text-xs text-text-muted">Bowling hand</span>
           <div className="flex gap-1">

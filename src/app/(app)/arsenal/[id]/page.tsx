@@ -163,7 +163,9 @@ export default function BallPage() {
         const up = parseFloat(draft.pap_up ?? "");
         const pap = Number.isFinite(over)
           ? { over, up: Number.isFinite(up) ? up : 0 }
-          : undefined;
+          : draft.no_thumb
+            ? { over: 5, up: -2 }
+            : undefined;
         return (
           <div className="glass mb-5 p-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
@@ -172,6 +174,7 @@ export default function BallPage() {
             <BallLayoutDiagram
               layout={{ drillingAngle: angle, pinToPap: pin, valAngle: val }}
               showPsa={draft.core_type !== "symmetric"}
+              showThumb={!draft.no_thumb}
               pap={pap}
               hand={
                 typeof window !== "undefined" &&

@@ -132,6 +132,15 @@ describe("analyzeFlight", () => {
     }
   });
 
+  it("classifies as two-handed when the flag is set, regardless of numbers", () => {
+    const result = analyzeFlight(
+      { ballSpeedMph: 18, revRate: 480, axisTilt: 10, axisRotation: 55 },
+      "mph",
+      { twoHanded: true },
+    );
+    expect(result.style).toBe("two-handed");
+  });
+
   it("clamps out-of-range inputs into valid bounds", () => {
     const result = analyzeFlight({
       ballSpeedMph: 99,

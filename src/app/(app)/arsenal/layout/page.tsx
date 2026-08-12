@@ -176,7 +176,11 @@ export default function LayoutPage() {
         </div>
       </div>
 
-      <LayoutResultCard layout={layout} hand={hand} />
+      <LayoutResultCard
+        layout={layout}
+        hand={hand}
+        twoHanded={latest.style === "two-handed"}
+      />
 
       <div className="glass mt-4 p-4">
         <label className="mb-1 block text-xs text-text-muted">

@@ -138,10 +138,13 @@ const STYLE_REASONS: Record<BowlerStyle, string> = {
 export function analyzeFlight(
   rawSpecs: BowlerSpecs,
   speedUnit: SpeedUnit = "mph",
+  options?: { twoHanded?: boolean },
 ): FlightAnalysis {
   const specs = clampSpecs(rawSpecs);
   const { ratio, match } = getSpeedRevMatch(specs.ballSpeedMph, specs.revRate);
-  const style = getStyle(specs);
+  const style: BowlerStyle = options?.twoHanded
+    ? "two-handed"
+    : getStyle(specs);
   const reasons = [
     `At ${formatSpeed(specs.ballSpeedMph, speedUnit)} with ${Math.round(specs.revRate)} rpm, you are ${match.replace("-", " ")}.`,
     MATCH_REASONS[match],

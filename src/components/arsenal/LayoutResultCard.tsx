@@ -11,14 +11,21 @@ export default function LayoutResultCard({
   layout,
   pap,
   hand = "right",
+  twoHanded = false,
   onSystemChange,
 }: {
   layout: LayoutRecommendation;
   pap?: PapPosition;
   hand?: Handedness;
+  twoHanded?: boolean;
   onSystemChange?: (system: LayoutSystem) => void;
 }) {
-  const [system, setSystem] = useState<LayoutSystem>("dual");
+  // Two-handers have no thumb, so Storm's 2LS notation is their default view
+  const [system, setSystem] = useState<LayoutSystem>(
+    twoHanded ? "2ls" : "dual",
+  );
+  // Storm's two-handed convention: PAP located 5" over, 2" down from bridge
+  const effectivePap = pap ?? (twoHanded ? { over: 5, up: -2 } : undefined);
   const systemViews = {
     dual: {
       label: "Dual Angle",
@@ -80,9 +87,10 @@ export default function LayoutResultCard({
         </div>
         <BallLayoutDiagram
           layout={layout.dualAngle}
-          pap={pap}
+          pap={effectivePap}
           hand={hand}
           showPsa={system !== "vls"}
+          showThumb={!twoHanded}
         />
       </div>
 

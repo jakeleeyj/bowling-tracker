@@ -16,11 +16,13 @@ export default function BallLayoutDiagram({
   showPsa = true,
   pap,
   hand = "right",
+  showThumb = true,
 }: {
   layout: DualAngleLayout;
   showPsa?: boolean;
   pap?: PapPosition;
   hand?: Handedness;
+  showThumb?: boolean;
 }) {
   const g = computeLayoutGeometry(layout, pap, hand);
   const blue = "var(--color-blue)";
@@ -83,14 +85,16 @@ export default function BallLayoutDiagram({
           strokeWidth={1.5}
         />
       ))}
-      <circle
-        cx={g.thumb.x}
-        cy={g.thumb.y}
-        r={12}
-        fill="none"
-        stroke={muted}
-        strokeWidth={1.5}
-      />
+      {showThumb && (
+        <circle
+          cx={g.thumb.x}
+          cy={g.thumb.y}
+          r={12}
+          fill="none"
+          stroke={muted}
+          strokeWidth={1.5}
+        />
+      )}
       <circle cx={g.grip.x} cy={g.grip.y} r={2.5} fill={muted} />
       <text x={g.grip.x - 8} y={g.grip.y + 16} fontSize={10} fill={muted}>
         grip

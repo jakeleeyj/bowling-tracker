@@ -27,7 +27,11 @@ export default function AnalyzePage() {
   const [saved, setSaved] = useState(false);
 
   function handleAnalyze(input: AnalyzeInput) {
-    setAnalysis(analyzeFlight(input.specs, input.speedUnit));
+    setAnalysis(
+      analyzeFlight(input.specs, input.speedUnit, {
+        twoHanded: input.twoHanded,
+      }),
+    );
     setSpeedUnit(input.speedUnit);
     setSaved(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
