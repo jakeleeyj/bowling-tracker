@@ -78,19 +78,28 @@ export default function BallLayoutDiagram({
         strokeWidth={1}
         strokeDasharray="4 4"
       />
-      {/* VAL */}
-      <line
-        x1={g.valTop.x}
-        y1={g.valTop.y}
-        x2={g.valBottom.x}
-        y2={g.valBottom.y}
-        stroke={gold}
-        strokeWidth={1.5}
-        strokeDasharray="6 4"
-      />
-      <text x={g.valTop.x + 6} y={g.valTop.y + 16} fontSize={11} fill={gold}>
-        VAL
-      </text>
+      {/* VAL — used by Dual Angle and VLS; 2LS is a distance-only system */}
+      {system !== "2ls" && (
+        <>
+          <line
+            x1={g.valTop.x}
+            y1={g.valTop.y}
+            x2={g.valBottom.x}
+            y2={g.valBottom.y}
+            stroke={gold}
+            strokeWidth={1.5}
+            strokeDasharray="6 4"
+          />
+          <text
+            x={g.valTop.x + 6}
+            y={g.valTop.y + 16}
+            fontSize={11}
+            fill={gold}
+          >
+            VAL
+          </text>
+        </>
+      )}
 
       {/* grip holes — clipped at the silhouette; on a real ball they wrap around */}
       <g clipPath="url(#ball-face)">

@@ -45,10 +45,11 @@ export function computeLayoutGeometry(
 ): LayoutGeometry {
   const center: Point = { x: BALL_RADIUS_PX, y: BALL_RADIUS_PX };
 
-  // The pin stays put; everything else is laid out relative to it.
+  // The pin stays put, top-center like the factory pin marker on a real
+  // ball; everything else is laid out relative to it.
   const pin: Point = {
-    x: center.x - 0.85 * INCH_PX,
-    y: center.y - 2.1 * INCH_PX,
+    x: center.x,
+    y: center.y - 2.6 * INCH_PX,
   };
 
   // PAP: pinToPap from the pin, rotated valAngle off the VAL (vertical),
