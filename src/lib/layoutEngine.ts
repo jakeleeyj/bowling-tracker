@@ -184,11 +184,22 @@ export function dualAngleToVLS(layout: DualAngleLayout): VLSLayout {
 // PSA-to-PAP via spherical law of cosines with pin-to-PSA fixed at 6.75" (≈90° arc):
 // cos(psaToPap) = sin(pinToPap) · cos(drillingAngle), all as arc angles.
 // Inverse of dualAngleToVLS: VAL angle from pin buffer. The drilling angle
-// isn't encoded in VLS (symmetric cores), so it defaults to a neutral 45°.
-export function vlsToDualAngle(vls: VLSLayout): DualAngleLayout {
+// comes from PSA-to-PAP when known (Storm's full spec is pin × PSA × buffer);
+// without it, defaults to a neutral 45°.
+export function vlsToDualAngle(
+  vls: VLSLayout,
+  psaToPap?: number,
+): DualAngleLayout {
   const ratio = clamp(vls.pinBuffer / vls.pinToPap, 0, 1);
+  let drillingAngle = 45;
+  if (psaToPap !== undefined) {
+    const pinArc = vls.pinToPap * DEG_PER_INCH * DEG;
+    const psaArc = clamp(psaToPap, 0.5, 8.5) * DEG_PER_INCH * DEG;
+    const cosDrill = clamp(Math.cos(psaArc) / Math.sin(pinArc), -1, 1);
+    drillingAngle = clamp(Math.round(Math.acos(cosDrill) / DEG), 10, 90);
+  }
   return {
-    drillingAngle: 45,
+    drillingAngle,
     pinToPap: vls.pinToPap,
     valAngle: Math.round((Math.asin(ratio) / DEG) * 10) / 10,
   };

@@ -43,9 +43,9 @@ export default function LayoutResultCard({
     },
     vls: {
       label: "VLS",
-      value: `${layout.vls.pinToPap}" × ${layout.vls.pinBuffer}"`,
-      legend: "pin-to-PAP × pin buffer",
-      note: "For symmetric-core balls.",
+      value: `${layout.vls.pinToPap}" × ${twoLS.psaToPap}" × ${layout.vls.pinBuffer}"`,
+      legend: "pin-to-PAP × PSA-to-PAP × pin buffer",
+      note: "Storm's pin buffer system; buffer is the pin-to-VAL distance.",
     },
     "2ls": {
       label: "2LS",

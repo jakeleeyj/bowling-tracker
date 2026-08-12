@@ -207,3 +207,12 @@ describe("twoLSToDualAngle", () => {
     expect(Number.isFinite(back.valAngle)).toBe(true);
   });
 });
+
+describe("vlsToDualAngle with PSA", () => {
+  it("derives the drilling angle when PSA-to-PAP is provided", () => {
+    const original = { drillingAngle: 60, pinToPap: 4.5, valAngle: 35 };
+    const psaToPap = dualAngleTo2LS(original).psaToPap;
+    const back = vlsToDualAngle(dualAngleToVLS(original), psaToPap);
+    expect(Math.abs(back.drillingAngle - 60)).toBeLessThan(4);
+  });
+});

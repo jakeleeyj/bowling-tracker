@@ -105,10 +105,15 @@ export default function LayoutPage() {
     const pinToPap = clamp(parseFloat(customPin) || 4.5, 0.75, 6);
     const dualAngle =
       customSystem === "vls"
-        ? vlsToDualAngle({
-            pinToPap,
-            pinBuffer: clamp(parseFloat(customBuffer) || 2.5, 0, 6),
-          })
+        ? vlsToDualAngle(
+            {
+              pinToPap,
+              pinBuffer: clamp(parseFloat(customBuffer) || 2.5, 0, 6),
+            },
+            Number.isFinite(parseFloat(customPsa))
+              ? clamp(parseFloat(customPsa), 0.5, 8.5)
+              : undefined,
+          )
         : customSystem === "2ls"
           ? twoLSToDualAngle(
               {
@@ -315,6 +320,7 @@ export default function LayoutPage() {
             {customSystem === "vls" && (
               <>
                 {customField('Pin-to-PAP "', customPin, setCustomPin)}
+                {customField('PSA-to-PAP "', customPsa, setCustomPsa)}
                 {customField('Pin buffer "', customBuffer, setCustomBuffer)}
               </>
             )}

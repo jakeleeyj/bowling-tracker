@@ -42,7 +42,7 @@ export default function BallLayoutDiagram({
   const vls = dualAngleToVLS(layout);
   const papForCog = pap ?? { over: 4.5, up: 0 };
   const twoLS = dualAngleTo2LS(layout, papForCog);
-  const showPsa = system !== "vls";
+  const showPsa = true;
   const pinNearGrip = Math.hypot(g.pin.x - g.grip.x, g.pin.y - g.grip.y) < 45;
 
   return (
@@ -200,8 +200,8 @@ export default function BallLayoutDiagram({
         </>
       )}
 
-      {/* 2LS: PSA-to-PAP arc (line 2) and pin-to-COG arc (line 3) */}
-      {system === "2ls" && (
+      {/* PSA-to-PAP arc — part of both the VLS and 2LS specs */}
+      {system !== "dual" && (
         <>
           <line
             x1={g.psa.x}
@@ -219,6 +219,12 @@ export default function BallLayoutDiagram({
           >
             {twoLS.psaToPap}&quot;
           </text>
+        </>
+      )}
+
+      {/* 2LS: pin-to-COG arc (line 3) */}
+      {system === "2ls" && (
+        <>
           <line
             x1={g.pin.x}
             y1={g.pin.y}
