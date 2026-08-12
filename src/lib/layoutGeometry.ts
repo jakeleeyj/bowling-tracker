@@ -35,9 +35,12 @@ export interface PapPosition {
 
 const DEFAULT_PAP: PapPosition = { over: 4.5, up: 0 };
 
+export type Handedness = "right" | "left";
+
 export function computeLayoutGeometry(
   layout: DualAngleLayout,
   papPosition: PapPosition = DEFAULT_PAP,
+  hand: Handedness = "right",
 ): LayoutGeometry {
   const center: Point = { x: BALL_RADIUS_PX, y: BALL_RADIUS_PX };
   // grip center left of ball center so the PAP fits on the right
@@ -89,7 +92,7 @@ export function computeLayoutGeometry(
   const valHalf = Math.sqrt(
     Math.max(0, BALL_RADIUS_PX ** 2 - (pap.x - center.x) ** 2),
   );
-  return {
+  const geometry: LayoutGeometry = {
     center,
     grip,
     fingers,
@@ -100,4 +103,19 @@ export function computeLayoutGeometry(
     valTop: { x: pap.x, y: center.y - valHalf },
     valBottom: { x: pap.x, y: center.y + valHalf },
   };
+  if (hand === "left") {
+    const mirror = (p: Point): Point => ({ x: 2 * center.x - p.x, y: p.y });
+    return {
+      center,
+      grip: mirror(grip),
+      fingers: [mirror(geometry.fingers[0]), mirror(geometry.fingers[1])],
+      thumb: mirror(thumb),
+      pap: mirror(pap),
+      pin: mirror(pin),
+      psa: mirror(psa),
+      valTop: mirror(geometry.valTop),
+      valBottom: mirror(geometry.valBottom),
+    };
+  }
+  return geometry;
 }

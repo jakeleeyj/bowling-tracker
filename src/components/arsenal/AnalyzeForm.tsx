@@ -11,7 +11,7 @@ import {
   type SpeedUnit,
 } from "@/lib/flightAnalysis";
 import type { LaneCondition } from "@/lib/layoutEngine";
-import type { PapPosition } from "@/lib/layoutGeometry";
+import type { PapPosition, Handedness } from "@/lib/layoutGeometry";
 
 const PRESET_LABELS: Record<keyof typeof STYLE_PRESETS, string> = {
   stroker: "Smooth & accurate",
@@ -35,9 +35,11 @@ export interface AnalyzeInput {
   lane: LaneCondition;
   speedUnit: SpeedUnit;
   pap?: PapPosition;
+  hand: Handedness;
 }
 
 const SPEED_UNIT_KEY = "spare-me-speed-unit";
+export const HAND_KEY = "spare-me-hand";
 
 export default function AnalyzeForm({
   onAnalyze,
@@ -55,8 +57,10 @@ export default function AnalyzeForm({
   const [speedUnit, setSpeedUnit] = useState<SpeedUnit>("mph");
   const [papOver, setPapOver] = useState("");
   const [papUp, setPapUp] = useState("");
+  const [hand, setHand] = useState<Handedness>("right");
 
   useEffect(() => {
+    if (localStorage.getItem(HAND_KEY) === "left") setHand("left");
     const saved = localStorage.getItem(SPEED_UNIT_KEY);
     if (saved === "kmh") {
       setSpeedUnit("kmh");
@@ -99,7 +103,12 @@ export default function AnalyzeForm({
       mode === "manual" && Number.isFinite(over)
         ? { over, up: Number.isFinite(up) ? up : 0 }
         : undefined;
-    onAnalyze({ specs, lane, speedUnit, pap });
+    onAnalyze({ specs, lane, speedUnit, pap, hand });
+  }
+
+  function switchHand(h: Handedness) {
+    setHand(h);
+    localStorage.setItem(HAND_KEY, h);
   }
 
   const numberField = (
@@ -145,6 +154,24 @@ export default function AnalyzeForm({
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
           Your numbers
         </p>
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-xs text-text-muted">Bowling hand</span>
+          <div className="flex gap-1">
+            {(["right", "left"] as const).map((h) => (
+              <button
+                key={h}
+                onClick={() => switchHand(h)}
+                className={`rounded px-2.5 py-1 text-xs font-semibold capitalize transition-all duration-150 ${
+                  hand === h
+                    ? "bg-blue/20 text-blue"
+                    : "bg-surface-light text-text-muted active:scale-95"
+                }`}
+              >
+                {h}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="mb-4 flex rounded-lg bg-surface-light p-1">
           {(["preset", "manual"] as const).map((m) => (
             <button

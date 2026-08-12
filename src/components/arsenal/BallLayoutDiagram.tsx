@@ -4,6 +4,7 @@ import {
   computeLayoutGeometry,
   BALL_RADIUS_PX,
   type PapPosition,
+  type Handedness,
 } from "@/lib/layoutGeometry";
 import type { DualAngleLayout } from "@/lib/layoutEngine";
 
@@ -14,12 +15,14 @@ export default function BallLayoutDiagram({
   layout,
   showPsa = true,
   pap,
+  hand = "right",
 }: {
   layout: DualAngleLayout;
   showPsa?: boolean;
   pap?: PapPosition;
+  hand?: Handedness;
 }) {
-  const g = computeLayoutGeometry(layout, pap);
+  const g = computeLayoutGeometry(layout, pap, hand);
   const blue = "var(--color-blue)";
   const purple = "var(--color-purple)";
   const gold = "var(--color-gold)";
@@ -46,10 +49,10 @@ export default function BallLayoutDiagram({
 
       {/* midline through grip center and PAP */}
       <line
-        x1={g.grip.x - 60}
+        x1={g.center.x - BALL_RADIUS_PX + 12}
         y1={g.grip.y}
-        x2={g.pap.x + 32}
-        y2={g.pap.y}
+        x2={g.center.x + BALL_RADIUS_PX - 12}
+        y2={g.grip.y}
         stroke={muted}
         strokeWidth={1}
         strokeDasharray="4 4"

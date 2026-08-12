@@ -35,6 +35,14 @@ describe("computeLayoutGeometry", () => {
     expect(def.pap.y - custom.pap.y).toBeCloseTo(1 * INCH_PX, 1);
   });
 
+  it("mirrors the whole layout for left-handed bowlers", () => {
+    const right = computeLayoutGeometry(layout);
+    const left = computeLayoutGeometry(layout, undefined, "left");
+    expect(left.pap.x).toBeCloseTo(2 * right.center.x - right.pap.x, 5);
+    expect(left.pin.x).toBeCloseTo(2 * right.center.x - right.pin.x, 5);
+    expect(left.pin.y).toBeCloseTo(right.pin.y, 5);
+  });
+
   it("larger VAL angle moves the pin further from the VAL", () => {
     const near = computeLayoutGeometry({ ...layout, valAngle: 25 });
     const far = computeLayoutGeometry({ ...layout, valAngle: 55 });

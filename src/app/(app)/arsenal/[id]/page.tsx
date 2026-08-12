@@ -173,6 +173,12 @@ export default function BallPage() {
               layout={{ drillingAngle: angle, pinToPap: pin, valAngle: val }}
               showPsa={draft.core_type !== "symmetric"}
               pap={pap}
+              hand={
+                typeof window !== "undefined" &&
+                localStorage.getItem("spare-me-hand") === "left"
+                  ? "left"
+                  : "right"
+              }
             />
           </div>
         );

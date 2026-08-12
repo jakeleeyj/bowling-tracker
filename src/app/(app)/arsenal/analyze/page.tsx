@@ -19,7 +19,7 @@ import {
   type LaneCondition,
   type LayoutRecommendation,
 } from "@/lib/layoutEngine";
-import type { PapPosition } from "@/lib/layoutGeometry";
+import type { PapPosition, Handedness } from "@/lib/layoutGeometry";
 
 export default function AnalyzePage() {
   const supabase = createClient();
@@ -30,6 +30,7 @@ export default function AnalyzePage() {
   const [lane, setLane] = useState<LaneCondition>("medium");
   const [speedUnit, setSpeedUnit] = useState<SpeedUnit>("mph");
   const [pap, setPap] = useState<PapPosition | undefined>(undefined);
+  const [hand, setHand] = useState<Handedness>("right");
   const [ballName, setBallName] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -40,6 +41,7 @@ export default function AnalyzePage() {
     setLane(input.lane);
     setSpeedUnit(input.speedUnit);
     setPap(input.pap);
+    setHand(input.hand);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -119,6 +121,7 @@ export default function AnalyzePage() {
             layout={layout}
             speedUnit={speedUnit}
             pap={pap}
+            hand={hand}
           />
 
           <div className="glass mt-4 rounded-xl p-4">

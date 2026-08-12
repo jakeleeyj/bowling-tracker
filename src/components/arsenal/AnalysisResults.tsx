@@ -7,7 +7,8 @@ import {
 } from "@/lib/flightAnalysis";
 import type { LayoutRecommendation } from "@/lib/layoutEngine";
 import BallLayoutDiagram from "@/components/arsenal/BallLayoutDiagram";
-import type { PapPosition } from "@/lib/layoutGeometry";
+import type { PapPosition, Handedness } from "@/lib/layoutGeometry";
+import { useState } from "react";
 
 const MATCH_LABELS = {
   "speed-dominant": "Speed-dominant",
@@ -20,12 +21,35 @@ export default function AnalysisResults({
   layout,
   speedUnit = "mph",
   pap,
+  hand = "right",
 }: {
   analysis: FlightAnalysis;
   layout: LayoutRecommendation;
   speedUnit?: SpeedUnit;
   pap?: PapPosition;
+  hand?: Handedness;
 }) {
+  const [system, setSystem] = useState<"dual" | "vls" | "2ls">("dual");
+  const systemViews = {
+    dual: {
+      label: "Dual Angle",
+      value: `${layout.dualAngle.drillingAngle}° × ${layout.dualAngle.pinToPap}" × ${layout.dualAngle.valAngle}°`,
+      legend: "drilling angle × pin-to-PAP × VAL angle",
+      note: "Works for any ball; the standard modern system.",
+    },
+    vls: {
+      label: "VLS",
+      value: `${layout.vls.pinToPap}" × ${layout.vls.pinBuffer}"`,
+      legend: "pin-to-PAP × pin buffer",
+      note: "For symmetric-core balls.",
+    },
+    "2ls": {
+      label: "2LS",
+      value: `${layout.twoLS.pinToPap}" × ${layout.twoLS.psaToPap}" × ${layout.twoLS.pinBuffer}"`,
+      legend: "pin-to-PAP × PSA-to-PAP × pin buffer",
+      note: "For asymmetric-core balls.",
+    },
+  } as const;
   // Balance meter: 0 = all speed, 1 = all revs; matched band is 0.4–0.6
   const meterPos = Math.min(1, Math.max(0, (analysis.ratio - 0.5) / 1));
 
@@ -62,37 +86,42 @@ export default function AnalysisResults({
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
           Recommended layout
         </p>
+        <div className="mb-3 flex rounded-lg bg-surface-light p-1">
+          {(Object.keys(systemViews) as (keyof typeof systemViews)[]).map(
+            (key) => (
+              <button
+                key={key}
+                onClick={() => setSystem(key)}
+                className={`flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-150 ${
+                  system === key
+                    ? "bg-blue/20 text-blue"
+                    : "text-text-muted active:scale-95"
+                }`}
+              >
+                {systemViews[key].label}
+              </button>
+            ),
+          )}
+        </div>
         <div className="mb-4 rounded-lg bg-blue/10 p-4 text-center">
-          <p className="text-xs text-text-muted">Dual Angle</p>
+          <p className="text-xs text-text-muted">{systemViews[system].label}</p>
           <p className="text-2xl font-extrabold text-text-primary">
-            {layout.dualAngle.drillingAngle}° × {layout.dualAngle.pinToPap}
-            &quot; × {layout.dualAngle.valAngle}°
+            {systemViews[system].value}
           </p>
           <p className="mt-1 text-[10px] text-text-muted">
-            drilling angle × pin-to-PAP × VAL angle
+            {systemViews[system].legend}
+          </p>
+          <p className="mt-1 text-[10px] text-text-secondary">
+            {systemViews[system].note}
           </p>
         </div>
         <div className="mb-4">
-          <BallLayoutDiagram layout={layout.dualAngle} pap={pap} />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-lg bg-surface-light p-3 text-center">
-            <p className="text-[10px] uppercase tracking-wide text-text-muted">
-              VLS (symmetric)
-            </p>
-            <p className="text-sm font-bold text-text-primary">
-              {layout.vls.pinToPap}&quot; × {layout.vls.pinBuffer}&quot;
-            </p>
-          </div>
-          <div className="rounded-lg bg-surface-light p-3 text-center">
-            <p className="text-[10px] uppercase tracking-wide text-text-muted">
-              2LS (asymmetric)
-            </p>
-            <p className="text-sm font-bold text-text-primary">
-              {layout.twoLS.pinToPap}&quot; × {layout.twoLS.psaToPap}&quot; ×{" "}
-              {layout.twoLS.pinBuffer}&quot;
-            </p>
-          </div>
+          <BallLayoutDiagram
+            layout={layout.dualAngle}
+            pap={pap}
+            hand={hand}
+            showPsa={system !== "vls"}
+          />
         </div>
       </div>
 
