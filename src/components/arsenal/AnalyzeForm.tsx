@@ -10,7 +10,6 @@ import {
   type BowlerSpecs,
   type SpeedUnit,
 } from "@/lib/flightAnalysis";
-import type { LaneCondition } from "@/lib/layoutEngine";
 import type { PapPosition, Handedness } from "@/lib/layoutGeometry";
 
 const PRESET_LABELS: Record<keyof typeof STYLE_PRESETS, string> = {
@@ -32,7 +31,6 @@ const FIELD_HELP: Record<string, string> = {
 
 export interface AnalyzeInput {
   specs: BowlerSpecs;
-  lane: LaneCondition;
   speedUnit: SpeedUnit;
   pap?: PapPosition;
   hand: Handedness;
@@ -52,7 +50,6 @@ export default function AnalyzeForm({
   const [revs, setRevs] = useState("300");
   const [tilt, setTilt] = useState("13");
   const [rotation, setRotation] = useState("45");
-  const [lane, setLane] = useState<LaneCondition>("medium");
   const [openHelp, setOpenHelp] = useState<string | null>(null);
   const [speedUnit, setSpeedUnit] = useState<SpeedUnit>("mph");
   const [papOver, setPapOver] = useState("");
@@ -103,7 +100,7 @@ export default function AnalyzeForm({
       mode === "manual" && Number.isFinite(over)
         ? { over, up: Number.isFinite(up) ? up : 0 }
         : undefined;
-    onAnalyze({ specs, lane, speedUnit, pap, hand });
+    onAnalyze({ specs, speedUnit, pap, hand });
   }
 
   function switchHand(h: Handedness) {
@@ -306,33 +303,6 @@ export default function AnalyzeForm({
             </div>
           </div>
         )}
-      </div>
-
-      <div className="glass p-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
-          Typical lane condition
-        </p>
-        <div className="grid grid-cols-3 gap-2">
-          {(
-            [
-              ["dry", "Dry / short"],
-              ["medium", "House shot"],
-              ["oily", "Heavy oil"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              onClick={() => setLane(value)}
-              className={`rounded-lg border py-3 text-xs font-semibold transition-all duration-150 active:scale-[0.97] ${
-                lane === value
-                  ? "border-blue bg-blue/10 text-blue"
-                  : "border-border bg-surface-light text-text-muted"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
       </div>
 
       <button

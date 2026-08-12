@@ -8,45 +8,33 @@ import BackButton from "@/components/BackButton";
 import AnalyzeForm, {
   type AnalyzeInput,
 } from "@/components/arsenal/AnalyzeForm";
-import AnalysisResults from "@/components/arsenal/AnalysisResults";
+import StyleResultCard from "@/components/arsenal/StyleResultCard";
 import {
   analyzeFlight,
   type FlightAnalysis,
   type SpeedUnit,
 } from "@/lib/flightAnalysis";
-import {
-  recommendLayout,
-  type LaneCondition,
-  type LayoutRecommendation,
-} from "@/lib/layoutEngine";
-import type { PapPosition, Handedness } from "@/lib/layoutGeometry";
+import { recommendLayout } from "@/lib/layoutEngine";
+import { ArrowRight } from "lucide-react";
 
 export default function AnalyzePage() {
   const supabase = createClient();
   const router = useRouter();
   const { toast } = useToast();
   const [analysis, setAnalysis] = useState<FlightAnalysis | null>(null);
-  const [layout, setLayout] = useState<LayoutRecommendation | null>(null);
-  const [lane, setLane] = useState<LaneCondition>("medium");
   const [speedUnit, setSpeedUnit] = useState<SpeedUnit>("mph");
-  const [pap, setPap] = useState<PapPosition | undefined>(undefined);
-  const [hand, setHand] = useState<Handedness>("right");
-  const [ballName, setBallName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   function handleAnalyze(input: AnalyzeInput) {
-    const result = analyzeFlight(input.specs, input.speedUnit);
-    setAnalysis(result);
-    setLayout(recommendLayout(result.specs, input.lane));
-    setLane(input.lane);
+    setAnalysis(analyzeFlight(input.specs, input.speedUnit));
     setSpeedUnit(input.speedUnit);
-    setPap(input.pap);
-    setHand(input.hand);
+    setSaved(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function saveToBall() {
-    if (!analysis || !layout || !ballName.trim()) return;
+  async function saveStyle() {
+    if (!analysis || saving) return;
     setSaving(true);
     const {
       data: { user },
@@ -55,45 +43,28 @@ export default function AnalyzePage() {
       router.push("/login");
       return;
     }
-
-    const { data: ball, error: ballError } = await supabase
-      .from("balls")
-      .insert({
-        user_id: user.id,
-        name: ballName.trim().slice(0, 60),
-        drilling_angle: layout.dualAngle.drillingAngle,
-        pin_to_pap: layout.dualAngle.pinToPap,
-        val_angle: layout.dualAngle.valAngle,
-        pin_buffer: layout.vls.pinBuffer,
-        psa_to_pap: layout.twoLS.psaToPap,
-        pap_over: pap?.over ?? null,
-        pap_up: pap?.up ?? null,
-      })
-      .select("id")
-      .single();
-
-    if (ballError || !ball) {
-      toast("Couldn't save — check your connection", "error");
-      setSaving(false);
-      return;
-    }
-
-    await supabase.from("flight_analyses").insert({
+    // Store a house-shot baseline layout alongside the style numbers
+    const layout = recommendLayout(analysis.specs, "medium");
+    const { error } = await supabase.from("flight_analyses").insert({
       user_id: user.id,
       ball_speed_mph: analysis.specs.ballSpeedMph,
       rev_rate: Math.round(analysis.specs.revRate),
       axis_tilt: Math.round(analysis.specs.axisTilt),
       axis_rotation: Math.round(analysis.specs.axisRotation),
-      lane_condition: lane,
+      lane_condition: "medium",
       speed_rev_match: analysis.match,
       style: analysis.style,
       drilling_angle: layout.dualAngle.drillingAngle,
       pin_to_pap: layout.dualAngle.pinToPap,
       val_angle: layout.dualAngle.valAngle,
     });
-
-    toast("Ball saved to your arsenal");
-    router.push(`/arsenal/${ball.id}`);
+    setSaving(false);
+    if (error) {
+      toast("Couldn't save — check your connection", "error");
+    } else {
+      setSaved(true);
+      toast("Style saved");
+    }
   }
 
   return (
@@ -101,61 +72,47 @@ export default function AnalyzePage() {
       <div className="mb-6 flex items-center gap-3">
         <BackButton />
         <h1 className="text-xl font-extrabold text-text-primary">
-          Ball Flight Analysis
+          Analyze My Style
         </h1>
       </div>
 
-      {!analysis || !layout ? (
+      {!analysis ? (
         <>
           <p className="mb-5 text-xs leading-relaxed text-text-muted">
-            A drilling layout controls where the pin sits relative to your hand,
-            which shapes how your ball rolls. Answer a couple of questions and
-            we&apos;ll recommend one you can take to a pro shop.
+            Your speed, rev rate and release numbers define your style — the
+            starting point for every layout decision.
           </p>
           <AnalyzeForm onAnalyze={handleAnalyze} />
         </>
       ) : (
         <>
-          <AnalysisResults
-            analysis={analysis}
-            layout={layout}
-            speedUnit={speedUnit}
-            pap={pap}
-            hand={hand}
-          />
+          <StyleResultCard analysis={analysis} speedUnit={speedUnit} />
 
-          <div className="glass mt-4 rounded-xl p-4">
-            <label className="mb-1 block text-xs text-text-muted">
-              Save this layout to a ball
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={ballName}
-                onChange={(e) => setBallName(e.target.value)}
-                placeholder="e.g. Storm Phaze II"
-                maxLength={60}
-                className="min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
-              />
+          <div className="mt-4 flex flex-col gap-3">
+            {!saved ? (
               <button
-                onClick={saveToBall}
-                disabled={!ballName.trim() || saving}
-                className="shrink-0 rounded-lg bg-gradient-to-r from-blue to-blue-dark px-5 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
+                onClick={saveStyle}
+                disabled={saving}
+                className="rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
               >
-                {saving ? "Saving…" : "Save"}
+                {saving ? "Saving…" : "Save my style"}
               </button>
-            </div>
+            ) : (
+              <button
+                onClick={() => router.push("/arsenal/layout")}
+                className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97]"
+              >
+                Get a layout
+                <ArrowRight size={16} />
+              </button>
+            )}
+            <button
+              onClick={() => setAnalysis(null)}
+              className="w-full py-2 text-center text-xs text-text-muted active:scale-95"
+            >
+              Start over
+            </button>
           </div>
-
-          <button
-            onClick={() => {
-              setAnalysis(null);
-              setLayout(null);
-            }}
-            className="mt-3 w-full py-2 text-center text-xs text-text-muted active:scale-95"
-          >
-            Start over
-          </button>
         </>
       )}
     </div>

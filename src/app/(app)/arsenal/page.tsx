@@ -7,7 +7,7 @@ import { BowlingSpinner } from "@/components/Skeleton";
 import ErrorCard from "@/components/ErrorCard";
 import BackButton from "@/components/BackButton";
 import BallCard from "@/components/arsenal/BallCard";
-import { Sparkles, Plus } from "lucide-react";
+import { Sparkles, Plus, Ruler, ChevronRight } from "lucide-react";
 import type { Ball } from "@/lib/database.types";
 
 export default function ArsenalPage() {
@@ -62,13 +62,49 @@ export default function ArsenalPage() {
 
       {!error && (
         <>
-          <button
-            onClick={() => router.push("/arsenal/analyze")}
-            className="mb-6 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97]"
-          >
-            <Sparkles size={16} />
-            Analyze My Style
-          </button>
+          <div className="mb-6 flex flex-col gap-3">
+            {(
+              [
+                {
+                  href: "/arsenal/analyze",
+                  icon: <Sparkles size={20} className="text-blue" />,
+                  title: "Analyze My Style",
+                  sub: "Speed, revs & release → your bowler profile",
+                },
+                {
+                  href: "/arsenal/layout",
+                  icon: <Ruler size={20} className="text-gold" />,
+                  title: "Get a Layout",
+                  sub: "Dual Angle, VLS & 2LS from your saved style",
+                },
+                {
+                  href: "/arsenal/new",
+                  icon: <Plus size={20} className="text-purple" />,
+                  title: "Add a Ball",
+                  sub: "Track specs & drilling for a ball you own",
+                },
+              ] as const
+            ).map((action) => (
+              <button
+                key={action.href}
+                onClick={() => router.push(action.href)}
+                className="glass flex w-full items-center gap-3 p-4 text-left transition-all duration-150 active:scale-[0.98]"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-light">
+                  {action.icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-text-primary">
+                    {action.title}
+                  </p>
+                  <p className="truncate text-xs text-text-muted">
+                    {action.sub}
+                  </p>
+                </div>
+                <ChevronRight size={16} className="shrink-0 text-text-muted" />
+              </button>
+            ))}
+          </div>
 
           {balls.length === 0 ? (
             <div className="glass p-6 text-center">
@@ -76,9 +112,9 @@ export default function ArsenalPage() {
                 No balls yet
               </p>
               <p className="text-xs leading-relaxed text-text-muted">
-                Analyze your style to find your ideal drilling layout, then save
-                it to your first ball. You&apos;ll get a spec sheet you can hand
-                straight to a pro shop.
+                Analyze your style, get a layout, and save it to your first ball
+                — you&apos;ll get a spec sheet you can hand straight to a pro
+                shop.
               </p>
             </div>
           ) : (
@@ -91,7 +127,7 @@ export default function ArsenalPage() {
                 />
               ))}
               <button
-                onClick={() => router.push("/arsenal/analyze")}
+                onClick={() => router.push("/arsenal/new")}
                 className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border-light py-3 text-sm text-text-muted transition-all duration-150 active:scale-[0.98]"
               >
                 <Plus size={16} />
