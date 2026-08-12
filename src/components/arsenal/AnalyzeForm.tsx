@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HelpCircle } from "lucide-react";
 import {
   STYLE_PRESETS,
   SPEC_LIMITS,
+  kmhToMph,
+  mphToKmh,
   type BowlerSpecs,
+  type SpeedUnit,
 } from "@/lib/flightAnalysis";
 import type { LaneCondition } from "@/lib/layoutEngine";
 
@@ -18,7 +21,7 @@ const PRESET_LABELS: Record<keyof typeof STYLE_PRESETS, string> = {
 
 const FIELD_HELP: Record<string, string> = {
   speed:
-    "Time your ball from release to pins (60 ft). 2.4 seconds ≈ 17 mph, 2.9 seconds ≈ 14 mph. Most house monitors also show it.",
+    "Time your ball from release to pins (60 ft). 2.4 seconds ≈ 17 mph (27 km/h), 2.9 seconds ≈ 14 mph (23 km/h). Most house monitors also show it.",
   revs: "Film your shot in slow motion, count tape rotations in the first second. A typical league bowler is 250–350 rpm.",
   tilt: "How much the ball spins like a top. 0–15° is normal, 30°+ means you're a spinner. If unsure, leave the default.",
   rotation:
@@ -28,7 +31,10 @@ const FIELD_HELP: Record<string, string> = {
 export interface AnalyzeInput {
   specs: BowlerSpecs;
   lane: LaneCondition;
+  speedUnit: SpeedUnit;
 }
+
+const SPEED_UNIT_KEY = "spare-me-speed-unit";
 
 export default function AnalyzeForm({
   onAnalyze,
@@ -43,18 +49,46 @@ export default function AnalyzeForm({
   const [rotation, setRotation] = useState("45");
   const [lane, setLane] = useState<LaneCondition>("medium");
   const [openHelp, setOpenHelp] = useState<string | null>(null);
+  const [speedUnit, setSpeedUnit] = useState<SpeedUnit>("mph");
+
+  useEffect(() => {
+    const saved = localStorage.getItem(SPEED_UNIT_KEY);
+    if (saved === "kmh") {
+      setSpeedUnit("kmh");
+      setSpeed((s) =>
+        String(Math.round(mphToKmh(parseFloat(s) || 16) * 10) / 10),
+      );
+    }
+  }, []);
+
+  function switchUnit(unit: SpeedUnit) {
+    if (unit === speedUnit) return;
+    setSpeedUnit(unit);
+    localStorage.setItem(SPEED_UNIT_KEY, unit);
+    const value = parseFloat(speed);
+    if (Number.isFinite(value)) {
+      const converted = unit === "kmh" ? mphToKmh(value) : kmhToMph(value);
+      setSpeed(String(Math.round(converted * 10) / 10));
+    }
+  }
 
   function submit() {
+    const rawSpeed = parseFloat(speed);
+    const speedMph = Number.isFinite(rawSpeed)
+      ? speedUnit === "kmh"
+        ? kmhToMph(rawSpeed)
+        : rawSpeed
+      : 16;
     const specs: BowlerSpecs =
       mode === "preset"
         ? STYLE_PRESETS[preset]
         : {
-            ballSpeedMph: parseFloat(speed) || 16,
+            ballSpeedMph: Math.round(speedMph * 10) / 10,
             revRate: parseFloat(revs) || 300,
             axisTilt: parseFloat(tilt) || 13,
             axisRotation: parseFloat(rotation) || 45,
           };
-    onAnalyze({ specs, lane });
+    onAnalyze({ specs, lane, speedUnit });
   }
 
   const numberField = (
@@ -62,7 +96,7 @@ export default function AnalyzeForm({
     helpKey: string,
     value: string,
     setValue: (v: string) => void,
-    unit: string,
+    unit: React.ReactNode,
     limits: { min: number; max: number },
   ) => (
     <div>
@@ -148,8 +182,27 @@ export default function AnalyzeForm({
               "speed",
               speed,
               setSpeed,
-              "mph",
-              SPEC_LIMITS.ballSpeedMph,
+              <span className="flex gap-1">
+                {(["mph", "kmh"] as const).map((u) => (
+                  <button
+                    key={u}
+                    onClick={() => switchUnit(u)}
+                    className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase transition-all duration-150 ${
+                      speedUnit === u
+                        ? "bg-blue/20 text-blue"
+                        : "bg-surface-light text-text-muted active:scale-95"
+                    }`}
+                  >
+                    {u === "kmh" ? "km/h" : "mph"}
+                  </button>
+                ))}
+              </span>,
+              speedUnit === "kmh"
+                ? {
+                    min: Math.round(mphToKmh(SPEC_LIMITS.ballSpeedMph.min)),
+                    max: Math.round(mphToKmh(SPEC_LIMITS.ballSpeedMph.max)),
+                  }
+                : SPEC_LIMITS.ballSpeedMph,
             )}
             {numberField(
               "Rev rate",

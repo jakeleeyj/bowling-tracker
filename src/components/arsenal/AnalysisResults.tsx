@@ -1,6 +1,10 @@
 "use client";
 
-import type { FlightAnalysis } from "@/lib/flightAnalysis";
+import {
+  formatSpeed,
+  type FlightAnalysis,
+  type SpeedUnit,
+} from "@/lib/flightAnalysis";
 import type { LayoutRecommendation } from "@/lib/layoutEngine";
 
 const MATCH_LABELS = {
@@ -12,9 +16,11 @@ const MATCH_LABELS = {
 export default function AnalysisResults({
   analysis,
   layout,
+  speedUnit = "mph",
 }: {
   analysis: FlightAnalysis;
   layout: LayoutRecommendation;
+  speedUnit?: SpeedUnit;
 }) {
   // Balance meter: 0 = all speed, 1 = all revs; matched band is 0.4–0.6
   const meterPos = Math.min(1, Math.max(0, (analysis.ratio - 0.5) / 1));
@@ -29,7 +35,8 @@ export default function AnalysisResults({
           {analysis.style}
         </p>
         <p className="mb-4 text-sm font-semibold text-blue">
-          {MATCH_LABELS[analysis.match]} · {analysis.specs.ballSpeedMph} mph /{" "}
+          {MATCH_LABELS[analysis.match]} ·{" "}
+          {formatSpeed(analysis.specs.ballSpeedMph, speedUnit)} /{" "}
           {Math.round(analysis.specs.revRate)} rpm
         </p>
 

@@ -28,6 +28,23 @@ export const SPEC_LIMITS = {
   axisRotation: { min: 0, max: 90 },
 } as const;
 
+export type SpeedUnit = "mph" | "kmh";
+
+const KMH_PER_MPH = 1.609344;
+
+export function kmhToMph(kmh: number): number {
+  return kmh / KMH_PER_MPH;
+}
+
+export function mphToKmh(mph: number): number {
+  return mph * KMH_PER_MPH;
+}
+
+export function formatSpeed(mph: number, unit: SpeedUnit): string {
+  if (unit === "kmh") return `${Math.round(mphToKmh(mph) * 10) / 10} km/h`;
+  return `${Math.round(mph * 10) / 10} mph`;
+}
+
 const MATCHED_LOW = 0.85;
 const MATCHED_HIGH = 1.15;
 
@@ -118,12 +135,15 @@ const STYLE_REASONS: Record<BowlerStyle, string> = {
     "Your high axis tilt makes the ball spin like a top and clear the front of the lane — you need layouts and surfaces that help it slow down and grip.",
 };
 
-export function analyzeFlight(rawSpecs: BowlerSpecs): FlightAnalysis {
+export function analyzeFlight(
+  rawSpecs: BowlerSpecs,
+  speedUnit: SpeedUnit = "mph",
+): FlightAnalysis {
   const specs = clampSpecs(rawSpecs);
   const { ratio, match } = getSpeedRevMatch(specs.ballSpeedMph, specs.revRate);
   const style = getStyle(specs);
   const reasons = [
-    `At ${specs.ballSpeedMph} mph with ${Math.round(specs.revRate)} rpm, you are ${match.replace("-", " ")}.`,
+    `At ${formatSpeed(specs.ballSpeedMph, speedUnit)} with ${Math.round(specs.revRate)} rpm, you are ${match.replace("-", " ")}.`,
     MATCH_REASONS[match],
     STYLE_REASONS[style],
   ];

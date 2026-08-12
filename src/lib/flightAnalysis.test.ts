@@ -4,6 +4,8 @@ import {
   getStyle,
   analyzeFlight,
   STYLE_PRESETS,
+  kmhToMph,
+  formatSpeed,
 } from "./flightAnalysis";
 
 describe("getSpeedRevMatch", () => {
@@ -99,6 +101,17 @@ describe("STYLE_PRESETS", () => {
     expect(getStyle(STYLE_PRESETS.stroker)).toBe("stroker");
     expect(getStyle(STYLE_PRESETS.tweener)).toBe("tweener");
     expect(getStyle(STYLE_PRESETS.cranker)).toBe("cranker");
+  });
+});
+
+describe("speed units", () => {
+  it("converts km/h to mph", () => {
+    expect(kmhToMph(27.4)).toBeCloseTo(17, 1);
+  });
+
+  it("formats speed in the requested unit", () => {
+    expect(formatSpeed(17, "mph")).toBe("17 mph");
+    expect(formatSpeed(17, "kmh")).toBe("27.4 km/h");
   });
 });
 

@@ -9,7 +9,11 @@ import AnalyzeForm, {
   type AnalyzeInput,
 } from "@/components/arsenal/AnalyzeForm";
 import AnalysisResults from "@/components/arsenal/AnalysisResults";
-import { analyzeFlight, type FlightAnalysis } from "@/lib/flightAnalysis";
+import {
+  analyzeFlight,
+  type FlightAnalysis,
+  type SpeedUnit,
+} from "@/lib/flightAnalysis";
 import {
   recommendLayout,
   type LaneCondition,
@@ -23,14 +27,16 @@ export default function AnalyzePage() {
   const [analysis, setAnalysis] = useState<FlightAnalysis | null>(null);
   const [layout, setLayout] = useState<LayoutRecommendation | null>(null);
   const [lane, setLane] = useState<LaneCondition>("medium");
+  const [speedUnit, setSpeedUnit] = useState<SpeedUnit>("mph");
   const [ballName, setBallName] = useState("");
   const [saving, setSaving] = useState(false);
 
   function handleAnalyze(input: AnalyzeInput) {
-    const result = analyzeFlight(input.specs);
+    const result = analyzeFlight(input.specs, input.speedUnit);
     setAnalysis(result);
     setLayout(recommendLayout(result.specs, input.lane));
     setLane(input.lane);
+    setSpeedUnit(input.speedUnit);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -103,7 +109,11 @@ export default function AnalyzePage() {
         </>
       ) : (
         <>
-          <AnalysisResults analysis={analysis} layout={layout} />
+          <AnalysisResults
+            analysis={analysis}
+            layout={layout}
+            speedUnit={speedUnit}
+          />
 
           <div className="glass mt-4 rounded-xl p-4">
             <label className="mb-1 block text-xs text-text-muted">
