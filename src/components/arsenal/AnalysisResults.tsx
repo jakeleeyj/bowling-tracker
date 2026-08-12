@@ -6,6 +6,8 @@ import {
   type SpeedUnit,
 } from "@/lib/flightAnalysis";
 import type { LayoutRecommendation } from "@/lib/layoutEngine";
+import BallLayoutDiagram from "@/components/arsenal/BallLayoutDiagram";
+import type { PapPosition } from "@/lib/layoutGeometry";
 
 const MATCH_LABELS = {
   "speed-dominant": "Speed-dominant",
@@ -17,10 +19,12 @@ export default function AnalysisResults({
   analysis,
   layout,
   speedUnit = "mph",
+  pap,
 }: {
   analysis: FlightAnalysis;
   layout: LayoutRecommendation;
   speedUnit?: SpeedUnit;
+  pap?: PapPosition;
 }) {
   // Balance meter: 0 = all speed, 1 = all revs; matched band is 0.4–0.6
   const meterPos = Math.min(1, Math.max(0, (analysis.ratio - 0.5) / 1));
@@ -67,6 +71,9 @@ export default function AnalysisResults({
           <p className="mt-1 text-[10px] text-text-muted">
             drilling angle × pin-to-PAP × VAL angle
           </p>
+        </div>
+        <div className="mb-4">
+          <BallLayoutDiagram layout={layout.dualAngle} pap={pap} />
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-surface-light p-3 text-center">

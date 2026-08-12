@@ -12,6 +12,7 @@ import DrillingSpecsForm, {
   type BallDraft,
 } from "@/components/arsenal/DrillingSpecsForm";
 import SpecSheetButton from "@/components/arsenal/SpecSheetButton";
+import BallLayoutDiagram from "@/components/arsenal/BallLayoutDiagram";
 import { Trash2 } from "lucide-react";
 import type { Ball } from "@/lib/database.types";
 
@@ -152,6 +153,30 @@ export default function BallPage() {
           <Trash2 size={18} />
         </button>
       </div>
+
+      {(() => {
+        const angle = parseFloat(draft.drilling_angle ?? "");
+        const pin = parseFloat(draft.pin_to_pap ?? "");
+        const val = parseFloat(draft.val_angle ?? "");
+        if (![angle, pin, val].every(Number.isFinite)) return null;
+        const over = parseFloat(draft.pap_over ?? "");
+        const up = parseFloat(draft.pap_up ?? "");
+        const pap = Number.isFinite(over)
+          ? { over, up: Number.isFinite(up) ? up : 0 }
+          : undefined;
+        return (
+          <div className="glass mb-5 p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
+              Layout diagram
+            </p>
+            <BallLayoutDiagram
+              layout={{ drillingAngle: angle, pinToPap: pin, valAngle: val }}
+              showPsa={draft.core_type !== "symmetric"}
+              pap={pap}
+            />
+          </div>
+        );
+      })()}
 
       <DrillingSpecsForm draft={draft} onChange={setDraft} />
 

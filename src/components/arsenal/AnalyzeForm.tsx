@@ -11,6 +11,7 @@ import {
   type SpeedUnit,
 } from "@/lib/flightAnalysis";
 import type { LaneCondition } from "@/lib/layoutEngine";
+import type { PapPosition } from "@/lib/layoutGeometry";
 
 const PRESET_LABELS: Record<keyof typeof STYLE_PRESETS, string> = {
   stroker: "Smooth & accurate",
@@ -26,12 +27,14 @@ const FIELD_HELP: Record<string, string> = {
   tilt: "How much the ball spins like a top. 0–15° is normal, 30°+ means you're a spinner. If unsure, leave the default.",
   rotation:
     "How much side-turn you put on the ball. 0° = end-over-end, 90° = full sideways. Most players are 30–60°.",
+  pap: 'Your Positive Axis Point — where your ball\'s rotation axis sits, measured from the grip center. A pro shop can mark it, or find it from the track flare rings. Typical: 4–5" over, 0–1" up. Leave blank if unknown.',
 };
 
 export interface AnalyzeInput {
   specs: BowlerSpecs;
   lane: LaneCondition;
   speedUnit: SpeedUnit;
+  pap?: PapPosition;
 }
 
 const SPEED_UNIT_KEY = "spare-me-speed-unit";
@@ -50,6 +53,8 @@ export default function AnalyzeForm({
   const [lane, setLane] = useState<LaneCondition>("medium");
   const [openHelp, setOpenHelp] = useState<string | null>(null);
   const [speedUnit, setSpeedUnit] = useState<SpeedUnit>("mph");
+  const [papOver, setPapOver] = useState("");
+  const [papUp, setPapUp] = useState("");
 
   useEffect(() => {
     const saved = localStorage.getItem(SPEED_UNIT_KEY);
@@ -88,7 +93,13 @@ export default function AnalyzeForm({
             axisTilt: parseFloat(tilt) || 13,
             axisRotation: parseFloat(rotation) || 45,
           };
-    onAnalyze({ specs, lane, speedUnit });
+    const over = parseFloat(papOver);
+    const up = parseFloat(papUp);
+    const pap =
+      mode === "manual" && Number.isFinite(over)
+        ? { over, up: Number.isFinite(up) ? up : 0 }
+        : undefined;
+    onAnalyze({ specs, lane, speedUnit, pap });
   }
 
   const numberField = (
@@ -228,6 +239,44 @@ export default function AnalyzeForm({
               "degrees",
               SPEC_LIMITS.axisRotation,
             )}
+            <div>
+              <div className="mb-1 flex items-center gap-1.5">
+                <label className="block text-xs text-text-muted">
+                  PAP (optional)
+                </label>
+                <button
+                  onClick={() => setOpenHelp(openHelp === "pap" ? null : "pap")}
+                  aria-label="Help for PAP"
+                  className="-m-2 p-2 text-text-muted active:scale-90"
+                >
+                  <HelpCircle size={12} />
+                </button>
+                <span className="ml-auto text-xs text-text-muted">inches</span>
+              </div>
+              {openHelp === "pap" && (
+                <p className="animate-slide-down mb-2 rounded-lg bg-surface-light p-3 text-xs leading-relaxed text-text-secondary">
+                  {FIELD_HELP.pap}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={papOver}
+                  onChange={(e) => setPapOver(e.target.value)}
+                  placeholder={'over (e.g. 4.5")'}
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+                />
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={papUp}
+                  onChange={(e) => setPapUp(e.target.value)}
+                  placeholder={'up (e.g. 0.5")'}
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>
