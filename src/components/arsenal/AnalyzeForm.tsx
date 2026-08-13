@@ -48,12 +48,12 @@ export default function AnalyzeForm({
 }) {
   const [mode, setMode] = useState<"preset" | "manual">("preset");
   const [preset, setPreset] = useState<keyof typeof STYLE_PRESETS>("tweener");
-  const [speed, setSpeed] = useState("16");
+  const [speed, setSpeed] = useState("28");
   const [revs, setRevs] = useState("300");
   const [tilt, setTilt] = useState("13");
   const [rotation, setRotation] = useState("45");
   const [openHelp, setOpenHelp] = useState<string | null>(null);
-  const [speedUnit, setSpeedUnit] = useState<SpeedUnit>("mph");
+  const [speedUnit, setSpeedUnit] = useState<SpeedUnit>("kmh");
   const [papOver, setPapOver] = useState("");
   const [papUp, setPapUp] = useState("");
   const [hand, setHand] = useState<Handedness>("right");
@@ -62,11 +62,11 @@ export default function AnalyzeForm({
   useEffect(() => {
     if (localStorage.getItem(HAND_KEY) === "left") setHand("left");
     if (localStorage.getItem(GRIP_KEY) === "two") setTwoHanded(true);
-    const saved = localStorage.getItem(SPEED_UNIT_KEY);
-    if (saved === "kmh") {
-      setSpeedUnit("kmh");
+    // km/h is the default; only switch if the user chose mph before
+    if (localStorage.getItem(SPEED_UNIT_KEY) === "mph") {
+      setSpeedUnit("mph");
       setSpeed((s) =>
-        String(Math.round(mphToKmh(parseFloat(s) || 16) * 10) / 10),
+        String(Math.round(kmhToMph(parseFloat(s) || 28) * 10) / 10),
       );
     }
   }, []);
@@ -88,7 +88,7 @@ export default function AnalyzeForm({
       ? speedUnit === "kmh"
         ? kmhToMph(rawSpeed)
         : rawSpeed
-      : 16;
+      : 17.4;
     const specs: BowlerSpecs =
       mode === "preset"
         ? STYLE_PRESETS[preset]
@@ -262,7 +262,7 @@ export default function AnalyzeForm({
               speed,
               setSpeed,
               <span className="flex gap-1">
-                {(["mph", "kmh"] as const).map((u) => (
+                {(["kmh", "mph"] as const).map((u) => (
                   <button
                     key={u}
                     onClick={() => switchUnit(u)}

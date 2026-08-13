@@ -148,7 +148,8 @@ describe("analyzeFlight", () => {
       axisTilt: 200,
       axisRotation: -20,
     });
-    expect(result.specs.ballSpeedMph).toBeLessThanOrEqual(20);
+    // cap is 50 km/h expressed in mph
+    expect(result.specs.ballSpeedMph).toBeLessThanOrEqual(31.1);
     expect(result.specs.revRate).toBeLessThanOrEqual(700);
     expect(result.specs.axisTilt).toBeLessThanOrEqual(90);
     expect(result.specs.axisRotation).toBeGreaterThanOrEqual(0);

@@ -22,7 +22,8 @@ export interface FlightAnalysis {
 }
 
 export const SPEC_LIMITS = {
-  ballSpeedMph: { min: 8, max: 20 },
+  // 13–50 km/h
+  ballSpeedMph: { min: 8, max: 31 },
   revRate: { min: 100, max: 700 },
   axisTilt: { min: 0, max: 90 },
   axisRotation: { min: 0, max: 90 },
