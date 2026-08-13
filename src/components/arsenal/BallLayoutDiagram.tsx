@@ -222,7 +222,7 @@ export default function BallLayoutDiagram({
       )}
       <circle cx={grip.x} cy={grip.y} r={2.5} fill={muted} />
       <text x={grip.x - 14} y={grip.y + 16} fontSize={10} fill={muted}>
-        bridge
+        {showThumb ? "grip" : "bridge"}
       </text>
 
       {/* pin-to-PAP line — line 1 in every system */}
@@ -300,14 +300,28 @@ export default function BallLayoutDiagram({
         </>
       )}
 
-      {/* PSA */}
-      <path
-        d={toPath(segment(g.pin, g.psa).map(P))}
+      {/* pin→PSA baseline — dual angle's construction line only */}
+      {system === "dual" && (
+        <path
+          d={toPath(segment(g.pin, g.psa).map(P))}
+          fill="none"
+          stroke={purple}
+          strokeWidth={1.5}
+          strokeDasharray="3 3"
+        />
+      )}
+      {/* CG — on the pin→PSA baseline */}
+      <circle
+        cx={P(g.cg).x}
+        cy={P(g.cg).y}
+        r={3}
         fill="none"
-        stroke={purple}
+        stroke={muted}
         strokeWidth={1.5}
-        strokeDasharray="3 3"
       />
+      <text x={P(g.cg).x + 6} y={P(g.cg).y + 4} fontSize={10} fill={muted}>
+        CG
+      </text>
       <circle cx={psa.x} cy={psa.y} r={4} fill={purple} />
       <text x={psa.x + 7} y={psa.y + 4} fontSize={11} fill={purple}>
         PSA

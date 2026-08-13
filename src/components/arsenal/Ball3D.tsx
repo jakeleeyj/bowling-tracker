@@ -229,8 +229,10 @@ export default function Ball3D({
 
     // pin-to-PAP
     group.add(line(segment(g.pap, g.pin), COLORS.blue));
-    // pin-to-PSA
-    group.add(line(segment(g.pin, g.psa), COLORS.purple, true));
+    // pin-to-PSA baseline — dual angle construction only
+    if (system === "dual") {
+      group.add(line(segment(g.pin, g.psa), COLORS.purple, true));
+    }
 
     if (system !== "dual") {
       group.add(line(segment(g.psa, g.pap), COLORS.purple));
@@ -358,6 +360,7 @@ export default function Ball3D({
       dot(g.pin, COLORS.red),
       dot(g.pap, COLORS.blue),
       dot(g.psa, COLORS.purple, 0.028),
+      dot(g.cg, 0xcbd5e1, 0.024),
       dot(g.grip, COLORS.muted, 0.02),
     );
 
@@ -444,6 +447,9 @@ export default function Ball3D({
         </span>
         <span className="flex items-center gap-1">
           <span className="h-2 w-2 rounded-full bg-purple" /> PSA
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-2 w-2 rounded-full bg-text-secondary" /> CG
         </span>
         <span>· drag to rotate</span>
       </div>

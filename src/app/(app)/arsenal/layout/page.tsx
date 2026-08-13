@@ -421,6 +421,7 @@ export default function LayoutPage() {
             layout={layout}
             hand={hand}
             twoHanded={isTwoHanded}
+            defaultSystem={mode === "custom" ? effectiveSystem : undefined}
             pap={mode === "custom" ? customPap : undefined}
             span={
               mode === "custom" && Number.isFinite(parseFloat(customSpan))

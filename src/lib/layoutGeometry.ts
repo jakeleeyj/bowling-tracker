@@ -25,6 +25,7 @@ export interface LayoutGeometry {
   pap: Point;
   pin: Point;
   psa: Point;
+  cg: Point;
   valTop: Point;
   valBottom: Point;
 }
@@ -88,15 +89,18 @@ export function computeLayoutGeometry(
     x: pap.x - papPosition.over * INCH_PX,
     y: pap.y + papPosition.up * INCH_PX,
   };
-  // Storm convention: the PAP reference point is the bridge center, so the
-  // fingers straddle it and (for thumb grips) the thumb sits a span below.
-  // real holes are ~7/8" wide with a 1/4" bridge → centers ~0.6" off-center
+  // No-thumb grips reference the bridge center (fingers straddle it);
+  // conventional grips reference the center of grip — fingers half a span
+  // above it, thumb half a span below.
+  // Real holes are ~7/8" wide with a 1/4" bridge → centers ~0.6" off-center.
   const fingerGap = 0.6 * INCH_PX;
+  const halfSpan = (span / 2) * INCH_PX;
+  const fingerY = noThumb ? grip.y : grip.y - halfSpan;
   const fingers: [Point, Point] = [
-    { x: grip.x - fingerGap, y: grip.y },
-    { x: grip.x + fingerGap, y: grip.y },
+    { x: grip.x - fingerGap, y: fingerY },
+    { x: grip.x + fingerGap, y: fingerY },
   ];
-  const thumb: Point = { x: grip.x, y: grip.y + span * INCH_PX };
+  const thumb: Point = { x: grip.x, y: grip.y + halfSpan };
 
   // Keeps a labeled point on the visible ball face.
   const clampToBall = (p: Point): Point => {
@@ -127,6 +131,13 @@ export function computeLayoutGeometry(
     y: pin.y + dir.y * psaDist,
   });
 
+  // CG sits on the pin→PSA baseline (that line is drawn through the CG on
+  // symmetric balls); typical pin-out puts it ~2.5" from the pin.
+  const cg: Point = {
+    x: pin.x + dir.x * 2.5 * INCH_PX,
+    y: pin.y + dir.y * 2.5 * INCH_PX,
+  };
+
   const valHalf = Math.sqrt(
     Math.max(0, BALL_RADIUS_PX ** 2 - (pap.x - center.x) ** 2),
   );
@@ -138,6 +149,7 @@ export function computeLayoutGeometry(
     pap: clampToBall(pap),
     pin,
     psa,
+    cg,
     valTop: { x: pap.x, y: center.y - valHalf },
     valBottom: { x: pap.x, y: center.y + valHalf },
   };
@@ -151,6 +163,7 @@ export function computeLayoutGeometry(
       pap: mirror(geometry.pap),
       pin: mirror(pin),
       psa: mirror(psa),
+      cg: mirror(cg),
       valTop: mirror(geometry.valTop),
       valBottom: mirror(geometry.valBottom),
     };

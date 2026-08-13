@@ -65,11 +65,11 @@ describe("computeLayoutGeometry", () => {
     expect((g.fingers[0].x + g.fingers[1].x) / 2).toBeCloseTo(g.grip.x, 5);
   });
 
-  it("references the bridge: fingers straddle it, thumb a full span below", () => {
+  it("one-handed: center-of-grip reference, fingers above and thumb below by half the span", () => {
     const g = computeLayoutGeometry(layout, undefined, "right", false, 4.5);
-    expect(g.fingers[0].y).toBeCloseTo(g.grip.y, 5);
-    expect(g.fingers[1].y).toBeCloseTo(g.grip.y, 5);
-    expect(g.thumb.y - g.grip.y).toBeCloseTo(4.5 * INCH_PX, 1);
+    expect(g.grip.y - g.fingers[0].y).toBeCloseTo(2.25 * INCH_PX, 1);
+    expect(g.grip.y - g.fingers[1].y).toBeCloseTo(2.25 * INCH_PX, 1);
+    expect(g.thumb.y - g.grip.y).toBeCloseTo(2.25 * INCH_PX, 1);
   });
 
   it("mirrors the whole layout for left-handed bowlers", () => {
@@ -115,5 +115,18 @@ describe("projectToSphere", () => {
   it("clamps beyond-horizon points to the rim", () => {
     const p = projectToSphere({ x: center.x + 9 * INCH_PX, y: center.y });
     expect(p.x - center.x).toBeCloseTo(BALL_RADIUS_PX, 0);
+  });
+});
+
+describe("cg marker", () => {
+  it("places the CG on the pin-to-PSA line, 2.5 inches from the pin", () => {
+    const g = computeLayoutGeometry(layout);
+    const d = Math.hypot(g.cg.x - g.pin.x, g.cg.y - g.pin.y);
+    expect(d).toBeCloseTo(2.5 * INCH_PX, 0);
+    // collinear with pin->psa
+    const cross =
+      (g.psa.x - g.pin.x) * (g.cg.y - g.pin.y) -
+      (g.psa.y - g.pin.y) * (g.cg.x - g.pin.x);
+    expect(Math.abs(cross)).toBeLessThan(200);
   });
 });

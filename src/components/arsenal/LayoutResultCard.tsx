@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   dualAngleTo2LS,
   TWO_HANDED_PAP,
@@ -17,6 +17,7 @@ export default function LayoutResultCard({
   hand = "right",
   twoHanded = false,
   span,
+  defaultSystem,
   onSystemChange,
 }: {
   layout: LayoutRecommendation;
@@ -24,6 +25,7 @@ export default function LayoutResultCard({
   hand?: Handedness;
   twoHanded?: boolean;
   span?: number;
+  defaultSystem?: LayoutSystem;
   onSystemChange?: (system: LayoutSystem) => void;
 }) {
   // Two-handers use Storm's 2LS only; one-handers use Dual Angle or VLS
@@ -33,6 +35,9 @@ export default function LayoutResultCard({
   const [system, setSystem] = useState<LayoutSystem>(
     twoHanded ? "2ls" : "dual",
   );
+  useEffect(() => {
+    if (defaultSystem) setSystem(defaultSystem);
+  }, [defaultSystem]);
   const activeSystem = availableSystems.includes(system)
     ? system
     : availableSystems[0];
