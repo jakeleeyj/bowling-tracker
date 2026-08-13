@@ -43,6 +43,7 @@ export function computeLayoutGeometry(
   papPosition: PapPosition = DEFAULT_PAP,
   hand: Handedness = "right",
   noThumb = false,
+  span = 4.4,
 ): LayoutGeometry {
   const center: Point = { x: BALL_RADIUS_PX, y: BALL_RADIUS_PX };
 
@@ -68,12 +69,13 @@ export function computeLayoutGeometry(
   // No-thumb grips reference the bridge center, so the fingers straddle the
   // grip point itself; conventional grips have fingers above it.
   const fingerGap = 0.4 * INCH_PX;
-  const fingerY = noThumb ? grip.y : grip.y - 2.1 * INCH_PX;
+  const halfSpan = (span / 2) * INCH_PX;
+  const fingerY = noThumb ? grip.y : grip.y - halfSpan;
   const fingers: [Point, Point] = [
     { x: grip.x - fingerGap, y: fingerY },
     { x: grip.x + fingerGap, y: fingerY },
   ];
-  const thumb: Point = { x: grip.x, y: grip.y + 2.3 * INCH_PX };
+  const thumb: Point = { x: grip.x, y: grip.y + halfSpan };
 
   // Keeps a labeled point on the visible ball face.
   const clampToBall = (p: Point): Point => {

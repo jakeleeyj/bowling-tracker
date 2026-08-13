@@ -181,6 +181,11 @@ export default function BallPage() {
                     : "dual"
               }
               showThumb={!draft.no_thumb}
+              span={
+                Number.isFinite(parseFloat(draft.span ?? ""))
+                  ? parseFloat(draft.span!)
+                  : undefined
+              }
               pap={pap}
               hand={
                 typeof window !== "undefined" &&

@@ -25,14 +25,16 @@ export default function BallLayoutDiagram({
   pap,
   hand = "right",
   showThumb = true,
+  span,
 }: {
   layout: DualAngleLayout;
   system?: DiagramSystem;
   pap?: PapPosition;
   hand?: Handedness;
   showThumb?: boolean;
+  span?: number;
 }) {
-  const g = computeLayoutGeometry(layout, pap, hand, !showThumb);
+  const g = computeLayoutGeometry(layout, pap, hand, !showThumb, span);
   const blue = "var(--color-blue)";
   const purple = "var(--color-purple)";
   const gold = "var(--color-gold)";

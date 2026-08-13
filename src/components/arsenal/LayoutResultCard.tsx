@@ -16,12 +16,14 @@ export default function LayoutResultCard({
   pap,
   hand = "right",
   twoHanded = false,
+  span,
   onSystemChange,
 }: {
   layout: LayoutRecommendation;
   pap?: PapPosition;
   hand?: Handedness;
   twoHanded?: boolean;
+  span?: number;
   onSystemChange?: (system: LayoutSystem) => void;
 }) {
   // Two-handers have no thumb, so Storm's 2LS notation is their default view
@@ -99,6 +101,7 @@ export default function LayoutResultCard({
           hand={hand}
           system={system}
           showThumb={!twoHanded}
+          span={span}
         />
       </div>
 

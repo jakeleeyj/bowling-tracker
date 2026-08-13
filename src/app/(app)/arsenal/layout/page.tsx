@@ -56,6 +56,7 @@ export default function LayoutPage() {
   const [customCog, setCustomCog] = useState("3.5");
   const [customPapOver, setCustomPapOver] = useState("");
   const [customPapUp, setCustomPapUp] = useState("");
+  const [customSpan, setCustomSpan] = useState("");
   const [ballName, setBallName] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -341,6 +342,8 @@ export default function LayoutPage() {
               setCustomPapOver,
             )}
             {customField('PAP up " (− = down)', customPapUp, setCustomPapUp)}
+            {!isTwoHanded &&
+              customField('Span " (optional)', customSpan, setCustomSpan)}
           </div>
           {customSystem === "2ls" &&
             layout &&
@@ -374,6 +377,11 @@ export default function LayoutPage() {
             hand={hand}
             twoHanded={isTwoHanded}
             pap={mode === "custom" ? customPap : undefined}
+            span={
+              mode === "custom" && Number.isFinite(parseFloat(customSpan))
+                ? clamp(parseFloat(customSpan), 3, 6)
+                : undefined
+            }
           />
 
           <div className="glass mt-4 p-4">
