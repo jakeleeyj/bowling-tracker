@@ -1,25 +1,10 @@
 "use client";
 
 import type { BallDraft } from "@/components/arsenal/DrillingSpecsForm";
+import { formatMeasure, parseMeasure } from "@/lib/flightAnalysis";
 
 // Graphical drilling chart: finger holes with sizes, pitch arrows, bridge
 // and span — the way a pro shop's drill sheet lays it out.
-
-// 0.375 → 3/8", shown the way a drill sheet writes it
-function toFraction(value: number): string {
-  const sixtyFourths = Math.round(value * 64);
-  if (sixtyFourths === 0) return "0";
-  let n = sixtyFourths;
-  let d = 64;
-  while (n % 2 === 0 && d > 1) {
-    n /= 2;
-    d /= 2;
-  }
-  const whole = Math.floor(n / d);
-  const rem = n % d;
-  if (rem === 0) return String(whole);
-  return whole > 0 ? `${whole} ${rem}/${d}` : `${rem}/${d}`;
-}
 
 function PitchChip({
   x,
@@ -34,16 +19,16 @@ function PitchChip({
   forward: string | undefined;
   lateralFlip?: boolean;
 }) {
-  const lat = parseFloat(lateral ?? "");
-  const fwd = parseFloat(forward ?? "");
+  const lat = parseMeasure(lateral ?? "");
+  const fwd = parseMeasure(forward ?? "");
   if (!Number.isFinite(lat) && !Number.isFinite(fwd)) return null;
   const items: string[] = [];
   if (Number.isFinite(lat) && lat !== 0)
     items.push(
-      `${lat > 0 !== lateralFlip ? "→" : "←"} ${toFraction(Math.abs(lat))}"`,
+      `${lat > 0 !== lateralFlip ? "→" : "←"} ${formatMeasure(Math.abs(lat))}"`,
     );
   if (Number.isFinite(fwd) && fwd !== 0)
-    items.push(`${fwd > 0 ? "↑" : "↓"} ${toFraction(Math.abs(fwd))}"`);
+    items.push(`${fwd > 0 ? "↑" : "↓"} ${formatMeasure(Math.abs(fwd))}"`);
   if (items.length === 0) return null;
   return (
     <text

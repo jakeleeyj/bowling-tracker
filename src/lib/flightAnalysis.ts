@@ -71,6 +71,24 @@ export function parseMeasure(raw: string): number {
   return sign ? -value : value;
 }
 
+// Inverse of parseMeasure: 3.375 → "3 3/8" (nearest 1/64"), the way a
+// drill sheet writes measurements.
+export function formatMeasure(value: number): string {
+  if (!Number.isFinite(value)) return "";
+  const sign = value < 0 ? "-" : "";
+  const abs = Math.abs(value);
+  const sixtyFourths = Math.round(abs * 64);
+  const whole = Math.floor(sixtyFourths / 64);
+  let n = sixtyFourths % 64;
+  if (n === 0) return `${sign}${whole}`;
+  let d = 64;
+  while (n % 2 === 0) {
+    n /= 2;
+    d /= 2;
+  }
+  return whole > 0 ? `${sign}${whole} ${n}/${d}` : `${sign}${n}/${d}`;
+}
+
 const MATCHED_LOW = 0.85;
 const MATCHED_HIGH = 1.15;
 

@@ -43,17 +43,32 @@ const SpecSheetCard = forwardRef<
         ["Date drilled", show(draft.date_drilled)],
       ],
     ],
-    [
-      "Layout",
-      [
-        ["Drilling angle", show(draft.drilling_angle, "°")],
-        ["Pin to PAP", show(draft.pin_to_pap, '"')],
-        ["VAL angle", show(draft.val_angle, "°")],
-        ["Pin buffer", show(draft.pin_buffer, '"')],
-        ["PSA to PAP", show(draft.psa_to_pap, '"')],
-        ["Pin to COG", show(draft.pin_to_cog, '"')],
-      ],
-    ],
+    draft.no_thumb
+      ? [
+          "Layout (2LS)",
+          [
+            ["Pin to PAP", show(draft.pin_to_pap, '"')],
+            ["PSA to PAP", show(draft.psa_to_pap, '"')],
+            ["Pin to COG", show(draft.pin_to_cog, '"')],
+          ],
+        ]
+      : draft.core_type === "symmetric"
+        ? [
+            "Layout (VLS)",
+            [
+              ["Pin to PAP", show(draft.pin_to_pap, '"')],
+              ["PSA to PAP", show(draft.psa_to_pap, '"')],
+              ["Pin buffer", show(draft.pin_buffer, '"')],
+            ],
+          ]
+        : [
+            "Layout (Dual Angle)",
+            [
+              ["Drilling angle", show(draft.drilling_angle, "°")],
+              ["Pin to PAP", show(draft.pin_to_pap, '"')],
+              ["VAL angle", show(draft.val_angle, "°")],
+            ],
+          ],
     [
       "Fit & drilling",
       [

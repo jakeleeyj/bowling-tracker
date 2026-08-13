@@ -7,6 +7,7 @@ import {
   kmhToMph,
   formatSpeed,
   parseMeasure,
+  formatMeasure,
 } from "./flightAnalysis";
 
 describe("getSpeedRevMatch", () => {
@@ -179,5 +180,18 @@ describe("parseMeasure", () => {
     expect(Number.isNaN(parseMeasure("abc"))).toBe(true);
     expect(Number.isNaN(parseMeasure(""))).toBe(true);
     expect(Number.isNaN(parseMeasure("3/0"))).toBe(true);
+  });
+});
+
+describe("formatMeasure", () => {
+  it("round-trips fractions with parseMeasure", () => {
+    for (const text of ["3 3/8", "3/8", "-3/8", "4 1/2", "5"]) {
+      expect(formatMeasure(parseMeasure(text))).toBe(text);
+    }
+  });
+
+  it("snaps to the nearest 1/64", () => {
+    expect(formatMeasure(0.375)).toBe("3/8");
+    expect(formatMeasure(3.38)).toBe("3 3/8");
   });
 });

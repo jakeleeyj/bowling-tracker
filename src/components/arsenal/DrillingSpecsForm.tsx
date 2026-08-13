@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Ball } from "@/lib/database.types";
 import { BALL_BRANDS } from "@/lib/brands";
-import { parseMeasure } from "@/lib/flightAnalysis";
+import { parseMeasure, formatMeasure } from "@/lib/flightAnalysis";
 import {
   dualAngleToVLS,
   dualAngleTo2LS,
@@ -24,6 +24,9 @@ export type BallDraft = Partial<
 
 export function draftFromBall(ball: Ball): BallDraft {
   const str = (v: string | number | null) => (v === null ? "" : String(v));
+  // inch measurements come back as fractions, the way they were typed
+  const frac = (v: string | number | null) =>
+    v === null ? "" : formatMeasure(Number(v));
   const draft: BallDraft = {
     name: str(ball.name),
     brand: str(ball.brand),
@@ -33,19 +36,19 @@ export function draftFromBall(ball: Ball): BallDraft {
     coverstock: str(ball.coverstock),
     core_type: str(ball.core_type),
     drilling_angle: str(ball.drilling_angle),
-    pin_to_pap: str(ball.pin_to_pap),
+    pin_to_pap: frac(ball.pin_to_pap),
     val_angle: str(ball.val_angle),
-    pin_buffer: str(ball.pin_buffer),
-    psa_to_pap: str(ball.psa_to_pap),
-    pap_over: str(ball.pap_over),
-    pap_up: str(ball.pap_up),
-    span: str(ball.span),
-    thumb_pitch_forward: str(ball.thumb_pitch_forward),
-    thumb_pitch_lateral: str(ball.thumb_pitch_lateral),
-    finger_pitch_forward: str(ball.finger_pitch_forward),
-    finger_pitch_lateral: str(ball.finger_pitch_lateral),
-    finger_pitch_forward_2: str(ball.finger_pitch_forward_2),
-    finger_pitch_lateral_2: str(ball.finger_pitch_lateral_2),
+    pin_buffer: frac(ball.pin_buffer),
+    psa_to_pap: frac(ball.psa_to_pap),
+    pap_over: frac(ball.pap_over),
+    pap_up: frac(ball.pap_up),
+    span: frac(ball.span),
+    thumb_pitch_forward: frac(ball.thumb_pitch_forward),
+    thumb_pitch_lateral: frac(ball.thumb_pitch_lateral),
+    finger_pitch_forward: frac(ball.finger_pitch_forward),
+    finger_pitch_lateral: frac(ball.finger_pitch_lateral),
+    finger_pitch_forward_2: frac(ball.finger_pitch_forward_2),
+    finger_pitch_lateral_2: frac(ball.finger_pitch_lateral_2),
     thumb_size: str(ball.thumb_size),
     finger_size: str(ball.finger_size),
     finger_size_2: str(ball.finger_size_2),
