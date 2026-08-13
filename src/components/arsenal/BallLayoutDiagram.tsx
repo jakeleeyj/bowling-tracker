@@ -222,9 +222,45 @@ export default function BallLayoutDiagram({
         </>
       )}
 
-      {/* 2LS: pin-to-COG arc (line 3) */}
+      {/* 2LS: PAP location guides — over along the midline, then up/down */}
       {system === "2ls" && (
         <>
+          <line
+            x1={g.grip.x}
+            y1={g.grip.y}
+            x2={g.pap.x}
+            y2={g.grip.y}
+            stroke={gold}
+            strokeWidth={1}
+            strokeDasharray="2 3"
+          />
+          <line
+            x1={g.pap.x}
+            y1={g.grip.y}
+            x2={g.pap.x}
+            y2={g.pap.y}
+            stroke={gold}
+            strokeWidth={1}
+            strokeDasharray="2 3"
+          />
+          <text
+            x={(g.grip.x + g.pap.x) / 2 - 10}
+            y={g.grip.y - 6}
+            fontSize={10}
+            fill={gold}
+          >
+            {papForCog.over}&quot; {hand === "left" ? "←" : "→"}
+          </text>
+          {papForCog.up !== 0 && (
+            <text
+              x={g.pap.x + 5}
+              y={(g.grip.y + g.pap.y) / 2 + 3}
+              fontSize={10}
+              fill={gold}
+            >
+              {Math.abs(papForCog.up)}&quot; {papForCog.up < 0 ? "↓" : "↑"}
+            </text>
+          )}
           <line
             x1={g.pin.x}
             y1={g.pin.y}
