@@ -261,22 +261,16 @@ export default function DrillingSpecsForm({
             onChange={set("name")}
             placeholder="e.g. Phaze II"
           />
-          <div>
-            <label className="mb-1 block text-xs text-text-muted">Brand</label>
-            <input
-              type="text"
-              list="ball-brands"
-              value={draft.brand ?? ""}
-              onChange={(e) => set("brand")(e.target.value)}
-              placeholder="e.g. Storm"
-              className="w-full rounded-lg border border-border bg-surface-light px-3 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
-            />
-            <datalist id="ball-brands">
-              {BALL_BRANDS.map((b) => (
-                <option key={b} value={b} />
-              ))}
-            </datalist>
-          </div>
+          <Select
+            label="Brand"
+            value={draft.brand ?? ""}
+            onChange={set("brand")}
+            options={
+              draft.brand?.trim() && !BALL_BRANDS.includes(draft.brand)
+                ? [draft.brand, ...BALL_BRANDS]
+                : BALL_BRANDS
+            }
+          />
           <Field
             label="Weight (lbs)"
             value={draft.weight_lbs ?? ""}

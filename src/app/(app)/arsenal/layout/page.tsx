@@ -203,6 +203,9 @@ export default function LayoutPage() {
         val_angle: layout.dualAngle.valAngle,
         pin_buffer: layout.vls.pinBuffer,
         psa_to_pap: layout.twoLS.psaToPap,
+        pap_over: (mode === "custom" ? customPap : (storedPap ?? customPap))
+          .over,
+        pap_up: (mode === "custom" ? customPap : (storedPap ?? customPap)).up,
         no_thumb: isTwoHanded,
       })
       .select("id")

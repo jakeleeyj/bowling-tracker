@@ -5,7 +5,7 @@ export async function shareSpecSheet(
   const { toPng } = await import("html-to-image");
   const dataUrl = await toPng(cardElement, {
     width: 1080,
-    height: 1527,
+    height: 2150,
     pixelRatio: 2,
   });
 
