@@ -41,6 +41,20 @@ export interface AnalyzeInput {
 const SPEED_UNIT_KEY = "spare-me-speed-unit";
 export const HAND_KEY = "spare-me-hand";
 export const GRIP_KEY = "spare-me-grip";
+export const PAP_KEY = "spare-me-pap";
+
+export function loadStoredPap(): PapPosition | undefined {
+  try {
+    const raw = localStorage.getItem(PAP_KEY);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed?.over !== "number" || typeof parsed?.up !== "number")
+      return undefined;
+    return parsed;
+  } catch {
+    return undefined;
+  }
+}
 
 export default function AnalyzeForm({
   onAnalyze,
@@ -63,6 +77,11 @@ export default function AnalyzeForm({
   useEffect(() => {
     if (localStorage.getItem(HAND_KEY) === "left") setHand("left");
     if (localStorage.getItem(GRIP_KEY) === "two") setTwoHanded(true);
+    const storedPap = loadStoredPap();
+    if (storedPap) {
+      setPapOver(String(storedPap.over));
+      setPapUp(storedPap.up !== 0 ? String(storedPap.up) : "");
+    }
     // km/h is the default; only switch if the user chose mph before
     if (localStorage.getItem(SPEED_UNIT_KEY) === "mph") {
       setSpeedUnit("mph");
@@ -105,6 +124,7 @@ export default function AnalyzeForm({
       mode === "manual" && Number.isFinite(over)
         ? { over, up: Number.isFinite(up) ? up : 0 }
         : undefined;
+    if (pap) localStorage.setItem(PAP_KEY, JSON.stringify(pap));
     onAnalyze({
       specs,
       speedUnit,

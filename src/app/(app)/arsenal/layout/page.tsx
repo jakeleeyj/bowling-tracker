@@ -21,7 +21,12 @@ import {
 } from "@/lib/layoutEngine";
 import { parseMeasure, type BowlerSpecs } from "@/lib/flightAnalysis";
 import type { Handedness } from "@/lib/layoutGeometry";
-import { HAND_KEY, GRIP_KEY } from "@/components/arsenal/AnalyzeForm";
+import {
+  HAND_KEY,
+  GRIP_KEY,
+  loadStoredPap,
+} from "@/components/arsenal/AnalyzeForm";
+import type { PapPosition } from "@/lib/layoutGeometry";
 import { Sparkles } from "lucide-react";
 import type { FlightAnalysisRow } from "@/lib/database.types";
 
@@ -58,6 +63,9 @@ export default function LayoutPage() {
   const [customPapUp, setCustomPapUp] = useState("");
   const [customSpan, setCustomSpan] = useState("");
   const [customGrip, setCustomGrip] = useState<"one" | "two">("one");
+  const [storedPap, setStoredPap] = useState<PapPosition | undefined>(
+    undefined,
+  );
   const [ballName, setBallName] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -86,6 +94,7 @@ export default function LayoutPage() {
       setTwoHanded(true);
       setCustomGrip("two");
     }
+    setStoredPap(loadStoredPap());
     load();
   }, [load]);
 
@@ -116,9 +125,8 @@ export default function LayoutPage() {
   const papUpNum = parseMeasure(customPapUp);
   const customPap = Number.isFinite(papOverNum)
     ? { over: papOverNum, up: Number.isFinite(papUpNum) ? papUpNum : 0 }
-    : isTwoHanded
-      ? { ...TWO_HANDED_PAP }
-      : { over: 4.5, up: 0 };
+    : (storedPap ??
+      (isTwoHanded ? { ...TWO_HANDED_PAP } : { over: 4.5, up: 0 }));
 
   let layout: LayoutRecommendation | null = null;
   if (mode === "custom") {
@@ -422,7 +430,7 @@ export default function LayoutPage() {
             hand={hand}
             twoHanded={isTwoHanded}
             defaultSystem={mode === "custom" ? effectiveSystem : undefined}
-            pap={mode === "custom" ? customPap : undefined}
+            pap={mode === "custom" ? customPap : storedPap}
             span={
               mode === "custom" && Number.isFinite(parseMeasure(customSpan))
                 ? clamp(parseMeasure(customSpan), 3, 6)
