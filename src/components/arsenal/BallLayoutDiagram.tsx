@@ -34,6 +34,30 @@ function compassArc(
   return `M ${x0} ${y0} A ${r} ${r} 0 0 1 ${x1} ${y1}`;
 }
 
+// A small angle-marker arc at a vertex, swept between the directions of two
+// other points — the protractor wedge a pro shop draws.
+function angleArc(
+  vertex: { x: number; y: number },
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+  r = 26,
+): string {
+  let ta = Math.atan2(a.y - vertex.y, a.x - vertex.x);
+  let tb = Math.atan2(b.y - vertex.y, b.x - vertex.x);
+  let diff = tb - ta;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  if (diff < 0) {
+    [ta, tb] = [tb, ta];
+    diff = -diff;
+  }
+  const x0 = vertex.x + r * Math.cos(ta);
+  const y0 = vertex.y + r * Math.sin(ta);
+  const x1 = vertex.x + r * Math.cos(ta + diff);
+  const y1 = vertex.y + r * Math.sin(ta + diff);
+  return `M ${x0} ${y0} A ${r} ${r} 0 ${diff > Math.PI ? 1 : 0} 1 ${x1} ${y1}`;
+}
+
 export type DiagramSystem = "dual" | "vls" | "2ls";
 
 export default function BallLayoutDiagram({
@@ -169,9 +193,32 @@ export default function BallLayoutDiagram({
         {layout.pinToPap}&quot;
       </text>
 
-      {/* VLS: pin buffer — distance from the pin to the VAL */}
+      {/* VLS construction: pin-to-PAP and PSA-to-PAP arcs cross at the PAP;
+          the buffer arc circles the pin and the VAL is drawn tangent to it. */}
       {system === "vls" && (
         <>
+          <g clipPath="url(#ball-face)" opacity={0.6} fill="none">
+            <path
+              d={compassArc(g.pin, layout.pinToPap * INCH_PX, g.pap)}
+              stroke={blue}
+              strokeWidth={1}
+              strokeDasharray="3 4"
+            />
+            <path
+              d={compassArc(g.psa, twoLS.psaToPap * INCH_PX, g.pap)}
+              stroke={purple}
+              strokeWidth={1}
+              strokeDasharray="3 4"
+            />
+            <circle
+              cx={g.pin.x}
+              cy={g.pin.y}
+              r={Math.abs(vls.pinBuffer) * INCH_PX}
+              stroke={gold}
+              strokeWidth={1}
+              strokeDasharray="3 4"
+            />
+          </g>
           <line
             x1={g.pin.x}
             y1={g.pin.y}
@@ -209,14 +256,22 @@ export default function BallLayoutDiagram({
             PSA
           </text>
           {system === "dual" && (
-            <text
-              x={(g.pin.x + g.psa.x) / 2 + 8}
-              y={(g.pin.y + g.psa.y) / 2 - 6}
-              fontSize={10}
-              fill={purple}
-            >
-              {layout.drillingAngle}°
-            </text>
+            <>
+              <path
+                d={angleArc(g.pin, g.psa, g.pap)}
+                fill="none"
+                stroke={purple}
+                strokeWidth={1.5}
+              />
+              <text
+                x={(g.pin.x + g.psa.x) / 2 + 8}
+                y={(g.pin.y + g.psa.y) / 2 - 6}
+                fontSize={10}
+                fill={purple}
+              >
+                {layout.drillingAngle}°
+              </text>
+            </>
           )}
         </>
       )}
@@ -335,11 +390,19 @@ export default function BallLayoutDiagram({
         </>
       )}
 
-      {/* VAL angle label at the PAP — dual angle only */}
+      {/* VAL angle at the PAP — dual angle only */}
       {system === "dual" && (
-        <text x={g.pap.x - 34} y={g.pap.y - 12} fontSize={10} fill={gold}>
-          {layout.valAngle}°
-        </text>
+        <>
+          <path
+            d={angleArc(g.pap, g.pin, g.valTop)}
+            fill="none"
+            stroke={gold}
+            strokeWidth={1.5}
+          />
+          <text x={g.pap.x - 34} y={g.pap.y - 12} fontSize={10} fill={gold}>
+            {layout.valAngle}°
+          </text>
+        </>
       )}
 
       {/* pin — label flips above the dot when it sits close to the grip */}
