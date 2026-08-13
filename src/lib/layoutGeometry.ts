@@ -38,6 +38,28 @@ const DEFAULT_PAP: PapPosition = { over: 4.5, up: 0 };
 
 export type Handedness = "right" | "left";
 
+// Orthographic sphere projection: flat offsets from the ball-face center
+// represent surface arc length; a point d inches of arc away is seen at
+// R·sin(d as an angle) from center, exactly like a photographed ball.
+// A quarter circumference (6.75") lands on the rim; anything past the
+// horizon clamps to it.
+export function projectToSphere(p: Point): Point {
+  const center: Point = { x: BALL_RADIUS_PX, y: BALL_RADIUS_PX };
+  const dx = p.x - center.x;
+  const dy = p.y - center.y;
+  const flat = Math.hypot(dx, dy);
+  if (flat === 0) return { ...p };
+  const arcRad = Math.min(
+    ((flat / INCH_PX) * (360 / 26.785) * Math.PI) / 180,
+    Math.PI / 2,
+  );
+  const drawn = BALL_RADIUS_PX * Math.sin(arcRad);
+  return {
+    x: center.x + (dx / flat) * drawn,
+    y: center.y + (dy / flat) * drawn,
+  };
+}
+
 export function computeLayoutGeometry(
   layout: DualAngleLayout,
   papPosition: PapPosition = DEFAULT_PAP,

@@ -2,9 +2,12 @@
 
 import {
   computeLayoutGeometry,
+  projectToSphere,
   BALL_RADIUS_PX,
+  INCH_PX,
   type PapPosition,
   type Handedness,
+  type Point,
 } from "@/lib/layoutGeometry";
 import {
   dualAngleToVLS,
@@ -12,36 +15,46 @@ import {
   lightningArc,
   type DualAngleLayout,
 } from "@/lib/layoutEngine";
-import { INCH_PX } from "@/lib/layoutGeometry";
 
 const SIZE = BALL_RADIUS_PX * 2;
 const PAD = 24;
+const CENTER: Point = { x: BALL_RADIUS_PX, y: BALL_RADIUS_PX };
 
-// A short compass swipe: an arc centered on `c` with radius `r`, spanning
-// ±spread° around the direction toward the point it is meant to locate.
-function compassArc(
-  c: { x: number; y: number },
-  r: number,
-  toward: { x: number; y: number },
-  spread = 28,
-): string {
-  const theta = Math.atan2(toward.y - c.y, toward.x - c.x);
-  const s = (spread * Math.PI) / 180;
-  const x0 = c.x + r * Math.cos(theta - s);
-  const y0 = c.y + r * Math.sin(theta - s);
-  const x1 = c.x + r * Math.cos(theta + s);
-  const y1 = c.y + r * Math.sin(theta + s);
-  return `M ${x0} ${y0} A ${r} ${r} 0 0 1 ${x1} ${y1}`;
+// All flat construction shapes are sampled and pushed through the sphere
+// projection, so lines and arcs curve near the edge like on a real ball.
+function toPath(samples: Point[]): string {
+  return samples
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+    .join(" ");
 }
 
-// A small angle-marker arc at a vertex, swept between the directions of two
-// other points — the protractor wedge a pro shop draws.
-function angleArc(
-  vertex: { x: number; y: number },
-  a: { x: number; y: number },
-  b: { x: number; y: number },
-  r = 26,
-): string {
+function segment(a: Point, b: Point, n = 24): Point[] {
+  return Array.from({ length: n + 1 }, (_, i) => ({
+    x: a.x + ((b.x - a.x) * i) / n,
+    y: a.y + ((b.y - a.y) * i) / n,
+  }));
+}
+
+function arcSamples(
+  c: Point,
+  r: number,
+  from: number,
+  to: number,
+  n = 32,
+): Point[] {
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const t = from + ((to - from) * i) / n;
+    return { x: c.x + r * Math.cos(t), y: c.y + r * Math.sin(t) };
+  });
+}
+
+function compassArc(c: Point, r: number, toward: Point, spread = 28): Point[] {
+  const theta = Math.atan2(toward.y - c.y, toward.x - c.x);
+  const s = (spread * Math.PI) / 180;
+  return arcSamples(c, r, theta - s, theta + s);
+}
+
+function angleArc(vertex: Point, a: Point, b: Point, r = 26): Point[] {
   let ta = Math.atan2(a.y - vertex.y, a.x - vertex.x);
   let tb = Math.atan2(b.y - vertex.y, b.x - vertex.x);
   let diff = tb - ta;
@@ -51,11 +64,17 @@ function angleArc(
     [ta, tb] = [tb, ta];
     diff = -diff;
   }
-  const x0 = vertex.x + r * Math.cos(ta);
-  const y0 = vertex.y + r * Math.sin(ta);
-  const x1 = vertex.x + r * Math.cos(ta + diff);
-  const y1 = vertex.y + r * Math.sin(ta + diff);
-  return `M ${x0} ${y0} A ${r} ${r} 0 ${diff > Math.PI ? 1 : 0} 1 ${x1} ${y1}`;
+  return arcSamples(vertex, r, ta, ta + diff, 16);
+}
+
+// Holes shrink toward the horizon like on a photographed ball.
+function holeRadius(flat: Point, r: number): number {
+  const d = Math.hypot(flat.x - CENTER.x, flat.y - CENTER.y);
+  const arc = Math.min(
+    ((d / INCH_PX) * (360 / 26.785) * Math.PI) / 180,
+    Math.PI / 2,
+  );
+  return r * (0.35 + 0.65 * Math.cos(arc));
 }
 
 export type DiagramSystem = "dual" | "vls" | "2ls";
@@ -87,8 +106,23 @@ export default function BallLayoutDiagram({
   const vls = dualAngleToVLS(layout);
   const papForCog = pap ?? { over: 4.5, up: 0 };
   const twoLS = dualAngleTo2LS(layout, papForCog);
-  const showPsa = true;
-  const pinNearGrip = Math.hypot(g.pin.x - g.grip.x, g.pin.y - g.grip.y) < 45;
+
+  const P = projectToSphere;
+  const pin = P(g.pin);
+  const pap2 = P(g.pap);
+  const psa = P(g.psa);
+  const grip = P(g.grip);
+  const thumb = P(g.thumb);
+  const fingers = g.fingers.map((f) => ({ flat: f, proj: P(f) }));
+  const midlineTick: Point = { x: g.pap.x, y: g.grip.y };
+  const tick = P(midlineTick);
+  const pinNearGrip = Math.hypot(pin.x - grip.x, pin.y - grip.y) < 45;
+  const mid = (a: Point, b: Point): Point => ({
+    x: (a.x + b.x) / 2,
+    y: (a.y + b.y) / 2,
+  });
+
+  const reach = 7 * INCH_PX;
 
   return (
     <svg
@@ -98,46 +132,64 @@ export default function BallLayoutDiagram({
       aria-label={`Layout diagram: ${layout.drillingAngle}° drilling angle, ${layout.pinToPap} inch pin to PAP, ${layout.valAngle}° VAL angle`}
     >
       <defs>
-        <clipPath id="ball-face">
-          <circle cx={g.center.x} cy={g.center.y} r={BALL_RADIUS_PX - 2} />
-        </clipPath>
+        <radialGradient id="ball-shade" cx="38%" cy="30%" r="75%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.16)" />
+          <stop offset="45%" stopColor="rgba(255,255,255,0.03)" />
+          <stop offset="85%" stopColor="rgba(0,0,0,0.18)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0.38)" />
+        </radialGradient>
       </defs>
 
       {/* ball */}
       <circle
-        cx={g.center.x}
-        cy={g.center.y}
+        cx={CENTER.x}
+        cy={CENTER.y}
         r={BALL_RADIUS_PX}
         fill={surface}
         stroke="var(--color-border-light)"
         strokeWidth={2}
       />
+      <circle
+        cx={CENTER.x}
+        cy={CENTER.y}
+        r={BALL_RADIUS_PX}
+        fill="url(#ball-shade)"
+      />
 
-      {/* midline through grip center and PAP */}
-      <line
-        x1={g.center.x - BALL_RADIUS_PX + 12}
-        y1={g.grip.y}
-        x2={g.center.x + BALL_RADIUS_PX - 12}
-        y2={g.grip.y}
+      {/* midline through the bridge reference */}
+      <path
+        d={toPath(
+          segment(
+            { x: CENTER.x - reach, y: g.grip.y },
+            { x: CENTER.x + reach, y: g.grip.y },
+            40,
+          ).map(P),
+        )}
+        fill="none"
         stroke={muted}
         strokeWidth={1}
         strokeDasharray="4 4"
       />
+
       {/* VAL — used by Dual Angle and VLS; 2LS is a distance-only system */}
       {system !== "2ls" && (
         <>
-          <line
-            x1={g.valTop.x}
-            y1={g.valTop.y}
-            x2={g.valBottom.x}
-            y2={g.valBottom.y}
+          <path
+            d={toPath(
+              segment(
+                { x: g.pap.x, y: CENTER.y - reach },
+                { x: g.pap.x, y: CENTER.y + reach },
+                40,
+              ).map(P),
+            )}
+            fill="none"
             stroke={gold}
             strokeWidth={1.5}
             strokeDasharray="6 4"
           />
           <text
-            x={g.valTop.x + 6}
-            y={g.valTop.y + 16}
+            x={P({ x: g.pap.x, y: CENTER.y - reach }).x + 6}
+            y={Math.max(P({ x: g.pap.x, y: CENTER.y - reach }).y, 12) + 14}
             fontSize={11}
             fill={gold}
           >
@@ -146,47 +198,43 @@ export default function BallLayoutDiagram({
         </>
       )}
 
-      {/* grip holes — clipped at the silhouette; on a real ball they wrap around */}
-      <g clipPath="url(#ball-face)">
-        {g.fingers.map((f, i) => (
-          <circle
-            key={i}
-            cx={f.x}
-            cy={f.y}
-            r={9}
-            fill="none"
-            stroke={muted}
-            strokeWidth={1.5}
-          />
-        ))}
-        {showThumb && (
-          <circle
-            cx={g.thumb.x}
-            cy={g.thumb.y}
-            r={12}
-            fill="none"
-            stroke={muted}
-            strokeWidth={1.5}
-          />
-        )}
-      </g>
-      <circle cx={g.grip.x} cy={g.grip.y} r={2.5} fill={muted} />
-      <text x={g.grip.x - 14} y={g.grip.y + 16} fontSize={10} fill={muted}>
+      {/* grip holes */}
+      {fingers.map((f, i) => (
+        <circle
+          key={i}
+          cx={f.proj.x}
+          cy={f.proj.y}
+          r={holeRadius(f.flat, 9)}
+          fill="none"
+          stroke={muted}
+          strokeWidth={1.5}
+        />
+      ))}
+      {showThumb && (
+        <circle
+          cx={thumb.x}
+          cy={thumb.y}
+          r={holeRadius(g.thumb, 12)}
+          fill="none"
+          stroke={muted}
+          strokeWidth={1.5}
+        />
+      )}
+      <circle cx={grip.x} cy={grip.y} r={2.5} fill={muted} />
+      <text x={grip.x - 14} y={grip.y + 16} fontSize={10} fill={muted}>
         bridge
       </text>
 
       {/* pin-to-PAP line — line 1 in every system */}
-      <line
-        x1={g.pap.x}
-        y1={g.pap.y}
-        x2={g.pin.x}
-        y2={g.pin.y}
+      <path
+        d={toPath(segment(g.pap, g.pin).map(P))}
+        fill="none"
         stroke={blue}
         strokeWidth={2}
       />
       <text
-        x={(g.pap.x + g.pin.x) / 2 + 8}
-        y={(g.pap.y + g.pin.y) / 2}
+        x={mid(pap2, pin).x + 8}
+        y={mid(pap2, pin).y}
         fontSize={11}
         fill={blue}
       >
@@ -197,40 +245,53 @@ export default function BallLayoutDiagram({
           the buffer arc circles the pin and the VAL is drawn tangent to it. */}
       {system === "vls" && (
         <>
-          <g clipPath="url(#ball-face)" opacity={0.6} fill="none">
+          <g opacity={0.6} fill="none">
             <path
-              d={compassArc(g.pin, layout.pinToPap * INCH_PX, g.pap)}
+              d={toPath(
+                compassArc(g.pin, layout.pinToPap * INCH_PX, g.pap).map(P),
+              )}
               stroke={blue}
               strokeWidth={1}
               strokeDasharray="3 4"
             />
             <path
-              d={compassArc(g.psa, twoLS.psaToPap * INCH_PX, g.pap)}
+              d={toPath(
+                compassArc(g.psa, twoLS.psaToPap * INCH_PX, g.pap).map(P),
+              )}
               stroke={purple}
               strokeWidth={1}
               strokeDasharray="3 4"
             />
-            <circle
-              cx={g.pin.x}
-              cy={g.pin.y}
-              r={Math.abs(vls.pinBuffer) * INCH_PX}
+            <path
+              d={toPath(
+                arcSamples(
+                  g.pin,
+                  Math.abs(vls.pinBuffer) * INCH_PX,
+                  0,
+                  Math.PI * 2,
+                  48,
+                ).map(P),
+              )}
               stroke={gold}
               strokeWidth={1}
               strokeDasharray="3 4"
             />
           </g>
-          <line
-            x1={g.pin.x}
-            y1={g.pin.y}
-            x2={g.pap.x}
-            y2={g.pin.y}
+          <path
+            d={toPath(
+              segment(
+                { x: g.pin.x, y: g.pin.y },
+                { x: g.pap.x, y: g.pin.y },
+              ).map(P),
+            )}
+            fill="none"
             stroke={gold}
             strokeWidth={1.5}
             strokeDasharray="2 3"
           />
           <text
-            x={(g.pin.x + g.pap.x) / 2 - 8}
-            y={g.pin.y - 8}
+            x={mid(pin, P({ x: g.pap.x, y: g.pin.y })).x - 8}
+            y={pin.y - 8}
             fontSize={10}
             fill={gold}
           >
@@ -240,56 +301,48 @@ export default function BallLayoutDiagram({
       )}
 
       {/* PSA */}
-      {showPsa && (
+      <path
+        d={toPath(segment(g.pin, g.psa).map(P))}
+        fill="none"
+        stroke={purple}
+        strokeWidth={1.5}
+        strokeDasharray="3 3"
+      />
+      <circle cx={psa.x} cy={psa.y} r={4} fill={purple} />
+      <text x={psa.x + 7} y={psa.y + 4} fontSize={11} fill={purple}>
+        PSA
+      </text>
+      {system === "dual" && (
         <>
-          <line
-            x1={g.pin.x}
-            y1={g.pin.y}
-            x2={g.psa.x}
-            y2={g.psa.y}
+          <path
+            d={toPath(angleArc(g.pin, g.psa, g.pap).map(P))}
+            fill="none"
             stroke={purple}
             strokeWidth={1.5}
-            strokeDasharray="3 3"
           />
-          <circle cx={g.psa.x} cy={g.psa.y} r={4} fill={purple} />
-          <text x={g.psa.x + 7} y={g.psa.y + 4} fontSize={11} fill={purple}>
-            PSA
+          <text
+            x={mid(pin, psa).x + 8}
+            y={mid(pin, psa).y - 6}
+            fontSize={10}
+            fill={purple}
+          >
+            {layout.drillingAngle}°
           </text>
-          {system === "dual" && (
-            <>
-              <path
-                d={angleArc(g.pin, g.psa, g.pap)}
-                fill="none"
-                stroke={purple}
-                strokeWidth={1.5}
-              />
-              <text
-                x={(g.pin.x + g.psa.x) / 2 + 8}
-                y={(g.pin.y + g.psa.y) / 2 - 6}
-                fontSize={10}
-                fill={purple}
-              >
-                {layout.drillingAngle}°
-              </text>
-            </>
-          )}
         </>
       )}
 
       {/* PSA-to-PAP arc — part of both the VLS and 2LS specs */}
       {system !== "dual" && (
         <>
-          <line
-            x1={g.psa.x}
-            y1={g.psa.y}
-            x2={g.pap.x}
-            y2={g.pap.y}
+          <path
+            d={toPath(segment(g.psa, g.pap).map(P))}
+            fill="none"
             stroke={purple}
             strokeWidth={1.5}
           />
           <text
-            x={(g.psa.x + g.pap.x) / 2 + 6}
-            y={(g.psa.y + g.pap.y) / 2 + 14}
+            x={mid(psa, pap2).x + 6}
+            y={mid(psa, pap2).y + 14}
             fontSize={10}
             fill={purple}
           >
@@ -298,58 +351,22 @@ export default function BallLayoutDiagram({
         </>
       )}
 
-      {/* 2LS construction, drawn like the pamphlet's compass swipes:
-          pin-to-PAP and PSA-to-PAP arcs cross at the PAP; the pin-to-COG
-          arc and the Lightning Arc (from the PAP) cross at the grip center,
-          which sets the midline the fingers are drilled off. */}
-      {system === "2ls" && (
-        <g clipPath="url(#ball-face)" opacity={0.6} fill="none">
-          <path
-            d={compassArc(g.pin, twoLS.pinToPap * INCH_PX, g.pap)}
-            stroke={blue}
-            strokeWidth={1}
-            strokeDasharray="3 4"
-          />
-          <path
-            d={compassArc(g.psa, twoLS.psaToPap * INCH_PX, g.pap)}
-            stroke={purple}
-            strokeWidth={1}
-            strokeDasharray="3 4"
-          />
-          <path
-            d={compassArc(g.pin, twoLS.pinToCog * INCH_PX, g.grip)}
-            stroke={green}
-            strokeWidth={1}
-            strokeDasharray="3 4"
-          />
-          <path
-            d={compassArc(g.pap, lightningArc(papForCog) * INCH_PX, g.grip)}
-            stroke={gold}
-            strokeWidth={1}
-            strokeDasharray="3 4"
-          />
-        </g>
-      )}
-
       {/* Dual Angle & VLS: locate the grip from the PAP — vertical PAP
-          component down the VAL, then the horizontal component back along
-          the midline to the grip center where the holes are drilled. */}
+          component down the VAL, then back along the midline to the bridge. */}
       {system !== "2ls" && (
         <>
           {papForCog.up !== 0 && (
             <>
-              <line
-                x1={g.pap.x}
-                y1={g.pap.y}
-                x2={g.pap.x}
-                y2={g.grip.y}
+              <path
+                d={toPath(segment(g.pap, midlineTick).map(P))}
+                fill="none"
                 stroke={gold}
                 strokeWidth={1}
                 strokeDasharray="2 3"
               />
               <text
-                x={g.pap.x + 5}
-                y={(g.pap.y + g.grip.y) / 2 + 3}
+                x={mid(pap2, tick).x + 5}
+                y={mid(pap2, tick).y + 3}
                 fontSize={10}
                 fill={gold}
               >
@@ -357,18 +374,16 @@ export default function BallLayoutDiagram({
               </text>
             </>
           )}
-          <line
-            x1={g.pap.x}
-            y1={g.grip.y}
-            x2={g.grip.x}
-            y2={g.grip.y}
+          <path
+            d={toPath(segment(midlineTick, g.grip).map(P))}
+            fill="none"
             stroke={gold}
             strokeWidth={1}
             strokeDasharray="2 3"
           />
           <text
-            x={(g.grip.x + g.pap.x) / 2 - 10}
-            y={g.grip.y + 14}
+            x={mid(tick, grip).x - 10}
+            y={grip.y + 14}
             fontSize={10}
             fill={gold}
           >
@@ -377,30 +392,65 @@ export default function BallLayoutDiagram({
         </>
       )}
 
-      {/* 2LS: PAP location guides — over along the midline, then up/down */}
+      {/* 2LS construction: compass swipes crossing at the PAP and at the
+          bridge center, plus the PAP location guides. */}
       {system === "2ls" && (
         <>
-          <line
-            x1={g.grip.x}
-            y1={g.grip.y}
-            x2={g.pap.x}
-            y2={g.grip.y}
+          <g opacity={0.6} fill="none">
+            <path
+              d={toPath(
+                compassArc(g.pin, twoLS.pinToPap * INCH_PX, g.pap).map(P),
+              )}
+              stroke={blue}
+              strokeWidth={1}
+              strokeDasharray="3 4"
+            />
+            <path
+              d={toPath(
+                compassArc(g.psa, twoLS.psaToPap * INCH_PX, g.pap).map(P),
+              )}
+              stroke={purple}
+              strokeWidth={1}
+              strokeDasharray="3 4"
+            />
+            <path
+              d={toPath(
+                compassArc(g.pin, twoLS.pinToCog * INCH_PX, g.grip).map(P),
+              )}
+              stroke={green}
+              strokeWidth={1}
+              strokeDasharray="3 4"
+            />
+            <path
+              d={toPath(
+                compassArc(
+                  g.pap,
+                  lightningArc(papForCog) * INCH_PX,
+                  g.grip,
+                ).map(P),
+              )}
+              stroke={gold}
+              strokeWidth={1}
+              strokeDasharray="3 4"
+            />
+          </g>
+          <path
+            d={toPath(segment(g.grip, midlineTick).map(P))}
+            fill="none"
             stroke={gold}
             strokeWidth={1}
             strokeDasharray="2 3"
           />
-          <line
-            x1={g.pap.x}
-            y1={g.grip.y}
-            x2={g.pap.x}
-            y2={g.pap.y}
+          <path
+            d={toPath(segment(midlineTick, g.pap).map(P))}
+            fill="none"
             stroke={gold}
             strokeWidth={1}
             strokeDasharray="2 3"
           />
           <text
-            x={(g.grip.x + g.pap.x) / 2 - 10}
-            y={g.grip.y - 6}
+            x={mid(grip, tick).x - 10}
+            y={grip.y - 6}
             fontSize={10}
             fill={gold}
           >
@@ -408,26 +458,24 @@ export default function BallLayoutDiagram({
           </text>
           {papForCog.up !== 0 && (
             <text
-              x={g.pap.x + 5}
-              y={(g.grip.y + g.pap.y) / 2 + 3}
+              x={mid(tick, pap2).x + 5}
+              y={mid(tick, pap2).y + 3}
               fontSize={10}
               fill={gold}
             >
               {Math.abs(papForCog.up)}&quot; {papForCog.up < 0 ? "↓" : "↑"}
             </text>
           )}
-          <line
-            x1={g.pin.x}
-            y1={g.pin.y}
-            x2={g.grip.x}
-            y2={g.grip.y}
+          <path
+            d={toPath(segment(g.pin, g.grip).map(P))}
+            fill="none"
             stroke={green}
             strokeWidth={1.5}
             strokeDasharray="5 3"
           />
           <text
-            x={(g.pin.x + g.grip.x) / 2 - 26}
-            y={(g.pin.y + g.grip.y) / 2 - 6}
+            x={mid(pin, grip).x - 26}
+            y={mid(pin, grip).y - 6}
             fontSize={10}
             fill={green}
           >
@@ -440,22 +488,24 @@ export default function BallLayoutDiagram({
       {system === "dual" && (
         <>
           <path
-            d={angleArc(g.pap, g.pin, g.valTop)}
+            d={toPath(
+              angleArc(g.pap, g.pin, { x: g.pap.x, y: g.pap.y - 40 }).map(P),
+            )}
             fill="none"
             stroke={gold}
             strokeWidth={1.5}
           />
-          <text x={g.pap.x - 34} y={g.pap.y - 12} fontSize={10} fill={gold}>
+          <text x={pap2.x - 34} y={pap2.y - 12} fontSize={10} fill={gold}>
             {layout.valAngle}°
           </text>
         </>
       )}
 
       {/* pin — label flips above the dot when it sits close to the grip */}
-      <circle cx={g.pin.x} cy={g.pin.y} r={5} fill={red} />
+      <circle cx={pin.x} cy={pin.y} r={5} fill={red} />
       <text
-        x={pinNearGrip ? g.pin.x - 10 : g.pin.x - 26}
-        y={pinNearGrip ? g.pin.y - 10 : g.pin.y + 4}
+        x={pinNearGrip ? pin.x - 10 : pin.x - 26}
+        y={pinNearGrip ? pin.y - 10 : pin.y + 4}
         fontSize={11}
         fill={red}
       >
@@ -463,8 +513,8 @@ export default function BallLayoutDiagram({
       </text>
 
       {/* PAP */}
-      <circle cx={g.pap.x} cy={g.pap.y} r={5} fill={blue} />
-      <text x={g.pap.x + 9} y={g.pap.y + 4} fontSize={11} fill={blue}>
+      <circle cx={pap2.x} cy={pap2.y} r={5} fill={blue} />
+      <text x={pap2.x + 9} y={pap2.y + 4} fontSize={11} fill={blue}>
         PAP
       </text>
     </svg>

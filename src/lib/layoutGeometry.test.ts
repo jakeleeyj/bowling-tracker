@@ -3,6 +3,7 @@ import {
   computeLayoutGeometry,
   BALL_RADIUS_PX,
   INCH_PX,
+  projectToSphere,
 } from "./layoutGeometry";
 import { dualAngleTo2LS } from "./layoutEngine";
 
@@ -85,5 +86,34 @@ describe("computeLayoutGeometry", () => {
     expect(Math.abs(far.pin.x - far.pap.x)).toBeGreaterThan(
       Math.abs(near.pin.x - near.pap.x),
     );
+  });
+});
+
+describe("projectToSphere", () => {
+  const center = { x: BALL_RADIUS_PX, y: BALL_RADIUS_PX };
+
+  it("keeps the ball-face center fixed", () => {
+    const p = projectToSphere(center);
+    expect(p.x).toBeCloseTo(center.x, 5);
+    expect(p.y).toBeCloseTo(center.y, 5);
+  });
+
+  it("maps a quarter-circumference arc (6.75in) exactly to the rim", () => {
+    const p = projectToSphere({ x: center.x + 6.75 * INCH_PX, y: center.y });
+    expect(p.x - center.x).toBeCloseTo(BALL_RADIUS_PX, 0);
+  });
+
+  it("compresses distances toward the edge (foreshortening)", () => {
+    const mid = projectToSphere({ x: center.x + 3.375 * INCH_PX, y: center.y });
+    // sin(45deg) * R < linear 3.375in
+    expect(mid.x - center.x).toBeLessThan(3.375 * INCH_PX);
+    expect(
+      Math.abs(mid.x - center.x - BALL_RADIUS_PX * Math.SQRT1_2),
+    ).toBeLessThan(1.5);
+  });
+
+  it("clamps beyond-horizon points to the rim", () => {
+    const p = projectToSphere({ x: center.x + 9 * INCH_PX, y: center.y });
+    expect(p.x - center.x).toBeCloseTo(BALL_RADIUS_PX, 0);
   });
 });
