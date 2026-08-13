@@ -108,7 +108,6 @@ const SpecSheetCard = forwardRef<
       ref={ref}
       style={{
         width: 1080,
-        height: 2600,
         background: "#ffffff",
         color: "#0a0e1a",
         padding: 64,
@@ -254,7 +253,7 @@ const SpecSheetCard = forwardRef<
 
       <p
         style={{
-          marginTop: "auto",
+          marginTop: 40,
           fontSize: 20,
           color: "#94a3b8",
           textAlign: "center",

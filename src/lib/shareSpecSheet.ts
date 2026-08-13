@@ -3,11 +3,8 @@ export async function shareSpecSheet(
   ballName: string,
 ): Promise<void> {
   const { toPng } = await import("html-to-image");
-  const dataUrl = await toPng(cardElement, {
-    width: 1080,
-    height: 2600,
-    pixelRatio: 2,
-  });
+  // height follows the content — no fixed frame, no trailing white space
+  const dataUrl = await toPng(cardElement, { pixelRatio: 2 });
 
   const res = await fetch(dataUrl);
   const blob = await res.blob();
