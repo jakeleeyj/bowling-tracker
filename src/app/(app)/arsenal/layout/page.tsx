@@ -57,6 +57,7 @@ export default function LayoutPage() {
   const [customPapOver, setCustomPapOver] = useState("");
   const [customPapUp, setCustomPapUp] = useState("");
   const [customSpan, setCustomSpan] = useState("");
+  const [customGrip, setCustomGrip] = useState<"one" | "two">("one");
   const [ballName, setBallName] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -81,7 +82,10 @@ export default function LayoutPage() {
 
   useEffect(() => {
     if (localStorage.getItem(HAND_KEY) === "left") setHand("left");
-    if (localStorage.getItem(GRIP_KEY) === "two") setTwoHanded(true);
+    if (localStorage.getItem(GRIP_KEY) === "two") {
+      setTwoHanded(true);
+      setCustomGrip("two");
+    }
     load();
   }, [load]);
 
@@ -93,7 +97,20 @@ export default function LayoutPage() {
     );
   }
 
-  const isTwoHanded = latest?.style === "two-handed" || twoHanded;
+  // In custom mode the grip picker decides; recommended mode follows the
+  // saved style / stored preference.
+  const isTwoHanded =
+    mode === "custom"
+      ? customGrip === "two"
+      : latest?.style === "two-handed" || twoHanded;
+  const effectiveSystem =
+    mode === "custom"
+      ? isTwoHanded
+        ? "2ls"
+        : customSystem === "2ls"
+          ? "dual"
+          : customSystem
+      : customSystem;
 
   const papOverNum = parseFloat(customPapOver);
   const papUpNum = parseFloat(customPapUp);
@@ -107,7 +124,7 @@ export default function LayoutPage() {
   if (mode === "custom") {
     const pinToPap = clamp(parseFloat(customPin) || 4.5, 0.75, 6);
     const dualAngle =
-      customSystem === "vls"
+      effectiveSystem === "vls"
         ? vlsToDualAngle(
             {
               pinToPap,
@@ -117,7 +134,7 @@ export default function LayoutPage() {
               ? clamp(parseFloat(customPsa), 0.5, 8.5)
               : undefined,
           )
-        : customSystem === "2ls"
+        : effectiveSystem === "2ls"
           ? twoLSToDualAngle(
               {
                 pinToPap,
@@ -291,43 +308,71 @@ export default function LayoutPage() {
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
             Your layout
           </p>
-          <div className="mb-3 flex rounded-lg bg-surface-light p-1">
-            {(
-              [
-                ["dual", "Dual Angle"],
-                ["vls", "VLS"],
-                ["2ls", "2LS"],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                onClick={() => setCustomSystem(value)}
-                className={`flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-150 ${
-                  customSystem === value
-                    ? "bg-blue/20 text-blue"
-                    : "text-text-muted active:scale-95"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-xs text-text-muted">Grip</span>
+            <div className="flex gap-1">
+              {(
+                [
+                  ["one", "One-handed"],
+                  ["two", "Two-handed"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  onClick={() => setCustomGrip(value)}
+                  className={`rounded px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
+                    customGrip === value
+                      ? "bg-blue/20 text-blue"
+                      : "bg-surface-light text-text-muted active:scale-95"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
+          {isTwoHanded ? (
+            <p className="mb-3 rounded-lg bg-surface-light p-2 text-center text-xs font-semibold text-blue">
+              2LS — the 2-hand layout system
+            </p>
+          ) : (
+            <div className="mb-3 flex rounded-lg bg-surface-light p-1">
+              {(
+                [
+                  ["dual", "Dual Angle"],
+                  ["vls", "VLS"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  onClick={() => setCustomSystem(value)}
+                  className={`flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-150 ${
+                    effectiveSystem === value
+                      ? "bg-blue/20 text-blue"
+                      : "text-text-muted active:scale-95"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="grid grid-cols-3 gap-3">
-            {customSystem === "dual" && (
+            {effectiveSystem === "dual" && (
               <>
                 {customField("Drill angle °", customDrill, setCustomDrill)}
                 {customField('Pin-to-PAP "', customPin, setCustomPin)}
                 {customField("VAL angle °", customVal, setCustomVal)}
               </>
             )}
-            {customSystem === "vls" && (
+            {effectiveSystem === "vls" && (
               <>
                 {customField('Pin-to-PAP "', customPin, setCustomPin)}
                 {customField('PSA-to-PAP "', customPsa, setCustomPsa)}
                 {customField('Pin buffer "', customBuffer, setCustomBuffer)}
               </>
             )}
-            {customSystem === "2ls" && (
+            {effectiveSystem === "2ls" && (
               <>
                 {customField('Pin-to-PAP "', customPin, setCustomPin)}
                 {customField('PSA-to-PAP "', customPsa, setCustomPsa)}
@@ -345,7 +390,7 @@ export default function LayoutPage() {
             {!isTwoHanded &&
               customField('Span " (optional)', customSpan, setCustomSpan)}
           </div>
-          {customSystem === "2ls" &&
+          {effectiveSystem === "2ls" &&
             layout &&
             !isValid2LS(
               {

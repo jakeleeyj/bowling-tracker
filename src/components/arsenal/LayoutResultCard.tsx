@@ -26,10 +26,16 @@ export default function LayoutResultCard({
   span?: number;
   onSystemChange?: (system: LayoutSystem) => void;
 }) {
-  // Two-handers have no thumb, so Storm's 2LS notation is their default view
+  // Two-handers use Storm's 2LS only; one-handers use Dual Angle or VLS
+  const availableSystems: LayoutSystem[] = twoHanded
+    ? ["2ls"]
+    : ["dual", "vls"];
   const [system, setSystem] = useState<LayoutSystem>(
     twoHanded ? "2ls" : "dual",
   );
+  const activeSystem = availableSystems.includes(system)
+    ? system
+    : availableSystems[0];
   // Storm's two-handed convention: PAP located 5" over, 1" down from bridge
   const effectivePap = pap ?? (twoHanded ? { ...TWO_HANDED_PAP } : undefined);
   const twoLS = dualAngleTo2LS(
@@ -68,38 +74,42 @@ export default function LayoutResultCard({
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
           Recommended layout
         </p>
-        <div className="mb-3 flex rounded-lg bg-surface-light p-1">
-          {(Object.keys(systemViews) as LayoutSystem[]).map((key) => (
-            <button
-              key={key}
-              onClick={() => pick(key)}
-              className={`flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-150 ${
-                system === key
-                  ? "bg-blue/20 text-blue"
-                  : "text-text-muted active:scale-95"
-              }`}
-            >
-              {systemViews[key].label}
-            </button>
-          ))}
-        </div>
+        {availableSystems.length > 1 && (
+          <div className="mb-3 flex rounded-lg bg-surface-light p-1">
+            {availableSystems.map((key) => (
+              <button
+                key={key}
+                onClick={() => pick(key)}
+                className={`flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-150 ${
+                  activeSystem === key
+                    ? "bg-blue/20 text-blue"
+                    : "text-text-muted active:scale-95"
+                }`}
+              >
+                {systemViews[key].label}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="mb-4 rounded-lg bg-blue/10 p-4 text-center">
-          <p className="text-xs text-text-muted">{systemViews[system].label}</p>
+          <p className="text-xs text-text-muted">
+            {systemViews[activeSystem].label}
+          </p>
           <p className="text-2xl font-extrabold text-text-primary">
-            {systemViews[system].value}
+            {systemViews[activeSystem].value}
           </p>
           <p className="mt-1 text-[10px] text-text-muted">
-            {systemViews[system].legend}
+            {systemViews[activeSystem].legend}
           </p>
           <p className="mt-1 text-[10px] text-text-secondary">
-            {systemViews[system].note}
+            {systemViews[activeSystem].note}
           </p>
         </div>
         <BallLayoutDiagram
           layout={layout.dualAngle}
           pap={effectivePap}
           hand={hand}
-          system={system}
+          system={activeSystem}
           showThumb={!twoHanded}
           span={span}
         />

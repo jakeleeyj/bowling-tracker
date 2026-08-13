@@ -116,7 +116,8 @@ export default function AnalyzeForm({
   function switchGrip(two: boolean) {
     setTwoHanded(two);
     localStorage.setItem(GRIP_KEY, two ? "two" : "one");
-    if (two && mode === "preset") setPreset("two-handed");
+    if (two) setPreset("two-handed");
+    else if (preset === "two-handed") setPreset("tweener");
   }
 
   function switchHand(h: Handedness) {
@@ -228,26 +229,30 @@ export default function AnalyzeForm({
 
         {mode === "preset" ? (
           <div className="grid grid-cols-2 gap-2">
-            {(Object.keys(STYLE_PRESETS) as (keyof typeof STYLE_PRESETS)[]).map(
-              (key) => (
-                <button
-                  key={key}
-                  onClick={() => setPreset(key)}
-                  className={`rounded-lg border p-3 text-left transition-all duration-150 active:scale-[0.97] ${
-                    preset === key
-                      ? "border-blue bg-blue/10"
-                      : "border-border bg-surface-light"
-                  }`}
-                >
-                  <p className="text-sm font-bold capitalize text-text-primary">
-                    {key}
-                  </p>
-                  <p className="text-xs text-text-muted">
-                    {PRESET_LABELS[key]}
-                  </p>
-                </button>
-              ),
-            )}
+            {(
+              (twoHanded
+                ? ["two-handed"]
+                : [
+                    "stroker",
+                    "tweener",
+                    "cranker",
+                  ]) as (keyof typeof STYLE_PRESETS)[]
+            ).map((key) => (
+              <button
+                key={key}
+                onClick={() => setPreset(key)}
+                className={`rounded-lg border p-3 text-left transition-all duration-150 active:scale-[0.97] ${
+                  preset === key
+                    ? "border-blue bg-blue/10"
+                    : "border-border bg-surface-light"
+                }`}
+              >
+                <p className="text-sm font-bold capitalize text-text-primary">
+                  {key}
+                </p>
+                <p className="text-xs text-text-muted">{PRESET_LABELS[key]}</p>
+              </button>
+            ))}
           </div>
         ) : (
           <div className="flex flex-col gap-4">
