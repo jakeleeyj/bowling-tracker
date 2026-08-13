@@ -13,6 +13,8 @@ import {
   dualAngleTo2LS,
   vlsToDualAngle,
   twoLSToDualAngle,
+  lightningArc,
+  isValid2LS,
   TWO_HANDED_PAP,
   type LaneCondition,
   type LayoutRecommendation,
@@ -340,6 +342,24 @@ export default function LayoutPage() {
             )}
             {customField('PAP up " (− = down)', customPapUp, setCustomPapUp)}
           </div>
+          {customSystem === "2ls" &&
+            layout &&
+            !isValid2LS(
+              {
+                pinToPap: layout.dualAngle.pinToPap,
+                psaToPap: clamp(parseFloat(customPsa) || 4.25, 0.5, 8.5),
+                pinToCog: clamp(parseFloat(customCog) || 3.5, 0.5, 8),
+              },
+              customPap,
+            ) && (
+              <p className="mt-2 rounded-lg bg-red/10 p-3 text-[10px] leading-relaxed text-red">
+                These distances can&apos;t meet on the ball with your PAP —
+                Storm&apos;s Lightning Arc for a {customPap.over}&quot; ×{" "}
+                {Math.abs(customPap.up)}&quot; PAP is {lightningArc(customPap)}
+                &quot;, so pin-to-PAP and pin-to-COG must differ by less than
+                that. The preview shows the nearest drillable layout.
+              </p>
+            )}
           <p className="mt-2 text-[10px] leading-relaxed text-text-muted">
             Enter the numbers you know — the tabs below convert between all
             three systems automatically.

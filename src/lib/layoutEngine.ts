@@ -220,8 +220,10 @@ export function twoLSToDualAngle(
     r,
   );
   // over·sin(v) − up·cos(v) = k  →  v = asin(k/r) + atan2(up, over)
+  // Negative VAL angles are real: Storm's strongest 2LS layouts put the pin
+  // on the far side of the VAL (e.g. their 3½×4×6½ example).
   const phi = Math.atan2(pap.up, pap.over);
-  const valAngle = clamp((Math.asin(k / r) + phi) / DEG, 20, 90);
+  const valAngle = clamp((Math.asin(k / r) + phi) / DEG, -45, 90);
 
   const pinArc = p * DEG_PER_INCH * DEG;
   const psaArc = clamp(twoLS.psaToPap, 0.5, 8.5) * DEG_PER_INCH * DEG;
@@ -233,6 +235,29 @@ export function twoLSToDualAngle(
     pinToPap: p,
     valAngle: Math.round(valAngle),
   };
+}
+
+// Storm Lightning Arc: the PAP-to-COG distance, computed as the spherical
+// hypotenuse of the PAP coordinates (cos c = cos a · cos b) and rounded to
+// the nearest 1/8", exactly like Storm's Lightning Arc Chart for 2LS.
+export function lightningArc(pap: { over: number; up: number }): number {
+  const a = Math.abs(pap.over) * DEG_PER_INCH * DEG;
+  const b = Math.abs(pap.up) * DEG_PER_INCH * DEG;
+  const c = Math.acos(Math.cos(a) * Math.cos(b)) / DEG / DEG_PER_INCH;
+  return Math.round(c * 8) / 8;
+}
+
+// A 2LS spec is only drillable if the pin-to-PAP, pin-to-COG and Lightning
+// arcs can meet — the triangle inequality on the ball surface.
+export function isValid2LS(
+  twoLS: TwoLSLayout,
+  pap: { over: number; up: number } = TWO_HANDED_PAP,
+): boolean {
+  const arc = lightningArc(pap);
+  return (
+    arc <= twoLS.pinToPap + twoLS.pinToCog &&
+    arc >= Math.abs(twoLS.pinToPap - twoLS.pinToCog)
+  );
 }
 
 // Storm 2LS notation: pin-to-PAP × PSA-to-PAP × pin-to-COG (center of grip).

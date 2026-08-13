@@ -5,6 +5,8 @@ import {
   dualAngleTo2LS,
   vlsToDualAngle,
   twoLSToDualAngle,
+  lightningArc,
+  isValid2LS,
 } from "./layoutEngine";
 
 const stroker = {
@@ -214,5 +216,63 @@ describe("vlsToDualAngle with PSA", () => {
     const psaToPap = dualAngleTo2LS(original).psaToPap;
     const back = vlsToDualAngle(dualAngleToVLS(original), psaToPap);
     expect(Math.abs(back.drillingAngle - 60)).toBeLessThan(4);
+  });
+});
+
+describe("Storm 2LS ranked layouts round-trip", () => {
+  // The six official example layouts from Storm's 2LS pamphlet, all built
+  // on a 5" over / 1" down PAP from the bridge center.
+  const PAP = { over: 5, up: -1 };
+  const layouts: [number, number, number][] = [
+    [5.5, 5, 2],
+    [2, 6, 5],
+    [5, 4, 3.5],
+    [4.5, 3, 4.5],
+    [4, 4, 5],
+    [3.5, 4, 6.5],
+  ];
+
+  it("recovers every official layout within measurement tolerance", () => {
+    for (const [pinToPap, psaToPap, pinToCog] of layouts) {
+      const dual = twoLSToDualAngle({ pinToPap, psaToPap, pinToCog }, PAP);
+      const back = dualAngleTo2LS(dual, PAP);
+      expect(back.pinToPap).toBe(pinToPap);
+      expect(Math.abs(back.psaToPap - psaToPap)).toBeLessThanOrEqual(0.3);
+      expect(Math.abs(back.pinToCog - pinToCog)).toBeLessThanOrEqual(0.3);
+    }
+  });
+});
+
+describe("lightningArc", () => {
+  // Values from Storm's official Lightning Arc Chart (spherical hypotenuse
+  // of the PAP coordinates, rounded to the nearest 1/8")
+  it("matches Storm's chart", () => {
+    expect(lightningArc({ over: 5, up: 1 })).toBe(5.0);
+    expect(lightningArc({ over: 2, up: 0.5 })).toBe(2.0);
+    expect(lightningArc({ over: 5, up: 0 })).toBe(5.0);
+    expect(lightningArc({ over: 4.5, up: 1 })).toBe(4.625);
+  });
+});
+
+describe("isValid2LS", () => {
+  const PAP = { over: 5, up: -1 };
+  it("accepts all six official Storm layouts", () => {
+    for (const [pinToPap, psaToPap, pinToCog] of [
+      [5.5, 5, 2],
+      [2, 6, 5],
+      [5, 4, 3.5],
+      [4.5, 3, 4.5],
+      [4, 4, 5],
+      [3.5, 4, 6.5],
+    ]) {
+      expect(isValid2LS({ pinToPap, psaToPap, pinToCog }, PAP)).toBe(true);
+    }
+  });
+
+  it("rejects arcs that cannot meet", () => {
+    // pin 1" from PAP but 7" from COG: |1 - 7| = 6 > lightning arc 5
+    expect(isValid2LS({ pinToPap: 1, psaToPap: 5, pinToCog: 7 }, PAP)).toBe(
+      false,
+    );
   });
 });
