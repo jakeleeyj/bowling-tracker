@@ -331,6 +331,52 @@ export default function BallLayoutDiagram({
         </g>
       )}
 
+      {/* Dual Angle & VLS: locate the grip from the PAP — vertical PAP
+          component down the VAL, then the horizontal component back along
+          the midline to the grip center where the holes are drilled. */}
+      {system !== "2ls" && (
+        <>
+          {papForCog.up !== 0 && (
+            <>
+              <line
+                x1={g.pap.x}
+                y1={g.pap.y}
+                x2={g.pap.x}
+                y2={g.grip.y}
+                stroke={gold}
+                strokeWidth={1}
+                strokeDasharray="2 3"
+              />
+              <text
+                x={g.pap.x + 5}
+                y={(g.pap.y + g.grip.y) / 2 + 3}
+                fontSize={10}
+                fill={gold}
+              >
+                {Math.abs(papForCog.up)}&quot; {papForCog.up < 0 ? "↓" : "↑"}
+              </text>
+            </>
+          )}
+          <line
+            x1={g.pap.x}
+            y1={g.grip.y}
+            x2={g.grip.x}
+            y2={g.grip.y}
+            stroke={gold}
+            strokeWidth={1}
+            strokeDasharray="2 3"
+          />
+          <text
+            x={(g.grip.x + g.pap.x) / 2 - 10}
+            y={g.grip.y + 14}
+            fontSize={10}
+            fill={gold}
+          >
+            {papForCog.over}&quot; {hand === "left" ? "→" : "←"}
+          </text>
+        </>
+      )}
+
       {/* 2LS: PAP location guides — over along the midline, then up/down */}
       {system === "2ls" && (
         <>
