@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Plus, BarChart3, Swords, User, Dices } from "lucide-react";
+import {
+  Home,
+  Plus,
+  BarChart3,
+  Swords,
+  User,
+  Dices,
+  CircleDot,
+} from "lucide-react";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
 
 const navItems = [
@@ -10,6 +18,7 @@ const navItems = [
   { href: "/stats", label: "Stats", icon: BarChart3 },
   { href: "/leaderboard", label: "Ranked", icon: Swords },
   { href: "/minigames", label: "Minigames", icon: Dices },
+  { href: "/arsenal", label: "Arsenal", icon: CircleDot },
   { href: "/profile", label: "Me", icon: User },
 ];
 

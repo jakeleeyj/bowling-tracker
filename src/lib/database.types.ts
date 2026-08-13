@@ -9,6 +9,160 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      balls: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          brand: string | null;
+          weight_lbs: number | null;
+          rg: number | null;
+          differential: number | null;
+          coverstock: string | null;
+          core_type: string | null;
+          drilling_angle: number | null;
+          pin_to_pap: number | null;
+          val_angle: number | null;
+          pin_buffer: number | null;
+          psa_to_pap: number | null;
+          pap_over: number | null;
+          pap_up: number | null;
+          span: number | null;
+          thumb_pitch_forward: number | null;
+          thumb_pitch_lateral: number | null;
+          finger_pitch_forward: number | null;
+          finger_pitch_lateral: number | null;
+          thumb_size: string | null;
+          finger_size: string | null;
+          no_thumb: boolean;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          brand?: string | null;
+          weight_lbs?: number | null;
+          rg?: number | null;
+          differential?: number | null;
+          coverstock?: string | null;
+          core_type?: string | null;
+          drilling_angle?: number | null;
+          pin_to_pap?: number | null;
+          val_angle?: number | null;
+          pin_buffer?: number | null;
+          psa_to_pap?: number | null;
+          pap_over?: number | null;
+          pap_up?: number | null;
+          span?: number | null;
+          thumb_pitch_forward?: number | null;
+          thumb_pitch_lateral?: number | null;
+          finger_pitch_forward?: number | null;
+          finger_pitch_lateral?: number | null;
+          thumb_size?: string | null;
+          finger_size?: string | null;
+          no_thumb?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          brand?: string | null;
+          weight_lbs?: number | null;
+          rg?: number | null;
+          differential?: number | null;
+          coverstock?: string | null;
+          core_type?: string | null;
+          drilling_angle?: number | null;
+          pin_to_pap?: number | null;
+          val_angle?: number | null;
+          pin_buffer?: number | null;
+          psa_to_pap?: number | null;
+          pap_over?: number | null;
+          pap_up?: number | null;
+          span?: number | null;
+          thumb_pitch_forward?: number | null;
+          thumb_pitch_lateral?: number | null;
+          finger_pitch_forward?: number | null;
+          finger_pitch_lateral?: number | null;
+          thumb_size?: string | null;
+          finger_size?: string | null;
+          no_thumb?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "balls_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      flight_analyses: {
+        Row: {
+          id: string;
+          user_id: string;
+          ball_speed_mph: number;
+          rev_rate: number;
+          axis_tilt: number;
+          axis_rotation: number;
+          lane_condition: string;
+          speed_rev_match: string;
+          style: string;
+          drilling_angle: number;
+          pin_to_pap: number;
+          val_angle: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          ball_speed_mph: number;
+          rev_rate: number;
+          axis_tilt: number;
+          axis_rotation: number;
+          lane_condition: string;
+          speed_rev_match: string;
+          style: string;
+          drilling_angle: number;
+          pin_to_pap: number;
+          val_angle: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          ball_speed_mph?: number;
+          rev_rate?: number;
+          axis_tilt?: number;
+          axis_rotation?: number;
+          lane_condition?: string;
+          speed_rev_match?: string;
+          style?: string;
+          drilling_angle?: number;
+          pin_to_pap?: number;
+          val_angle?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "flight_analyses_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           id: string;
@@ -287,6 +441,10 @@ export type Frame = Database["public"]["Tables"]["frames"]["Row"];
 
 export type PushSubscription =
   Database["public"]["Tables"]["push_subscriptions"]["Row"];
+
+export type Ball = Database["public"]["Tables"]["balls"]["Row"];
+export type FlightAnalysisRow =
+  Database["public"]["Tables"]["flight_analyses"]["Row"];
 
 export type SessionWithGames = Session & {
   games: Game[];
