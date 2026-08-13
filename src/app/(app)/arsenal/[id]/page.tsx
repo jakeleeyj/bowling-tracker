@@ -13,6 +13,7 @@ import DrillingSpecsForm, {
 } from "@/components/arsenal/DrillingSpecsForm";
 import SpecSheetButton from "@/components/arsenal/SpecSheetButton";
 import BallLayoutDiagram from "@/components/arsenal/BallLayoutDiagram";
+import GripChart from "@/components/arsenal/GripChart";
 import { Trash2 } from "lucide-react";
 import type { Ball } from "@/lib/database.types";
 
@@ -197,6 +198,13 @@ export default function BallPage() {
           </div>
         );
       })()}
+
+      <div className="glass mb-5 p-4">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
+          Grip chart
+        </p>
+        <GripChart draft={draft} />
+      </div>
 
       <DrillingSpecsForm draft={draft} onChange={setDraft} />
 
