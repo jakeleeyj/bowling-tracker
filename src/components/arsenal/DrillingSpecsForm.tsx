@@ -58,11 +58,12 @@ function Field({
     <div>
       <label className="mb-1 block text-xs text-text-muted">{label}</label>
       <input
-        type={type}
-        inputMode={type === "number" ? "decimal" : undefined}
+        type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
+        placeholder={
+          placeholder ?? (type === "number" ? "e.g. 3 3/8" : undefined)
+        }
         className="w-full rounded-lg border border-border bg-surface-light px-3 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
       />
     </div>

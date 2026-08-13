@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { parseMeasure } from "@/lib/flightAnalysis";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { useToast } from "@/components/Toast";
@@ -13,7 +14,7 @@ const EMPTY_DRAFT: BallDraft = { no_thumb: false };
 
 function toNumber(value: string | undefined): number | null {
   if (value === undefined || value.trim() === "") return null;
-  const n = parseFloat(value);
+  const n = parseMeasure(value);
   return Number.isFinite(n) ? n : null;
 }
 

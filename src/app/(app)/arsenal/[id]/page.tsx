@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { parseMeasure } from "@/lib/flightAnalysis";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { useToast } from "@/components/Toast";
@@ -19,7 +20,7 @@ import type { Ball } from "@/lib/database.types";
 
 function toNumber(value: string | undefined): number | null {
   if (value === undefined || value.trim() === "") return null;
-  const n = parseFloat(value);
+  const n = parseMeasure(value);
   return Number.isFinite(n) ? n : null;
 }
 
@@ -156,12 +157,12 @@ export default function BallPage() {
       </div>
 
       {(() => {
-        const angle = parseFloat(draft.drilling_angle ?? "");
-        const pin = parseFloat(draft.pin_to_pap ?? "");
-        const val = parseFloat(draft.val_angle ?? "");
+        const angle = parseMeasure(draft.drilling_angle ?? "");
+        const pin = parseMeasure(draft.pin_to_pap ?? "");
+        const val = parseMeasure(draft.val_angle ?? "");
         if (![angle, pin, val].every(Number.isFinite)) return null;
-        const over = parseFloat(draft.pap_over ?? "");
-        const up = parseFloat(draft.pap_up ?? "");
+        const over = parseMeasure(draft.pap_over ?? "");
+        const up = parseMeasure(draft.pap_up ?? "");
         const pap = Number.isFinite(over)
           ? { over, up: Number.isFinite(up) ? up : 0 }
           : draft.no_thumb
@@ -183,8 +184,8 @@ export default function BallPage() {
               }
               showThumb={!draft.no_thumb}
               span={
-                Number.isFinite(parseFloat(draft.span ?? ""))
-                  ? parseFloat(draft.span!)
+                Number.isFinite(parseMeasure(draft.span ?? ""))
+                  ? parseMeasure(draft.span!)
                   : undefined
               }
               pap={pap}

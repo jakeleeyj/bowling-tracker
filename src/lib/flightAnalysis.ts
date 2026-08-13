@@ -46,6 +46,31 @@ export function formatSpeed(mph: number, unit: SpeedUnit): string {
   return `${Math.round(mph * 10) / 10} mph`;
 }
 
+// Accepts "3.375", "3/8", "3 3/8", "3-3/8" and negatives; NaN when invalid.
+export function parseMeasure(raw: string): number {
+  const text = raw.trim();
+  if (text === "") return NaN;
+  const match = text.match(
+    /^(-)?(?:(\d+(?:\.\d+)?)(?:[ -](\d+)\/(\d+))?|(\d+)\/(\d+))$/,
+  );
+  if (!match) return NaN;
+  const [, sign, whole, mixedNum, mixedDen, fracNum, fracDen] = match;
+  let value: number;
+  if (fracNum !== undefined) {
+    const den = Number(fracDen);
+    if (den === 0) return NaN;
+    value = Number(fracNum) / den;
+  } else {
+    value = Number(whole);
+    if (mixedNum !== undefined) {
+      const den = Number(mixedDen);
+      if (den === 0) return NaN;
+      value += Number(mixedNum) / den;
+    }
+  }
+  return sign ? -value : value;
+}
+
 const MATCHED_LOW = 0.85;
 const MATCHED_HIGH = 1.15;
 

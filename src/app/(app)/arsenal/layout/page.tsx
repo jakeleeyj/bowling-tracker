@@ -19,7 +19,7 @@ import {
   type LaneCondition,
   type LayoutRecommendation,
 } from "@/lib/layoutEngine";
-import type { BowlerSpecs } from "@/lib/flightAnalysis";
+import { parseMeasure, type BowlerSpecs } from "@/lib/flightAnalysis";
 import type { Handedness } from "@/lib/layoutGeometry";
 import { HAND_KEY, GRIP_KEY } from "@/components/arsenal/AnalyzeForm";
 import { Sparkles } from "lucide-react";
@@ -112,8 +112,8 @@ export default function LayoutPage() {
           : customSystem
       : customSystem;
 
-  const papOverNum = parseFloat(customPapOver);
-  const papUpNum = parseFloat(customPapUp);
+  const papOverNum = parseMeasure(customPapOver);
+  const papUpNum = parseMeasure(customPapUp);
   const customPap = Number.isFinite(papOverNum)
     ? { over: papOverNum, up: Number.isFinite(papUpNum) ? papUpNum : 0 }
     : isTwoHanded
@@ -122,31 +122,31 @@ export default function LayoutPage() {
 
   let layout: LayoutRecommendation | null = null;
   if (mode === "custom") {
-    const pinToPap = clamp(parseFloat(customPin) || 4.5, 0.75, 6);
+    const pinToPap = clamp(parseMeasure(customPin) || 4.5, 0.75, 6);
     const dualAngle =
       effectiveSystem === "vls"
         ? vlsToDualAngle(
             {
               pinToPap,
-              pinBuffer: clamp(parseFloat(customBuffer) || 2.5, 0, 6),
+              pinBuffer: clamp(parseMeasure(customBuffer) || 2.5, 0, 6),
             },
-            Number.isFinite(parseFloat(customPsa))
-              ? clamp(parseFloat(customPsa), 0.5, 8.5)
+            Number.isFinite(parseMeasure(customPsa))
+              ? clamp(parseMeasure(customPsa), 0.5, 8.5)
               : undefined,
           )
         : effectiveSystem === "2ls"
           ? twoLSToDualAngle(
               {
                 pinToPap,
-                psaToPap: clamp(parseFloat(customPsa) || 4.25, 0.5, 8.5),
-                pinToCog: clamp(parseFloat(customCog) || 3.5, 0.5, 8),
+                psaToPap: clamp(parseMeasure(customPsa) || 4.25, 0.5, 8.5),
+                pinToCog: clamp(parseMeasure(customCog) || 3.5, 0.5, 8),
               },
               customPap,
             )
           : {
-              drillingAngle: clamp(parseFloat(customDrill) || 50, 10, 90),
+              drillingAngle: clamp(parseMeasure(customDrill) || 50, 10, 90),
               pinToPap,
-              valAngle: clamp(parseFloat(customVal) || 35, 20, 90),
+              valAngle: clamp(parseMeasure(customVal) || 35, 20, 90),
             };
     layout = {
       dualAngle,
@@ -205,11 +205,11 @@ export default function LayoutPage() {
     <div>
       <label className="mb-1 block text-xs text-text-muted">{label}</label>
       <input
-        type="number"
-        inputMode="decimal"
+        type="text"
+        placeholder={"e.g. 3 3/8"}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="w-full rounded-lg border border-border bg-surface-light px-3 py-2.5 text-sm text-text-primary outline-none focus:border-blue"
+        className="w-full rounded-lg border border-border bg-surface-light px-3 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
       />
     </div>
   );
@@ -395,8 +395,8 @@ export default function LayoutPage() {
             !isValid2LS(
               {
                 pinToPap: layout.dualAngle.pinToPap,
-                psaToPap: clamp(parseFloat(customPsa) || 4.25, 0.5, 8.5),
-                pinToCog: clamp(parseFloat(customCog) || 3.5, 0.5, 8),
+                psaToPap: clamp(parseMeasure(customPsa) || 4.25, 0.5, 8.5),
+                pinToCog: clamp(parseMeasure(customCog) || 3.5, 0.5, 8),
               },
               customPap,
             ) && (
@@ -424,8 +424,8 @@ export default function LayoutPage() {
             defaultSystem={mode === "custom" ? effectiveSystem : undefined}
             pap={mode === "custom" ? customPap : undefined}
             span={
-              mode === "custom" && Number.isFinite(parseFloat(customSpan))
-                ? clamp(parseFloat(customSpan), 3, 6)
+              mode === "custom" && Number.isFinite(parseMeasure(customSpan))
+                ? clamp(parseMeasure(customSpan), 3, 6)
                 : undefined
             }
           />

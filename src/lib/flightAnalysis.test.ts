@@ -6,6 +6,7 @@ import {
   STYLE_PRESETS,
   kmhToMph,
   formatSpeed,
+  parseMeasure,
 } from "./flightAnalysis";
 
 describe("getSpeedRevMatch", () => {
@@ -153,5 +154,30 @@ describe("analyzeFlight", () => {
     expect(result.specs.revRate).toBeLessThanOrEqual(700);
     expect(result.specs.axisTilt).toBeLessThanOrEqual(90);
     expect(result.specs.axisRotation).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe("parseMeasure", () => {
+  it("parses plain decimals", () => {
+    expect(parseMeasure("3.375")).toBeCloseTo(3.375, 5);
+    expect(parseMeasure("45")).toBe(45);
+  });
+
+  it("parses fractions and mixed numbers", () => {
+    expect(parseMeasure("3/8")).toBeCloseTo(0.375, 5);
+    expect(parseMeasure("3 3/8")).toBeCloseTo(3.375, 5);
+    expect(parseMeasure("6 3/4")).toBeCloseTo(6.75, 5);
+  });
+
+  it("parses negatives and dash-separated mixed numbers", () => {
+    expect(parseMeasure("-3/8")).toBeCloseTo(-0.375, 5);
+    expect(parseMeasure("-1 1/2")).toBeCloseTo(-1.5, 5);
+    expect(parseMeasure("3-3/8")).toBeCloseTo(3.375, 5);
+  });
+
+  it("returns NaN for junk", () => {
+    expect(Number.isNaN(parseMeasure("abc"))).toBe(true);
+    expect(Number.isNaN(parseMeasure(""))).toBe(true);
+    expect(Number.isNaN(parseMeasure("3/0"))).toBe(true);
   });
 });

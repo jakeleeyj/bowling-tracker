@@ -6,6 +6,7 @@ import {
   STYLE_PRESETS,
   SPEC_LIMITS,
   kmhToMph,
+  parseMeasure,
   mphToKmh,
   type BowlerSpecs,
   type SpeedUnit,
@@ -98,8 +99,8 @@ export default function AnalyzeForm({
             axisTilt: parseFloat(tilt) || 13,
             axisRotation: parseFloat(rotation) || 45,
           };
-    const over = parseFloat(papOver);
-    const up = parseFloat(papUp);
+    const over = parseMeasure(papOver);
+    const up = parseMeasure(papUp);
     const pap =
       mode === "manual" && Number.isFinite(over)
         ? { over, up: Number.isFinite(up) ? up : 0 }
@@ -328,19 +329,17 @@ export default function AnalyzeForm({
               )}
               <div className="flex gap-2">
                 <input
-                  type="number"
-                  inputMode="decimal"
+                  type="text"
                   value={papOver}
                   onChange={(e) => setPapOver(e.target.value)}
-                  placeholder={'over (e.g. 4.5")'}
+                  placeholder={'over (e.g. 4 1/2")'}
                   className="min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
                 />
                 <input
-                  type="number"
-                  inputMode="decimal"
+                  type="text"
                   value={papUp}
                   onChange={(e) => setPapUp(e.target.value)}
-                  placeholder={'up (e.g. 0.5")'}
+                  placeholder={'up (e.g. 1/2")'}
                   className="min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
                 />
               </div>
