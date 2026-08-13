@@ -173,7 +173,11 @@ export default function Ball3D({
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 10);
     camera.position.set(0, 0, 4.2);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      preserveDrawingBuffer: true,
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 

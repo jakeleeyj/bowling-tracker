@@ -93,7 +93,13 @@ function Hole({
   );
 }
 
-export default function GripChart({ draft }: { draft: BallDraft }) {
+export default function GripChart({
+  draft,
+  maxWidth = 300,
+}: {
+  draft: BallDraft;
+  maxWidth?: number;
+}) {
   const W = 300;
   const fingerY = 62;
   const fingerR = 34;
@@ -107,7 +113,8 @@ export default function GripChart({ draft }: { draft: BallDraft }) {
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
-      className="mx-auto w-full max-w-[300px]"
+      className="mx-auto w-full"
+      style={{ maxWidth }}
       role="img"
       aria-label="Grip drilling chart"
     >

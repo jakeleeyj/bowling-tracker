@@ -18,11 +18,16 @@ export default function SpecSheetButton({
   const cardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const [sharing, setSharing] = useState(false);
+  const [ballImage, setBallImage] = useState<string | undefined>(undefined);
 
   async function share() {
     if (!cardRef.current || sharing) return;
     setSharing(true);
     try {
+      // snapshot the on-page 3D ball so the sheet carries the real render
+      const canvas = document.querySelector<HTMLCanvasElement>("canvas");
+      if (canvas) setBallImage(canvas.toDataURL("image/png"));
+      await new Promise((r) => setTimeout(r, 120));
       await shareSpecSheet(cardRef.current, ball.name);
     } catch {
       toast("Couldn't create the spec sheet", "error");
@@ -41,7 +46,7 @@ export default function SpecSheetButton({
         {sharing ? "Creating…" : "Share spec sheet"}
       </button>
       <div className="pointer-events-none fixed -left-[2000px] top-0">
-        <SpecSheetCard ref={cardRef} draft={draft} />
+        <SpecSheetCard ref={cardRef} draft={draft} ballImage={ballImage} />
       </div>
     </>
   );

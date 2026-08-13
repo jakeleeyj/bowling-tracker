@@ -127,7 +127,7 @@ export default function SpecSheetDiagram({
   return (
     <svg
       viewBox={`${-PAD} ${-PAD} ${SIZE + PAD * 2} ${SIZE + PAD * 2}`}
-      className="mx-auto w-full max-w-[300px]"
+      className="mx-auto w-full"
       role="img"
       aria-label={`Layout diagram: ${layout.drillingAngle}° drilling angle, ${layout.pinToPap} inch pin to PAP, ${layout.valAngle}° VAL angle`}
     >
