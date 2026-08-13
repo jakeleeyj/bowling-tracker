@@ -51,11 +51,19 @@ describe("computeLayoutGeometry", () => {
     expect(a.pin.y).toBeCloseTo(b.pin.y, 5);
   });
 
-  it("places the PSA at the true PSA-to-PAP distance", () => {
-    const g = computeLayoutGeometry(layout);
-    const expected = dualAngleTo2LS(layout).psaToPap * INCH_PX;
-    const actual = Math.hypot(g.psa.x - g.pap.x, g.psa.y - g.pap.y);
-    expect(actual).toBeCloseTo(expected, 0);
+  it("keeps the PSA a fixed 6.75in from the pin for every layout", () => {
+    // pin and PSA are physical marks on the ball — a quarter circumference
+    // apart. Layout changes swing the PSA around the pin but never change
+    // that distance.
+    for (const l of [
+      layout,
+      { drillingAngle: 70, pinToPap: 5.5, valAngle: 60 },
+      { drillingAngle: 20, pinToPap: 2, valAngle: 25 },
+    ]) {
+      const g = computeLayoutGeometry(l);
+      const d = Math.hypot(g.psa.x - g.pin.x, g.psa.y - g.pin.y);
+      expect(d).toBeCloseTo(6.75 * INCH_PX, 0);
+    }
   });
 
   it("straddles the fingers around the grip point for no-thumb grips", () => {

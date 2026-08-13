@@ -4,7 +4,7 @@
 // Flat projection — illustrative, not drilling-accurate; grip parts that would
 // wrap around the ball are clipped at the silhouette.
 
-import { dualAngleTo2LS, type DualAngleLayout } from "./layoutEngine";
+import type { DualAngleLayout } from "./layoutEngine";
 
 export const BALL_RADIUS_PX = 150;
 // 8.59" ball diameter mapped to the 300px circle
@@ -114,28 +114,23 @@ export function computeLayoutGeometry(
     };
   };
 
-  // PSA: at the pin, drillingAngle between pin→PSA and pin→PAP, rotated
-  // down-lane (clockwise). Placed along that ray at the distance that makes
-  // |PSA−PAP| equal the true 2LS PSA-to-PAP measurement.
+  // PSA: a physical mark a quarter circumference (6.75") from the pin.
+  // The drilling angle sets its direction — at the pin, between the
+  // pin→PSA and pin→PAP lines, rotated down-lane (clockwise) — but the
+  // pin-to-PSA distance never changes.
   const toPap = Math.atan2(pap.y - pin.y, pap.x - pin.x);
   const psaAngle = toPap + layout.drillingAngle * DEG;
-  const dir: Point = { x: Math.cos(psaAngle), y: Math.sin(psaAngle) };
-  const targetPsaToPap = dualAngleTo2LS(layout).psaToPap * INCH_PX;
-  const v: Point = { x: pin.x - pap.x, y: pin.y - pap.y };
-  const b = v.x * dir.x + v.y * dir.y;
-  const c = v.x * v.x + v.y * v.y - targetPsaToPap * targetPsaToPap;
-  const disc = b * b - c;
-  const psaDist = disc >= 0 ? -b + Math.sqrt(disc) : 2.2 * INCH_PX;
-  const psa: Point = clampToBall({
-    x: pin.x + dir.x * psaDist,
-    y: pin.y + dir.y * psaDist,
-  });
+  const psaDist = 6.75 * INCH_PX;
+  const psa: Point = {
+    x: pin.x + Math.cos(psaAngle) * psaDist,
+    y: pin.y + Math.sin(psaAngle) * psaDist,
+  };
 
   // CG sits on the pin→PSA baseline (that line is drawn through the CG on
   // symmetric balls); typical pin-out puts it ~2.5" from the pin.
   const cg: Point = {
-    x: pin.x + dir.x * 2.5 * INCH_PX,
-    y: pin.y + dir.y * 2.5 * INCH_PX,
+    x: pin.x + Math.cos(psaAngle) * 2.5 * INCH_PX,
+    y: pin.y + Math.sin(psaAngle) * 2.5 * INCH_PX,
   };
 
   const valHalf = Math.sqrt(
