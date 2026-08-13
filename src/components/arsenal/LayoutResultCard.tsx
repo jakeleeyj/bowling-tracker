@@ -7,7 +7,7 @@ import {
   type LayoutRecommendation,
 } from "@/lib/layoutEngine";
 import type { PapPosition, Handedness } from "@/lib/layoutGeometry";
-import BallLayoutDiagram from "@/components/arsenal/BallLayoutDiagram";
+import BallView from "@/components/arsenal/BallView";
 
 export type LayoutSystem = "dual" | "vls" | "2ls";
 
@@ -105,7 +105,7 @@ export default function LayoutResultCard({
             {systemViews[activeSystem].note}
           </p>
         </div>
-        <BallLayoutDiagram
+        <BallView
           layout={layout.dualAngle}
           pap={effectivePap}
           hand={hand}

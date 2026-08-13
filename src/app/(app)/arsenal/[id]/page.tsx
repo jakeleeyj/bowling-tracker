@@ -12,7 +12,7 @@ import DrillingSpecsForm, {
   type BallDraft,
 } from "@/components/arsenal/DrillingSpecsForm";
 import SpecSheetButton from "@/components/arsenal/SpecSheetButton";
-import BallLayoutDiagram from "@/components/arsenal/BallLayoutDiagram";
+import BallView from "@/components/arsenal/BallView";
 import GripChart from "@/components/arsenal/GripChart";
 import { Trash2 } from "lucide-react";
 import type { Ball } from "@/lib/database.types";
@@ -172,7 +172,7 @@ export default function BallPage() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
               Layout diagram
             </p>
-            <BallLayoutDiagram
+            <BallView
               layout={{ drillingAngle: angle, pinToPap: pin, valAngle: val }}
               system={
                 draft.no_thumb
