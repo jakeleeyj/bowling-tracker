@@ -99,6 +99,38 @@ function dot(p: Point, color: number, size = 0.035): THREE.Mesh {
   return mesh;
 }
 
+// Billboard text label from a canvas texture
+function makeLabel(text: string, color: string): THREE.Sprite {
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d")!;
+  ctx.font = "bold 40px Inter, system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.shadowColor = "rgba(0,0,0,0.9)";
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = color;
+  ctx.fillText(text, 128, 32);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 4;
+  const sprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: texture, depthTest: false }),
+  );
+  sprite.scale.set(0.5, 0.125, 1);
+  return sprite;
+}
+
+function labelAt(p: Point, text: string, color: string): THREE.Sprite {
+  const sprite = makeLabel(text, color);
+  sprite.position.copy(toSphere(p, 1.09));
+  return sprite;
+}
+
+function midpoint(a: Point, b: Point): Point {
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+}
+
 function hole(p: Point, radiusInches: number): THREE.Mesh {
   const mesh = new THREE.Mesh(
     new THREE.CircleGeometry(radiusInches / 4.295, 24),
@@ -263,9 +295,63 @@ export default function Ball3D({
       line(segment(tick, g.pap), COLORS.gold, true),
     );
 
-    // holes
-    group.add(hole(g.fingers[0], 0.45), hole(g.fingers[1], 0.45));
-    if (showThumb) group.add(hole(g.thumb, 0.55));
+    // holes (real proportions: fingers ~7/8" dia, thumb ~1 1/8")
+    group.add(hole(g.fingers[0], 0.44), hole(g.fingers[1], 0.44));
+    if (showThumb) group.add(hole(g.thumb, 0.56));
+
+    // measurement labels
+    const HEX = {
+      blue: "#60a5fa",
+      purple: "#a78bfa",
+      gold: "#fbbf24",
+      green: "#4ade80",
+    };
+    group.add(labelAt(midpoint(g.pin, g.pap), `${layout.pinToPap}"`, HEX.blue));
+    if (system === "dual") {
+      group.add(
+        labelAt(midpoint(g.pin, g.psa), `${layout.drillingAngle}°`, HEX.purple),
+        labelAt(
+          { x: g.pap.x - 20, y: g.pap.y - 24 },
+          `${layout.valAngle}°`,
+          HEX.gold,
+        ),
+      );
+    }
+    if (system !== "dual") {
+      group.add(
+        labelAt(midpoint(g.psa, g.pap), `${twoLS.psaToPap}"`, HEX.purple),
+      );
+    }
+    if (system === "vls") {
+      group.add(
+        labelAt(
+          midpoint(g.pin, { x: g.pap.x, y: g.pin.y }),
+          `${vls.pinBuffer}"`,
+          HEX.gold,
+        ),
+      );
+    }
+    if (system === "2ls") {
+      group.add(
+        labelAt(midpoint(g.pin, g.grip), `${twoLS.pinToCog}"`, HEX.green),
+      );
+    }
+    if (papForCog.up !== 0) {
+      group.add(
+        labelAt(
+          midpoint({ x: g.pap.x, y: g.grip.y }, g.pap),
+          `${Math.abs(papForCog.up)}" ${papForCog.up < 0 ? "↓" : "↑"}`,
+          HEX.gold,
+        ),
+      );
+    }
+    group.add(
+      labelAt(
+        midpoint(g.grip, { x: g.pap.x, y: g.grip.y }),
+        `${papForCog.over}"`,
+        HEX.gold,
+      ),
+    );
 
     // markers
     group.add(

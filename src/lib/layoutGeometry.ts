@@ -90,7 +90,8 @@ export function computeLayoutGeometry(
   };
   // Storm convention: the PAP reference point is the bridge center, so the
   // fingers straddle it and (for thumb grips) the thumb sits a span below.
-  const fingerGap = 0.4 * INCH_PX;
+  // real holes are ~7/8" wide with a 1/4" bridge → centers ~0.6" off-center
+  const fingerGap = 0.6 * INCH_PX;
   const fingers: [Point, Point] = [
     { x: grip.x - fingerGap, y: grip.y },
     { x: grip.x + fingerGap, y: grip.y },
