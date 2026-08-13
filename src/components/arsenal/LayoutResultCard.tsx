@@ -9,7 +9,8 @@ import {
 import type { PapPosition, Handedness } from "@/lib/layoutGeometry";
 import BallView from "@/components/arsenal/BallView";
 
-export type LayoutSystem = "dual" | "vls" | "2ls";
+import type { LayoutSystem } from "@/lib/layoutEngine";
+export type { LayoutSystem };
 
 export default function LayoutResultCard({
   layout,

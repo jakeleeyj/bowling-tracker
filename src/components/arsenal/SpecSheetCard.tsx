@@ -48,9 +48,35 @@ const SpecSheetCard = forwardRef<HTMLDivElement, { draft: BallDraft }>(
                 ["Thumb pitch fwd", show(draft.thumb_pitch_forward, '"')],
                 ["Thumb pitch lat", show(draft.thumb_pitch_lateral, '"')],
               ] as [string, string][])),
-          ["Finger size", show(draft.finger_size)],
-          ["Finger pitch fwd", show(draft.finger_pitch_forward, '"')],
-          ["Finger pitch lat", show(draft.finger_pitch_lateral, '"')],
+          ["Finger size (L)", show(draft.finger_size)],
+          [
+            "Finger size (R)",
+            show(
+              draft.finger_size_2?.trim()
+                ? draft.finger_size_2
+                : draft.finger_size,
+            ),
+          ],
+          ["L finger pitch fwd", show(draft.finger_pitch_forward, '"')],
+          ["L finger pitch lat", show(draft.finger_pitch_lateral, '"')],
+          [
+            "R finger pitch fwd",
+            show(
+              draft.finger_pitch_forward_2?.trim()
+                ? draft.finger_pitch_forward_2
+                : draft.finger_pitch_forward,
+              '"',
+            ),
+          ],
+          [
+            "R finger pitch lat",
+            show(
+              draft.finger_pitch_lateral_2?.trim()
+                ? draft.finger_pitch_lateral_2
+                : draft.finger_pitch_lateral,
+              '"',
+            ),
+          ],
         ],
       ],
     ];

@@ -15,8 +15,9 @@ import {
   dualAngleToVLS,
   lightningArc,
   type DualAngleLayout,
+  type LayoutSystem,
 } from "@/lib/layoutEngine";
-import type { DiagramSystem } from "@/components/arsenal/BallLayoutDiagram";
+
 
 // WebGL colors can't read CSS variables — these mirror the globals.css tokens.
 const COLORS = {
@@ -151,7 +152,7 @@ export default function Ball3D({
   span,
 }: {
   layout: DualAngleLayout;
-  system?: DiagramSystem;
+  system?: LayoutSystem;
   pap?: PapPosition;
   hand?: Handedness;
   showThumb?: boolean;

@@ -111,7 +111,7 @@ export default function GripChart({ draft }: { draft: BallDraft }) {
       role="img"
       aria-label="Grip drilling chart"
     >
-      {/* finger pitch chips */}
+      {/* finger pitch chips — right finger falls back to the left values */}
       <PitchChip
         x={cx - fingerDX}
         y={16}
@@ -122,8 +122,16 @@ export default function GripChart({ draft }: { draft: BallDraft }) {
       <PitchChip
         x={cx + fingerDX}
         y={16}
-        lateral={draft.finger_pitch_lateral}
-        forward={draft.finger_pitch_forward}
+        lateral={
+          draft.finger_pitch_lateral_2?.trim()
+            ? draft.finger_pitch_lateral_2
+            : draft.finger_pitch_lateral
+        }
+        forward={
+          draft.finger_pitch_forward_2?.trim()
+            ? draft.finger_pitch_forward_2
+            : draft.finger_pitch_forward
+        }
       />
 
       {/* finger holes */}
@@ -137,7 +145,9 @@ export default function GripChart({ draft }: { draft: BallDraft }) {
         cx={cx + fingerDX}
         cy={fingerY}
         r={fingerR}
-        size={draft.finger_size}
+        size={
+          draft.finger_size_2?.trim() ? draft.finger_size_2 : draft.finger_size
+        }
       />
 
       {/* bridge */}

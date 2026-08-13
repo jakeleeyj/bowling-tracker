@@ -24,6 +24,7 @@ import type { Handedness } from "@/lib/layoutGeometry";
 import {
   HAND_KEY,
   GRIP_KEY,
+  PAP_KEY,
   loadStoredPap,
 } from "@/components/arsenal/AnalyzeForm";
 import type { PapPosition } from "@/lib/layoutGeometry";
@@ -97,6 +98,16 @@ export default function LayoutPage() {
     setStoredPap(loadStoredPap());
     load();
   }, [load]);
+
+  // Typing a PAP in custom mode remembers it, same as the analyze form.
+  useEffect(() => {
+    const over = parseMeasure(customPapOver);
+    if (!Number.isFinite(over)) return;
+    const up = parseMeasure(customPapUp);
+    const pap = { over, up: Number.isFinite(up) ? up : 0 };
+    localStorage.setItem(PAP_KEY, JSON.stringify(pap));
+    setStoredPap(pap);
+  }, [customPapOver, customPapUp]);
 
   if (loading) {
     return (

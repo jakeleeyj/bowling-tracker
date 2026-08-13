@@ -10,6 +10,7 @@ import ErrorCard from "@/components/ErrorCard";
 import BackButton from "@/components/BackButton";
 import DrillingSpecsForm, {
   draftFromBall,
+  saveLastSpecs,
   type BallDraft,
 } from "@/components/arsenal/DrillingSpecsForm";
 import SpecSheetButton from "@/components/arsenal/SpecSheetButton";
@@ -94,8 +95,11 @@ export default function BallPage() {
           : toNumber(draft.thumb_pitch_lateral),
         finger_pitch_forward: toNumber(draft.finger_pitch_forward),
         finger_pitch_lateral: toNumber(draft.finger_pitch_lateral),
+        finger_pitch_forward_2: toNumber(draft.finger_pitch_forward_2),
+        finger_pitch_lateral_2: toNumber(draft.finger_pitch_lateral_2),
         thumb_size: draft.no_thumb ? null : toText(draft.thumb_size),
         finger_size: toText(draft.finger_size),
+        finger_size_2: toText(draft.finger_size_2),
         no_thumb: draft.no_thumb,
         notes: toText(draft.notes),
         updated_at: new Date().toISOString(),
@@ -105,6 +109,7 @@ export default function BallPage() {
     if (dbError) {
       toast("Couldn't save — check the values and try again", "error");
     } else {
+      saveLastSpecs(draft);
       toast("Ball saved");
       load();
     }

@@ -7,8 +7,11 @@ import { createClient } from "@/lib/supabase-browser";
 import { useToast } from "@/components/Toast";
 import BackButton from "@/components/BackButton";
 import DrillingSpecsForm, {
+  saveLastSpecs,
+  loadLastSpecs,
   type BallDraft,
 } from "@/components/arsenal/DrillingSpecsForm";
+import { useEffect } from "react";
 
 const EMPTY_DRAFT: BallDraft = { no_thumb: false };
 
@@ -29,6 +32,11 @@ export default function NewBallPage() {
   const { toast } = useToast();
   const [draft, setDraft] = useState<BallDraft>(EMPTY_DRAFT);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const last = loadLastSpecs();
+    if (Object.keys(last).length > 0) setDraft((d) => ({ ...d, ...last }));
+  }, []);
 
   async function save() {
     if (!draft.name?.trim()) {
@@ -70,8 +78,11 @@ export default function NewBallPage() {
           : toNumber(draft.thumb_pitch_lateral),
         finger_pitch_forward: toNumber(draft.finger_pitch_forward),
         finger_pitch_lateral: toNumber(draft.finger_pitch_lateral),
+        finger_pitch_forward_2: toNumber(draft.finger_pitch_forward_2),
+        finger_pitch_lateral_2: toNumber(draft.finger_pitch_lateral_2),
         thumb_size: draft.no_thumb ? null : toText(draft.thumb_size),
         finger_size: toText(draft.finger_size),
+        finger_size_2: toText(draft.finger_size_2),
         no_thumb: draft.no_thumb,
         notes: toText(draft.notes),
       })
@@ -82,6 +93,7 @@ export default function NewBallPage() {
       toast("Couldn't save — check the values and try again", "error");
       return;
     }
+    saveLastSpecs(draft);
     toast("Ball added to your arsenal");
     router.push(`/arsenal/${ball.id}`);
   }

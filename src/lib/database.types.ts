@@ -34,6 +34,9 @@ export interface Database {
           finger_pitch_lateral: number | null;
           thumb_size: string | null;
           finger_size: string | null;
+          finger_size_2: string | null;
+          finger_pitch_forward_2: number | null;
+          finger_pitch_lateral_2: number | null;
           no_thumb: boolean;
           notes: string | null;
           created_at: string;
@@ -63,6 +66,9 @@ export interface Database {
           finger_pitch_lateral?: number | null;
           thumb_size?: string | null;
           finger_size?: string | null;
+          finger_size_2?: string | null;
+          finger_pitch_forward_2?: number | null;
+          finger_pitch_lateral_2?: number | null;
           no_thumb?: boolean;
           notes?: string | null;
           created_at?: string;
@@ -92,6 +98,9 @@ export interface Database {
           finger_pitch_lateral?: number | null;
           thumb_size?: string | null;
           finger_size?: string | null;
+          finger_size_2?: string | null;
+          finger_pitch_forward_2?: number | null;
+          finger_pitch_lateral_2?: number | null;
           no_thumb?: boolean;
           notes?: string | null;
           created_at?: string;

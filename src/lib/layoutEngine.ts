@@ -11,6 +11,7 @@ import {
 } from "./flightAnalysis";
 
 export type LaneCondition = "dry" | "medium" | "oily";
+export type LayoutSystem = "dual" | "vls" | "2ls";
 
 export interface DualAngleLayout {
   drillingAngle: number;
@@ -81,7 +82,7 @@ export function recommendLayout(
   let sum = clamp(90 + (ratio - 1) * 165, 55, 145);
   reasons.push(
     match === "matched"
-      ? "A balanced speed-to-rev ratio puts your angle total near 100°, the all-purpose sweet spot."
+      ? "A balanced speed-to-rev ratio puts your angle total near 90°, the all-purpose sweet spot."
       : match === "speed-dominant"
         ? "Because you are speed-dominant, the angle total is lowered so the ball starts its move sooner."
         : "Because you are rev-dominant, the angle total is raised so the ball conserves energy longer.",
