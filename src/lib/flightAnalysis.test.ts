@@ -148,7 +148,7 @@ describe("analyzeFlight", () => {
       axisTilt: 200,
       axisRotation: -20,
     });
-    expect(result.specs.ballSpeedMph).toBeLessThanOrEqual(24);
+    expect(result.specs.ballSpeedMph).toBeLessThanOrEqual(20);
     expect(result.specs.revRate).toBeLessThanOrEqual(700);
     expect(result.specs.axisTilt).toBeLessThanOrEqual(90);
     expect(result.specs.axisRotation).toBeGreaterThanOrEqual(0);
