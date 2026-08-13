@@ -66,16 +66,14 @@ export function computeLayoutGeometry(
     x: pap.x - papPosition.over * INCH_PX,
     y: pap.y + papPosition.up * INCH_PX,
   };
-  // No-thumb grips reference the bridge center, so the fingers straddle the
-  // grip point itself; conventional grips have fingers above it.
+  // Storm convention: the PAP reference point is the bridge center, so the
+  // fingers straddle it and (for thumb grips) the thumb sits a span below.
   const fingerGap = 0.4 * INCH_PX;
-  const halfSpan = (span / 2) * INCH_PX;
-  const fingerY = noThumb ? grip.y : grip.y - halfSpan;
   const fingers: [Point, Point] = [
-    { x: grip.x - fingerGap, y: fingerY },
-    { x: grip.x + fingerGap, y: fingerY },
+    { x: grip.x - fingerGap, y: grip.y },
+    { x: grip.x + fingerGap, y: grip.y },
   ];
-  const thumb: Point = { x: grip.x, y: grip.y + halfSpan };
+  const thumb: Point = { x: grip.x, y: grip.y + span * INCH_PX };
 
   // Keeps a labeled point on the visible ball face.
   const clampToBall = (p: Point): Point => {

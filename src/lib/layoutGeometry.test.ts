@@ -64,10 +64,11 @@ describe("computeLayoutGeometry", () => {
     expect((g.fingers[0].x + g.fingers[1].x) / 2).toBeCloseTo(g.grip.x, 5);
   });
 
-  it("spreads fingers and thumb by the span around the grip center", () => {
+  it("references the bridge: fingers straddle it, thumb a full span below", () => {
     const g = computeLayoutGeometry(layout, undefined, "right", false, 4.5);
-    expect(g.grip.y - g.fingers[0].y).toBeCloseTo(2.25 * INCH_PX, 1);
-    expect(g.thumb.y - g.grip.y).toBeCloseTo(2.25 * INCH_PX, 1);
+    expect(g.fingers[0].y).toBeCloseTo(g.grip.y, 5);
+    expect(g.fingers[1].y).toBeCloseTo(g.grip.y, 5);
+    expect(g.thumb.y - g.grip.y).toBeCloseTo(4.5 * INCH_PX, 1);
   });
 
   it("mirrors the whole layout for left-handed bowlers", () => {

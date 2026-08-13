@@ -171,8 +171,8 @@ export default function BallLayoutDiagram({
         )}
       </g>
       <circle cx={g.grip.x} cy={g.grip.y} r={2.5} fill={muted} />
-      <text x={g.grip.x - 8} y={g.grip.y + 16} fontSize={10} fill={muted}>
-        grip
+      <text x={g.grip.x - 14} y={g.grip.y + 16} fontSize={10} fill={muted}>
+        bridge
       </text>
 
       {/* pin-to-PAP line — line 1 in every system */}
