@@ -83,6 +83,7 @@ export default function NewBallPage() {
         thumb_size: draft.no_thumb ? null : toText(draft.thumb_size),
         finger_size: toText(draft.finger_size),
         finger_size_2: toText(draft.finger_size_2),
+        date_drilled: toText(draft.date_drilled),
         no_thumb: draft.no_thumb,
         notes: toText(draft.notes),
       })

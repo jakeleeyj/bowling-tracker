@@ -20,6 +20,7 @@ const SpecSheetCard = forwardRef<HTMLDivElement, { draft: BallDraft }>(
           ["RG", show(draft.rg)],
           ["Differential", show(draft.differential)],
           ["Core", show(draft.core_type)],
+          ["Date drilled", show(draft.date_drilled)],
         ],
       ],
       [

@@ -49,6 +49,7 @@ export function draftFromBall(ball: Ball): BallDraft {
     thumb_size: str(ball.thumb_size),
     finger_size: str(ball.finger_size),
     finger_size_2: str(ball.finger_size_2),
+    date_drilled: str(ball.date_drilled),
     notes: str(ball.notes),
     no_thumb: ball.no_thumb,
   };
@@ -458,6 +459,19 @@ export default function DrillingSpecsForm({
               />
             </>
           )}
+        </div>
+        <div className="mt-3">
+          <label className="mb-1 block text-xs text-text-muted">
+            Date drilled
+          </label>
+          <input
+            type="date"
+            value={draft.date_drilled ?? ""}
+            onChange={(e) =>
+              onChange({ ...draft, date_drilled: e.target.value })
+            }
+            className="w-full rounded-lg border border-border bg-surface-light px-3 py-2.5 text-sm text-text-primary outline-none focus:border-blue"
+          />
         </div>
         <div className="mt-3">
           <label className="mb-1 block text-xs text-text-muted">Notes</label>

@@ -37,6 +37,7 @@ export interface Database {
           finger_size_2: string | null;
           finger_pitch_forward_2: number | null;
           finger_pitch_lateral_2: number | null;
+          date_drilled: string | null;
           no_thumb: boolean;
           notes: string | null;
           created_at: string;
@@ -69,6 +70,7 @@ export interface Database {
           finger_size_2?: string | null;
           finger_pitch_forward_2?: number | null;
           finger_pitch_lateral_2?: number | null;
+          date_drilled?: string | null;
           no_thumb?: boolean;
           notes?: string | null;
           created_at?: string;
@@ -101,6 +103,7 @@ export interface Database {
           finger_size_2?: string | null;
           finger_pitch_forward_2?: number | null;
           finger_pitch_lateral_2?: number | null;
+          date_drilled?: string | null;
           no_thumb?: boolean;
           notes?: string | null;
           created_at?: string;
