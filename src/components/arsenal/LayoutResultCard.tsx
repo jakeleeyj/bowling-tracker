@@ -72,7 +72,7 @@ export default function LayoutResultCard({
     <div className="animate-slide-up flex flex-col gap-4">
       <div className="glass p-5">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
-          Recommended layout
+          Layout
         </p>
         {availableSystems.length > 1 && (
           <div className="mb-3 flex rounded-lg bg-surface-light p-1">
