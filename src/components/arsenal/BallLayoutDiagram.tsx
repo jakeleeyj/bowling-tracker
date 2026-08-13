@@ -17,6 +17,23 @@ import { INCH_PX } from "@/lib/layoutGeometry";
 const SIZE = BALL_RADIUS_PX * 2;
 const PAD = 24;
 
+// A short compass swipe: an arc centered on `c` with radius `r`, spanning
+// ±spread° around the direction toward the point it is meant to locate.
+function compassArc(
+  c: { x: number; y: number },
+  r: number,
+  toward: { x: number; y: number },
+  spread = 28,
+): string {
+  const theta = Math.atan2(toward.y - c.y, toward.x - c.x);
+  const s = (spread * Math.PI) / 180;
+  const x0 = c.x + r * Math.cos(theta - s);
+  const y0 = c.y + r * Math.sin(theta - s);
+  const x1 = c.x + r * Math.cos(theta + s);
+  const y1 = c.y + r * Math.sin(theta + s);
+  return `M ${x0} ${y0} A ${r} ${r} 0 0 1 ${x1} ${y1}`;
+}
+
 export type DiagramSystem = "dual" | "vls" | "2ls";
 
 export default function BallLayoutDiagram({
@@ -226,25 +243,32 @@ export default function BallLayoutDiagram({
         </>
       )}
 
-      {/* 2LS construction arcs: the pin-to-COG arc (around the pin) and the
-          Lightning Arc (around the PAP) cross at the grip center — that
-          intersection sets the midline the fingers are drilled off. */}
+      {/* 2LS construction, drawn like the pamphlet's compass swipes:
+          pin-to-PAP and PSA-to-PAP arcs cross at the PAP; the pin-to-COG
+          arc and the Lightning Arc (from the PAP) cross at the grip center,
+          which sets the midline the fingers are drilled off. */}
       {system === "2ls" && (
-        <g clipPath="url(#ball-face)" opacity={0.45}>
-          <circle
-            cx={g.pin.x}
-            cy={g.pin.y}
-            r={twoLS.pinToCog * INCH_PX}
-            fill="none"
+        <g clipPath="url(#ball-face)" opacity={0.6} fill="none">
+          <path
+            d={compassArc(g.pin, twoLS.pinToPap * INCH_PX, g.pap)}
+            stroke={blue}
+            strokeWidth={1}
+            strokeDasharray="3 4"
+          />
+          <path
+            d={compassArc(g.psa, twoLS.psaToPap * INCH_PX, g.pap)}
+            stroke={purple}
+            strokeWidth={1}
+            strokeDasharray="3 4"
+          />
+          <path
+            d={compassArc(g.pin, twoLS.pinToCog * INCH_PX, g.grip)}
             stroke={green}
             strokeWidth={1}
             strokeDasharray="3 4"
           />
-          <circle
-            cx={g.pap.x}
-            cy={g.pap.y}
-            r={lightningArc(papForCog) * INCH_PX}
-            fill="none"
+          <path
+            d={compassArc(g.pap, lightningArc(papForCog) * INCH_PX, g.grip)}
             stroke={gold}
             strokeWidth={1}
             strokeDasharray="3 4"
