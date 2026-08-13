@@ -57,6 +57,13 @@ describe("computeLayoutGeometry", () => {
     expect(actual).toBeCloseTo(expected, 0);
   });
 
+  it("straddles the fingers around the grip point for no-thumb grips", () => {
+    const g = computeLayoutGeometry(layout, undefined, "right", true);
+    expect(g.fingers[0].y).toBeCloseTo(g.grip.y, 5);
+    expect(g.fingers[1].y).toBeCloseTo(g.grip.y, 5);
+    expect((g.fingers[0].x + g.fingers[1].x) / 2).toBeCloseTo(g.grip.x, 5);
+  });
+
   it("mirrors the whole layout for left-handed bowlers", () => {
     const right = computeLayoutGeometry(layout);
     const left = computeLayoutGeometry(layout, undefined, "left");

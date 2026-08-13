@@ -32,7 +32,7 @@ export default function BallLayoutDiagram({
   hand?: Handedness;
   showThumb?: boolean;
 }) {
-  const g = computeLayoutGeometry(layout, pap, hand);
+  const g = computeLayoutGeometry(layout, pap, hand, !showThumb);
   const blue = "var(--color-blue)";
   const purple = "var(--color-purple)";
   const gold = "var(--color-gold)";
