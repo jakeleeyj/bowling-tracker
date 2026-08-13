@@ -276,3 +276,17 @@ describe("isValid2LS", () => {
     );
   });
 });
+
+describe("real-world benchmark", () => {
+  it("matched tweener on a house shot lands near the 45x4x35 convention", () => {
+    // Reference: Creating the Difference's example for 17 mph / 350 rpm
+    const { dualAngle } = recommendLayout(
+      { ballSpeedMph: 17, revRate: 350, axisTilt: 10, axisRotation: 60 },
+      "medium",
+    );
+    expect(Math.abs(dualAngle.drillingAngle - 45)).toBeLessThanOrEqual(10);
+    expect(Math.abs(dualAngle.valAngle - 35)).toBeLessThanOrEqual(7);
+    // drilling angle should carry more of the sum than the VAL angle
+    expect(dualAngle.drillingAngle).toBeGreaterThanOrEqual(dualAngle.valAngle);
+  });
+});

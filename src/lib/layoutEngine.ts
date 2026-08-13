@@ -76,7 +76,9 @@ export function recommendLayout(
 
   // Target angle sum from speed/rev match, interpolated on the ratio
   // (0.85 → 75, 1.0 → 100, 1.15 → 125, clamped to the sweet-spot bands).
-  let sum = clamp(100 + (ratio - 1) * 165, 55, 145);
+  // Centered at 90 rather than Maverick's 100: published pro-shop examples
+  // for matched players sit at the low end of the band (e.g. 45×4×35).
+  let sum = clamp(90 + (ratio - 1) * 165, 55, 145);
   reasons.push(
     match === "matched"
       ? "A balanced speed-to-rev ratio puts your angle total near 100°, the all-purpose sweet spot."
@@ -112,9 +114,9 @@ export function recommendLayout(
   // Split the sum between drilling and VAL angle:
   // high axis rotation → favor VAL (control), low rotation → favor drilling angle (backend).
   const drillShare = clamp(
-    0.55 - (specs.axisRotation - 50) * 0.003,
-    0.45,
-    0.62,
+    0.58 - (specs.axisRotation - 50) * 0.003,
+    0.48,
+    0.66,
   );
   let drillingAngle = clamp(
     sum * drillShare,
