@@ -9,8 +9,10 @@ import {
 import {
   dualAngleToVLS,
   dualAngleTo2LS,
+  lightningArc,
   type DualAngleLayout,
 } from "@/lib/layoutEngine";
+import { INCH_PX } from "@/lib/layoutGeometry";
 
 const SIZE = BALL_RADIUS_PX * 2;
 const PAD = 24;
@@ -220,6 +222,32 @@ export default function BallLayoutDiagram({
             {twoLS.psaToPap}&quot;
           </text>
         </>
+      )}
+
+      {/* 2LS construction arcs: the pin-to-COG arc (around the pin) and the
+          Lightning Arc (around the PAP) cross at the grip center — that
+          intersection sets the midline the fingers are drilled off. */}
+      {system === "2ls" && (
+        <g clipPath="url(#ball-face)" opacity={0.45}>
+          <circle
+            cx={g.pin.x}
+            cy={g.pin.y}
+            r={twoLS.pinToCog * INCH_PX}
+            fill="none"
+            stroke={green}
+            strokeWidth={1}
+            strokeDasharray="3 4"
+          />
+          <circle
+            cx={g.pap.x}
+            cy={g.pap.y}
+            r={lightningArc(papForCog) * INCH_PX}
+            fill="none"
+            stroke={gold}
+            strokeWidth={1}
+            strokeDasharray="3 4"
+          />
+        </g>
       )}
 
       {/* 2LS: PAP location guides — over along the midline, then up/down */}
