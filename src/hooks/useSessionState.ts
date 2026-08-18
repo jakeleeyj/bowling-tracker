@@ -16,10 +16,8 @@ import {
 import { useToast } from "@/components/Toast";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
 import {
-  calculateLP,
   getRank,
   getDivisionProgress,
-  getEventWeight,
   CALIBRATION_GAMES,
   EVENT_LABELS,
   type RankTier,
@@ -448,6 +446,12 @@ export function useSessionState() {
         return;
       }
 
+      // Season-scoped LP before syncing — from the server cache, not client math
+      const { data: preLpData } = await supabase.rpc("get_player_lp", {
+        p_user_id: user.id,
+      });
+      const oldLp = ((preLpData ?? {}) as { lp?: number }).lp ?? 0;
+
       let synced = 0;
       const remaining = [...queue];
       for (const item of queue) {
@@ -486,22 +490,14 @@ export function useSessionState() {
           .order("frame_number", { ascending: true });
 
         const scores = existingGames.map((g) => g.total_score);
-        const weights = existingGames.map((g) =>
-          getEventWeight(
-            (g as { sessions: { event_label: string | null } | null }).sessions
-              ?.event_label ?? null,
-          ),
-        );
-        const newLp = calculateLP(scores, weights);
+        const { data: postLpData } = await supabase.rpc("get_player_lp", {
+          p_user_id: user.id,
+        });
+        const newLp = ((postLpData ?? {}) as { lp?: number }).lp ?? oldLp;
         const newRank = getRank(newLp);
 
         const totalSyncedGames = queue.reduce((s, q) => s + q.games.length, 0);
         const scoresWithout = scores.slice(totalSyncedGames);
-        const weightsWithout = weights.slice(totalSyncedGames);
-        const oldLp =
-          scoresWithout.length > 0
-            ? calculateLP(scoresWithout, weightsWithout)
-            : 0;
         const oldRank = getRank(oldLp);
 
         const rankChanged =
@@ -1278,8 +1274,8 @@ export function useSessionState() {
       return;
     }
 
-    // Parallel: get profile name + existing games at once
-    const [profileResult, gamesResult] = await Promise.all([
+    // Parallel: get profile name + existing games + current LP at once
+    const [profileResult, gamesResult, oldLpResult] = await Promise.all([
       supabase
         .from("profiles")
         .select("display_name")
@@ -1292,6 +1288,7 @@ export function useSessionState() {
         )
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
+      supabase.rpc("get_player_lp", { p_user_id: user.id }),
     ]);
     const playerName = profileResult.data?.display_name ?? "Someone";
     const existingGames = gamesResult.data;
@@ -1312,12 +1309,8 @@ export function useSessionState() {
 
     const oldScores =
       existingGames?.map((g: { total_score: number }) => g.total_score) ?? [];
-    const oldWeights =
-      existingGames?.map(
-        (g: { sessions: { event_label: string | null } | null }) =>
-          getEventWeight(g.sessions?.event_label ?? null),
-      ) ?? [];
-    const oldLp = calculateLP(oldScores, oldWeights);
+    // Season-scoped LP comes from the server cache — never recompute client-side
+    const oldLp = ((oldLpResult.data ?? {}) as { lp?: number }).lp ?? 0;
     const oldRank = getRank(oldLp);
 
     const totalPins = games.reduce((sum, g) => sum + g.totalScore, 0);
@@ -1437,12 +1430,8 @@ export function useSessionState() {
       p_user_id: user.id,
     });
     const lpResult = (lpData ?? {}) as { lp?: number };
-    const newLp =
-      lpResult.lp ??
-      calculateLP(
-        [...games.map((g) => g.totalScore), ...oldScores],
-        [...games.map(() => getEventWeight(eventLabel || null)), ...oldWeights],
-      );
+    // If the cache read fails, show no change rather than a client-side guess
+    const newLp = lpResult.lp ?? oldLp;
     const newRank = getRank(newLp);
 
     const gameScores = games.map((g) => g.totalScore);

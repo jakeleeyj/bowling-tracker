@@ -1,0 +1,167 @@
+// 2D projection of a dual-angle layout onto a ball-face diagram, the way a
+// pro shop marks it up. The pin is a fixed physical marker on the ball, so it
+// stays anchored; the grip (and with it the PAP) moves as the layout changes.
+// Flat projection — illustrative, not drilling-accurate; grip parts that would
+// wrap around the ball are clipped at the silhouette.
+
+import type { DualAngleLayout } from "./layoutEngine";
+
+export const BALL_RADIUS_PX = 150;
+// 8.59" ball diameter mapped to the 300px circle
+export const INCH_PX = (BALL_RADIUS_PX * 2) / 8.59;
+
+const DEG = Math.PI / 180;
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface LayoutGeometry {
+  center: Point;
+  grip: Point;
+  fingers: [Point, Point];
+  thumb: Point;
+  pap: Point;
+  pin: Point;
+  psa: Point;
+  cg: Point;
+  valTop: Point;
+  valBottom: Point;
+}
+
+export interface PapPosition {
+  over: number;
+  up: number;
+}
+
+const DEFAULT_PAP: PapPosition = { over: 4.5, up: 0 };
+
+export type Handedness = "right" | "left";
+
+// Orthographic sphere projection: flat offsets from the ball-face center
+// represent surface arc length; a point d inches of arc away is seen at
+// R·sin(d as an angle) from center, exactly like a photographed ball.
+// A quarter circumference (6.75") lands on the rim; anything past the
+// horizon clamps to it.
+export function projectToSphere(p: Point): Point {
+  const center: Point = { x: BALL_RADIUS_PX, y: BALL_RADIUS_PX };
+  const dx = p.x - center.x;
+  const dy = p.y - center.y;
+  const flat = Math.hypot(dx, dy);
+  if (flat === 0) return { ...p };
+  const arcRad = Math.min(
+    ((flat / INCH_PX) * (360 / 26.785) * Math.PI) / 180,
+    Math.PI / 2,
+  );
+  const drawn = BALL_RADIUS_PX * Math.sin(arcRad);
+  return {
+    x: center.x + (dx / flat) * drawn,
+    y: center.y + (dy / flat) * drawn,
+  };
+}
+
+export function computeLayoutGeometry(
+  layout: DualAngleLayout,
+  papPosition: PapPosition = DEFAULT_PAP,
+  hand: Handedness = "right",
+  noThumb = false,
+  span = 4.4,
+): LayoutGeometry {
+  const center: Point = { x: BALL_RADIUS_PX, y: BALL_RADIUS_PX };
+
+  // The pin stays put, top-center like the factory pin marker on a real
+  // ball; everything else is laid out relative to it.
+  const pin: Point = {
+    x: center.x,
+    y: center.y - 2.6 * INCH_PX,
+  };
+
+  // PAP: pinToPap from the pin, rotated valAngle off the VAL (vertical),
+  // down-lane toward the midline.
+  const pap: Point = {
+    x: pin.x + layout.pinToPap * Math.sin(layout.valAngle * DEG) * INCH_PX,
+    y: pin.y + layout.pinToPap * Math.cos(layout.valAngle * DEG) * INCH_PX,
+  };
+
+  // Grip center from the PAP: "over" back along the midline, "up" above it.
+  const grip: Point = {
+    x: pap.x - papPosition.over * INCH_PX,
+    y: pap.y + papPosition.up * INCH_PX,
+  };
+  // No-thumb grips reference the bridge center (fingers straddle it);
+  // conventional grips reference the center of grip — fingers half a span
+  // above it, thumb half a span below.
+  // Real holes are ~7/8" wide with a 1/4" bridge → centers ~0.6" off-center.
+  const fingerGap = 0.6 * INCH_PX;
+  const halfSpan = (span / 2) * INCH_PX;
+  const fingerY = noThumb ? grip.y : grip.y - halfSpan;
+  const fingers: [Point, Point] = [
+    { x: grip.x - fingerGap, y: fingerY },
+    { x: grip.x + fingerGap, y: fingerY },
+  ];
+  const thumb: Point = { x: grip.x, y: grip.y + halfSpan };
+
+  // Keeps a labeled point on the visible ball face.
+  const clampToBall = (p: Point): Point => {
+    const max = BALL_RADIUS_PX * 0.92;
+    const d = Math.hypot(p.x - center.x, p.y - center.y);
+    if (d <= max) return p;
+    const k = max / d;
+    return {
+      x: center.x + (p.x - center.x) * k,
+      y: center.y + (p.y - center.y) * k,
+    };
+  };
+
+  // PSA: a physical mark a quarter circumference (6.75") from the pin.
+  // The drilling angle sets its direction — at the pin, between the
+  // pin→PSA and pin→PAP lines, rotated down-lane (clockwise) — but the
+  // pin-to-PSA distance never changes.
+  const toPap = Math.atan2(pap.y - pin.y, pap.x - pin.x);
+  const psaAngle = toPap + layout.drillingAngle * DEG;
+  const psaDist = 6.75 * INCH_PX;
+  const psa: Point = {
+    x: pin.x + Math.cos(psaAngle) * psaDist,
+    y: pin.y + Math.sin(psaAngle) * psaDist,
+  };
+
+  // CG sits on the pin→PSA baseline (that line is drawn through the CG on
+  // symmetric balls); typical pin-out puts it ~2.5" from the pin.
+  const cg: Point = {
+    x: pin.x + Math.cos(psaAngle) * 2.5 * INCH_PX,
+    y: pin.y + Math.sin(psaAngle) * 2.5 * INCH_PX,
+  };
+
+  const valHalf = Math.sqrt(
+    Math.max(0, BALL_RADIUS_PX ** 2 - (pap.x - center.x) ** 2),
+  );
+  const geometry: LayoutGeometry = {
+    center,
+    grip,
+    fingers,
+    thumb,
+    pap: clampToBall(pap),
+    pin,
+    psa,
+    cg,
+    valTop: { x: pap.x, y: center.y - valHalf },
+    valBottom: { x: pap.x, y: center.y + valHalf },
+  };
+  if (hand === "left") {
+    const mirror = (p: Point): Point => ({ x: 2 * center.x - p.x, y: p.y });
+    return {
+      center,
+      grip: mirror(grip),
+      fingers: [mirror(geometry.fingers[0]), mirror(geometry.fingers[1])],
+      thumb: mirror(thumb),
+      pap: mirror(geometry.pap),
+      pin: mirror(pin),
+      psa: mirror(psa),
+      cg: mirror(cg),
+      valTop: mirror(geometry.valTop),
+      valBottom: mirror(geometry.valBottom),
+    };
+  }
+  return geometry;
+}

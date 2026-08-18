@@ -16,6 +16,7 @@ import {
   Target,
   Crown,
   Award,
+  CircleDot,
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import ErrorCard from "@/components/ErrorCard";
@@ -602,6 +603,23 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* My Arsenal */}
+      <button
+        onClick={() => router.push("/arsenal")}
+        className="glass mb-5 flex w-full items-center gap-3 p-4 text-left transition-all duration-150 active:scale-[0.98]"
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple/15 text-purple">
+          <CircleDot size={20} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-text-primary">My Arsenal</p>
+          <p className="truncate text-xs text-text-muted">
+            Ball flight analysis, layouts & drilling specs
+          </p>
+        </div>
+        <ChevronDown size={16} className="-rotate-90 text-text-muted" />
+      </button>
 
       {/* Season Medals */}
       <div className="mb-5">
