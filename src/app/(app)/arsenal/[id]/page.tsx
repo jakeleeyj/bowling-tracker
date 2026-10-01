@@ -108,7 +108,7 @@ export default function BallPage() {
       .eq("id", ball.id);
     setSaving(false);
     if (dbError) {
-      toast("Couldn't save — check the values and try again", "error");
+      toast(`Couldn't save — ${dbError.message}`, "error");
     } else {
       saveLastSpecs(draft);
       toast("Ball saved");
