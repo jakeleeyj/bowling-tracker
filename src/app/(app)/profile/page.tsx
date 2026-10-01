@@ -404,7 +404,7 @@ export default function ProfilePage() {
                   currentUrl={avatarUrl}
                   onAvatarChange={(url) => {
                     setAvatarUrl(url);
-                    toast("Avatar updated");
+                    toast(url ? "Avatar updated" : "Back to default avatar");
                   }}
                 />
               </div>

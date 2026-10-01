@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Camera, Upload } from "lucide-react";
+import { Camera, Upload, Trash2 } from "lucide-react";
 import Avatar from "./Avatar";
 
 const PRESET_AVATARS = [
@@ -22,7 +22,7 @@ export default function AvatarPicker({
 }: {
   name: string;
   currentUrl: string | null;
-  onAvatarChange: (url: string) => void;
+  onAvatarChange: (url: string | null) => void;
 }) {
   const [uploading, setUploading] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
@@ -42,6 +42,14 @@ export default function AvatarPicker({
       const { avatarUrl } = await res.json();
       onAvatarChange(avatarUrl);
     }
+    setUploading(false);
+    setShowPicker(false);
+  }
+
+  async function handleRemove() {
+    setUploading(true);
+    const res = await fetch("/api/avatar", { method: "DELETE" });
+    if (res.ok) onAvatarChange(null);
     setUploading(false);
     setShowPicker(false);
   }
@@ -110,6 +118,16 @@ export default function AvatarPicker({
             <Upload size={14} />
             {uploading ? "Uploading..." : "Upload Photo"}
           </button>
+          {currentUrl && (
+            <button
+              onClick={handleRemove}
+              disabled={uploading}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold text-text-muted active:scale-[0.97] disabled:opacity-50"
+            >
+              <Trash2 size={14} />
+              Remove and use default
+            </button>
+          )}
           <input
             ref={fileRef}
             type="file"
