@@ -8,7 +8,6 @@ import {
   BarChart3,
   Swords,
   User,
-  Dices,
   CircleDot,
 } from "lucide-react";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
@@ -17,7 +16,6 @@ const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/stats", label: "Stats", icon: BarChart3 },
   { href: "/leaderboard", label: "Ranked", icon: Swords },
-  { href: "/minigames", label: "Minigames", icon: Dices },
   { href: "/arsenal", label: "Arsenal", icon: CircleDot },
   { href: "/profile", label: "Me", icon: User },
 ];
