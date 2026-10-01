@@ -42,9 +42,18 @@ export default function BallCard({
       onClick={onClick}
       className="glass flex w-full items-center gap-3 rounded-xl p-4 text-left transition-all duration-150 active:scale-[0.98]"
     >
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-purple/15 text-purple">
-        <CircleDot size={22} />
-      </div>
+      {ball.image_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={ball.image_url}
+          alt=""
+          className="h-11 w-11 shrink-0 rounded-full object-cover"
+        />
+      ) : (
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-purple/15 text-purple">
+          <CircleDot size={22} />
+        </div>
+      )}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold text-text-primary">
           {ball.name}

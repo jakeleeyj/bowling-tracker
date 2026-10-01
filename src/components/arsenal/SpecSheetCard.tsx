@@ -40,6 +40,9 @@ const SpecSheetCard = forwardRef<
         ["RG", show(draft.rg)],
         ["Differential", show(draft.differential)],
         ["Core", show(draft.core_type)],
+        ...(draft.core_type === "asymmetric"
+          ? ([["Int. diff", show(draft.intermediate_diff)]] as [string, string][])
+          : []),
         ["Date drilled", show(draft.date_drilled)],
       ],
     ],

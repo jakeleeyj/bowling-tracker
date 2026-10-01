@@ -41,7 +41,8 @@ export async function proxy(request: NextRequest) {
 
   const isPublicApi =
     request.nextUrl.pathname === "/api/push/deploy-notify" ||
-    request.nextUrl.pathname === "/auth/callback";
+    request.nextUrl.pathname === "/auth/callback" ||
+    request.nextUrl.pathname === "/api/catalog";
 
   const isPublicPage =
     request.nextUrl.pathname === "/" ||

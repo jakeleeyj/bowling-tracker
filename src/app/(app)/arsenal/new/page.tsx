@@ -84,6 +84,9 @@ export default function NewBallPage() {
         finger_size: toText(draft.finger_size),
         finger_size_2: toText(draft.finger_size_2),
         date_drilled: toText(draft.date_drilled),
+        catalog_id: toText(draft.catalog_id),
+        image_url: toText(draft.image_url),
+        intermediate_diff: toNumber(draft.intermediate_diff),
         no_thumb: draft.no_thumb,
         notes: toText(draft.notes),
       })
