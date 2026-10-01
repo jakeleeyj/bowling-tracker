@@ -38,6 +38,9 @@ export interface Database {
           finger_pitch_forward_2: number | null;
           finger_pitch_lateral_2: number | null;
           date_drilled: string | null;
+          catalog_id: string | null;
+          image_url: string | null;
+          intermediate_diff: number | null;
           no_thumb: boolean;
           notes: string | null;
           created_at: string;
@@ -71,6 +74,9 @@ export interface Database {
           finger_pitch_forward_2?: number | null;
           finger_pitch_lateral_2?: number | null;
           date_drilled?: string | null;
+          catalog_id?: string | null;
+          image_url?: string | null;
+          intermediate_diff?: number | null;
           no_thumb?: boolean;
           notes?: string | null;
           created_at?: string;
@@ -104,6 +110,9 @@ export interface Database {
           finger_pitch_forward_2?: number | null;
           finger_pitch_lateral_2?: number | null;
           date_drilled?: string | null;
+          catalog_id?: string | null;
+          image_url?: string | null;
+          intermediate_diff?: number | null;
           no_thumb?: boolean;
           notes?: string | null;
           created_at?: string;

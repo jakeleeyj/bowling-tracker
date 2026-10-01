@@ -39,7 +39,9 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname === "/login" ||
     request.nextUrl.pathname === "/signup";
 
-  const isPublicApi = request.nextUrl.pathname === "/api/push/deploy-notify";
+  const isPublicApi =
+    request.nextUrl.pathname === "/api/push/deploy-notify" ||
+    request.nextUrl.pathname === "/api/catalog";
 
   if (!user && !isAuthPage && !isPublicApi) {
     const url = request.nextUrl.clone();

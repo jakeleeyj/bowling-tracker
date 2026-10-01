@@ -4,6 +4,8 @@ import { useState } from "react";
 import type { Ball } from "@/lib/database.types";
 import { BALL_BRANDS } from "@/lib/brands";
 import { parseMeasure, formatMeasure } from "@/lib/flightAnalysis";
+import BallPicker from "@/components/arsenal/BallPicker";
+import type { CatalogBall } from "@/lib/catalog";
 import {
   dualAngleToVLS,
   dualAngleTo2LS,
@@ -53,6 +55,9 @@ export function draftFromBall(ball: Ball): BallDraft {
     finger_size: str(ball.finger_size),
     finger_size_2: str(ball.finger_size_2),
     date_drilled: str(ball.date_drilled),
+    catalog_id: str(ball.catalog_id),
+    image_url: str(ball.image_url),
+    intermediate_diff: str(ball.intermediate_diff),
     notes: str(ball.notes),
     no_thumb: ball.no_thumb,
   };
@@ -190,6 +195,27 @@ export default function DrillingSpecsForm({
   const set = (key: keyof BallDraft) => (v: string) =>
     onChange({ ...draft, [key]: v });
 
+  // Picking a catalog ball fills the factory specs; everything stays editable.
+  function pickBall(ball: CatalogBall) {
+    const num = (v: number | null) => (v === null ? "" : String(v));
+    onChange({
+      ...draft,
+      name: ball.name,
+      brand: ball.brand,
+      rg: num(ball.rg),
+      differential: num(ball.differential),
+      intermediate_diff: num(ball.intermediateDiff),
+      coverstock: ball.coverstock ?? "",
+      core_type: ball.coreType ?? "",
+      catalog_id: ball.id,
+      image_url: ball.imageUrl ?? "",
+    });
+  }
+
+  function clearPick() {
+    onChange({ ...draft, catalog_id: "", image_url: "" });
+  }
+
   // Editing any layout field re-derives the other systems' numbers so all
   // columns stay consistent no matter which notation was typed.
   function setLayoutField(key: keyof BallDraft, v: string) {
@@ -257,6 +283,31 @@ export default function DrillingSpecsForm({
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
           Ball
         </p>
+        <div className="mb-3">
+          <BallPicker
+            picked={
+              draft.catalog_id
+                ? {
+                    name: draft.name ?? "",
+                    brand: draft.brand ?? "",
+                    thumbUrl: draft.image_url || null,
+                    specs: [
+                      draft.rg ? `RG ${draft.rg}` : null,
+                      draft.differential ? `Diff ${draft.differential}` : null,
+                      draft.intermediate_diff
+                        ? `Int ${draft.intermediate_diff}`
+                        : null,
+                      draft.coverstock || null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · "),
+                  }
+                : null
+            }
+            onPick={pickBall}
+            onClear={clearPick}
+          />
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <Field
             label="Name"
@@ -304,6 +355,14 @@ export default function DrillingSpecsForm({
             onChange={set("core_type")}
             options={["symmetric", "asymmetric"]}
           />
+          {draft.core_type === "asymmetric" && (
+            <Field
+              label="Int. differential"
+              value={draft.intermediate_diff ?? ""}
+              onChange={set("intermediate_diff")}
+              placeholder="0–0.060"
+            />
+          )}
         </div>
       </div>
 

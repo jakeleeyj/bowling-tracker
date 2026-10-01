@@ -101,6 +101,9 @@ export default function BallPage() {
         finger_size: toText(draft.finger_size),
         finger_size_2: toText(draft.finger_size_2),
         date_drilled: toText(draft.date_drilled),
+        catalog_id: toText(draft.catalog_id),
+        image_url: toText(draft.image_url),
+        intermediate_diff: toNumber(draft.intermediate_diff),
         no_thumb: draft.no_thumb,
         notes: toText(draft.notes),
         updated_at: new Date().toISOString(),
@@ -175,10 +178,18 @@ export default function BallPage() {
             ? { over: 5, up: -1 }
             : undefined;
         return (
-          <div className="glass mb-5 p-4">
+          <div className="glass relative mb-5 p-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
               Layout diagram
             </p>
+            {draft.image_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={draft.image_url}
+                alt={ball.name}
+                className="absolute right-4 top-4 h-16 w-16 rounded-full object-cover"
+              />
+            )}
             <BallView
               layout={{ drillingAngle: angle, pinToPap: pin, valAngle: val }}
               system={
