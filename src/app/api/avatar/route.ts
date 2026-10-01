@@ -63,6 +63,36 @@ export async function POST(request: Request) {
   return NextResponse.json({ avatarUrl });
 }
 
+// Pick one of the default gradient colours instead of a photo.
+export async function PATCH(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body: unknown = await request.json().catch(() => null);
+  const avatarUrl =
+    body && typeof body === "object" && "avatarUrl" in body
+      ? (body as { avatarUrl: unknown }).avatarUrl
+      : null;
+  if (typeof avatarUrl !== "string" || !/^gradient:[0-5]$/.test(avatarUrl)) {
+    return NextResponse.json({ error: "Invalid colour" }, { status: 400 });
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", user.id);
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ avatarUrl });
+}
+
 export async function DELETE() {
   const supabase = await createClient();
   const {

@@ -2,7 +2,11 @@
 
 import { useState, useRef } from "react";
 import { Camera, Upload, Trash2 } from "lucide-react";
-import Avatar from "./Avatar";
+import Avatar, {
+  AVATAR_GRADIENTS,
+  gradientTag,
+  parseGradientTag,
+} from "./Avatar";
 
 const PRESET_AVATARS = [
   { id: "bowling", emoji: "🎳" },
@@ -42,6 +46,18 @@ export default function AvatarPicker({
       const { avatarUrl } = await res.json();
       onAvatarChange(avatarUrl);
     }
+    setUploading(false);
+    setShowPicker(false);
+  }
+
+  async function handleColour(index: number) {
+    setUploading(true);
+    const res = await fetch("/api/avatar", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ avatarUrl: gradientTag(index) }),
+    });
+    if (res.ok) onAvatarChange(gradientTag(index));
     setUploading(false);
     setShowPicker(false);
   }
@@ -96,7 +112,25 @@ export default function AvatarPicker({
       {showPicker && (
         <div className="animate-slide-down mt-3 glass p-3">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-            Choose an avatar
+            Choose a colour
+          </p>
+          <div className="mb-3 flex justify-between">
+            {AVATAR_GRADIENTS.map((g, i) => (
+              <button
+                key={g}
+                onClick={() => handleColour(i)}
+                disabled={uploading}
+                aria-label={`Colour ${i + 1}`}
+                className={`h-9 w-9 rounded-full bg-gradient-to-br ${g} active:scale-90 disabled:opacity-50 ${
+                  parseGradientTag(currentUrl) === i
+                    ? "ring-2 ring-white ring-offset-2 ring-offset-surface"
+                    : ""
+                }`}
+              />
+            ))}
+          </div>
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+            Or an avatar
           </p>
           <div className="mb-3 grid grid-cols-4 gap-2">
             {PRESET_AVATARS.map((p) => (
