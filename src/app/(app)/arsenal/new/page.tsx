@@ -91,7 +91,7 @@ export default function NewBallPage() {
       .single();
     setSaving(false);
     if (error || !ball) {
-      toast("Couldn't save — check the values and try again", "error");
+      toast(`Couldn't save — ${error?.message ?? "check the values and try again"}`, "error");
       return;
     }
     saveLastSpecs(draft);
