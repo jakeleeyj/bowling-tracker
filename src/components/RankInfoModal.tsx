@@ -23,7 +23,7 @@ export default function RankInfoModal() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="-my-1.5 flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition-[background-color,transform] duration-150 active:scale-[0.94] active:bg-white/10"
+        className="relative flex h-7 w-7 items-center justify-center rounded-full bg-white/5 transition-[background-color,transform] duration-150 after:absolute after:-inset-1.5 after:content-[''] active:scale-[0.94] active:bg-white/10"
         aria-label="How ranking works"
       >
         <Info size={14} className="text-text-muted" />
@@ -53,7 +53,7 @@ export default function RankInfoModal() {
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close"
-                className="-my-1.5 -mr-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition-[background-color,transform] duration-150 active:scale-[0.94] active:bg-white/10"
+                className="relative flex h-7 w-7 items-center justify-center rounded-full bg-white/5 transition-[background-color,transform] duration-150 after:absolute after:-inset-1.5 after:content-[''] active:scale-[0.94] active:bg-white/10"
               >
                 <X size={14} className="text-text-muted" />
               </button>

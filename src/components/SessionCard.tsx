@@ -961,7 +961,7 @@ export default function SessionCard({
                       </div>
                       <input
                         type="text"
-                        placeholder="Or type a venue..."
+                        placeholder="Or type a venue"
                         value={DEFAULT_VENUES.includes(editVenue) ? "" : editVenue}
                         onChange={(e) => setEditVenue(e.target.value)}
                         className="mb-2 w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-xs text-text-primary outline-none focus:border-blue"

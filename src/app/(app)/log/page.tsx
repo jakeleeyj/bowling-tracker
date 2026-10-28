@@ -13,7 +13,7 @@ function LogPage() {
 
   // Loading edit data
   if (session.editLoading) {
-    return <LoadingScreen message="Loading game..." />;
+    return <LoadingScreen message="Loading game" />;
   }
 
   return (

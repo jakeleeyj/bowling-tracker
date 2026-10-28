@@ -47,7 +47,7 @@ export function BowlingSpinner({ size = "md" }: { size?: "sm" | "md" }) {
 }
 
 export function LoadingScreen({
-  message = "Loading...",
+  message = "Loading",
 }: {
   message?: string;
 }) {
