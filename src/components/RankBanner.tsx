@@ -99,7 +99,7 @@ export default function RankBanner({
           )}
         </div>
         {href && (
-          <ChevronRight size={14} className="shrink-0 text-text-muted/30" />
+          <ChevronRight size={16} className="shrink-0 text-text-muted" />
         )}
       </div>
 
@@ -139,7 +139,7 @@ export default function RankBanner({
 
   if (href) {
     return (
-      <Link href={href} className={`${className} active:scale-[0.98]`}>
+      <Link href={href} className={`${className} transition-transform duration-150 ease-out active:scale-[0.98]`}>
         {content}
       </Link>
     );

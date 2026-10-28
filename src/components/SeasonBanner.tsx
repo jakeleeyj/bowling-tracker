@@ -98,7 +98,7 @@ export default function SeasonBanner() {
       </div>
       <button
         onClick={handleDismiss}
-        className="-mr-1 shrink-0 p-1 opacity-60 transition-opacity active:opacity-100"
+        className="-my-2 -mr-2.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg opacity-60 transition-[opacity,background-color] active:bg-white/5 active:opacity-100"
         aria-label="Dismiss"
       >
         <X size={14} />

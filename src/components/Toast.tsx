@@ -9,6 +9,7 @@ interface Toast {
   id: number;
   message: string;
   type: ToastType;
+  leaving?: boolean;
 }
 
 interface ToastContextValue {
@@ -32,6 +33,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const id = nextId++;
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
+      setToasts((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, leaving: true } : t)),
+      );
+    }, 2350);
+    setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 2500);
   }, []);
@@ -39,11 +45,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 right-4 z-[100] mx-auto flex max-w-[400px] flex-col gap-2">
+      <div
+        role="status"
+        aria-live="polite"
+        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 right-4 z-[100] mx-auto flex max-w-[400px] flex-col gap-2"
+      >
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`animate-slide-up flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg ${
+            className={`${t.leaving ? "animate-slide-out-down" : "animate-slide-up"} flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg ${
               t.type === "success"
                 ? "bg-green/90 text-white"
                 : t.type === "error"

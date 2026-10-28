@@ -250,23 +250,23 @@ export default function SessionResults({ data }: { data: ResultsData }) {
       <div className="mb-6 flex w-full max-w-[300px] gap-2">
         <div className="glass flex-1 p-3 text-center">
           <div className="text-[10px] uppercase text-text-muted">Avg</div>
-          <div className="text-lg font-extrabold">{data.sessionAvg}</div>
+          <div className="text-lg font-extrabold tabular-nums">{data.sessionAvg}</div>
         </div>
         <div className="glass flex-1 p-3 text-center">
           <div className="text-[10px] uppercase text-text-muted">High</div>
-          <div className="text-lg font-extrabold">{data.sessionHigh}</div>
+          <div className="text-lg font-extrabold tabular-nums">{data.sessionHigh}</div>
         </div>
         <div className="glass flex-1 p-3 text-center">
           <div className="text-[10px] uppercase text-text-muted">Total</div>
-          <div className="text-lg font-extrabold">{data.totalPins}</div>
+          <div className="text-lg font-extrabold tabular-nums">{data.totalPins}</div>
         </div>
       </div>
 
-      <div className="mb-8 flex flex-wrap justify-center gap-2 w-full max-w-[300px]">
+      <div className="mb-8 flex w-full max-w-[300px] flex-wrap justify-center gap-2">
         {data.gameScores.map((score: number, i: number) => (
           <div key={i} className="glass min-w-[48px] flex-1 p-2 text-center">
             <div className="text-[9px] text-text-muted">G{i + 1}</div>
-            <div className="text-sm font-bold text-text-primary">{score}</div>
+            <div className="text-sm font-bold tabular-nums text-text-primary">{score}</div>
           </div>
         ))}
       </div>
@@ -276,7 +276,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
           e.stopPropagation();
           window.location.href = "/dashboard";
         }}
-        className="w-full max-w-[300px] rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 active:scale-[0.97]"
+        className="w-full max-w-[300px] rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
       >
         Continue
       </button>

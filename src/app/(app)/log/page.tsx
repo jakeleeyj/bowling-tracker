@@ -1,7 +1,9 @@
 "use client";
 
 import { Suspense } from "react";
+import { Loader } from "lucide-react";
 import { useSessionState } from "@/hooks/useSessionState";
+import { LoadingScreen } from "@/components/Skeleton";
 import SessionSetup from "@/components/log/SessionSetup";
 import GameEntry from "@/components/log/GameEntry";
 import SessionResults from "@/components/log/SessionResults";
@@ -11,13 +13,17 @@ function LogPage() {
 
   // Loading edit data
   if (session.editLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="text-sm text-text-muted">Loading game...</div>
-      </div>
-    );
+    return <LoadingScreen message="Loading game..." />;
   }
 
+  return (
+    <div key={session.step} className="animate-slide-up">
+      <LogStep session={session} />
+    </div>
+  );
+}
+
+function LogStep({ session }: { session: ReturnType<typeof useSessionState> }) {
   // Results screen
   if (session.step === "results" && session.resultsData) {
     return <SessionResults data={session.resultsData} />;
@@ -28,17 +34,7 @@ function LogPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gold/10">
-          <svg
-            width={32}
-            height={32}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            className="text-gold"
-          >
-            <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
-          </svg>
+          <Loader size={32} className="text-gold" />
         </div>
         <h2 className="mb-2 text-lg font-extrabold">Pending sync to server</h2>
         <p className="mb-1 text-sm text-text-muted">
@@ -56,7 +52,7 @@ function LogPage() {
         ) : (
           <button
             onClick={() => session.startNewWhilePending()}
-            className="rounded-xl bg-gradient-to-r from-blue to-blue-dark px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 active:scale-[0.97]"
+            className="rounded-xl bg-gradient-to-r from-blue to-blue-dark px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
           >
             Log Another Session
           </button>
@@ -69,7 +65,7 @@ function LogPage() {
   if (session.step === "resume") {
     return (
       <div>
-        <h1 className="mb-6 text-xl font-extrabold text-text-primary">
+        <h1 className="mb-2 text-xl font-extrabold text-text-primary">
           Resume Session?
         </h1>
         <p className="mb-6 text-sm text-text-muted">
@@ -78,7 +74,7 @@ function LogPage() {
         <div className="flex flex-col gap-3">
           <button
             onClick={session.resumeSession}
-            className="rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 active:scale-[0.97]"
+            className="rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
           >
             Resume Session
           </button>
@@ -88,7 +84,7 @@ function LogPage() {
                 return;
               session.discardSession();
             }}
-            className="rounded-xl border border-border py-3 text-sm font-semibold text-text-secondary active:scale-[0.97]"
+            className="rounded-xl border border-border-light py-3 text-sm font-semibold text-text-secondary transition-[transform,background-color] duration-150 active:scale-[0.97] active:bg-white/5"
           >
             Start New Session
           </button>
@@ -166,56 +162,7 @@ function LogPage() {
 export default function LogPageWrapper() {
   return (
     <div className="lg:mx-auto lg:max-w-[480px]">
-      <Suspense
-        fallback={
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="h-8 w-8 animate-spin">
-              <svg viewBox="0 0 32 32" fill="none">
-                <circle
-                  cx="16"
-                  cy="16"
-                  r="14"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeOpacity="0.15"
-                />
-                <circle
-                  cx="16"
-                  cy="16"
-                  r="14"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeDasharray="60 28"
-                  strokeLinecap="round"
-                  className="text-blue"
-                />
-                <circle
-                  cx="13"
-                  cy="11"
-                  r="1.5"
-                  fill="currentColor"
-                  fillOpacity="0.3"
-                />
-                <circle
-                  cx="18"
-                  cy="11"
-                  r="1.5"
-                  fill="currentColor"
-                  fillOpacity="0.3"
-                />
-                <circle
-                  cx="15.5"
-                  cy="15"
-                  r="1.5"
-                  fill="currentColor"
-                  fillOpacity="0.3"
-                />
-              </svg>
-            </div>
-            <p className="mt-3 text-sm text-text-muted">Loading...</p>
-          </div>
-        }
-      >
+      <Suspense fallback={<LoadingScreen />}>
         <LogPage />
       </Suspense>
     </div>

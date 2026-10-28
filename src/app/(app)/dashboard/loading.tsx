@@ -1,24 +1,32 @@
-import { BowlingSpinner, Skeleton, SkeletonCard } from "@/components/Skeleton";
+import { Skeleton, SkeletonCard } from "@/components/Skeleton";
 
 export default function DashboardLoading() {
   return (
-    <div>
+    <div aria-busy="true" aria-label="Loading dashboard">
       {/* Header */}
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <Skeleton className="mb-1 h-4 w-20" />
-          <Skeleton className="h-6 w-32" />
+          <Skeleton className="mb-1.5 h-3.5 w-24" />
+          <Skeleton className="h-6 w-36" />
         </div>
         <Skeleton className="h-10 w-10 rounded-full" />
       </div>
 
-      <div className="flex flex-col items-center py-12">
-        <BowlingSpinner />
-        <p className="mt-3 text-sm text-text-muted">Loading...</p>
+      {/* Rank banner */}
+      <SkeletonCard className="mb-5 h-[106px]" />
+
+      {/* Quick stats */}
+      <div className="mb-5 grid grid-cols-3 gap-2">
+        {[1, 2, 3].map((i) => (
+          <SkeletonCard key={i} className="h-[75px]" />
+        ))}
       </div>
 
-      {/* Activity Feed skeleton */}
-      <div className="mb-3 flex items-center justify-between">
+      {/* CTA */}
+      <Skeleton className="mb-6 h-14 rounded-xl" />
+
+      {/* Activity feed */}
+      <div className="mb-2 flex h-10 items-center justify-between">
         <Skeleton className="h-4 w-28" />
         <Skeleton className="h-3 w-12" />
       </div>

@@ -24,6 +24,25 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-sans), system-ui, sans-serif;
   min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *:not(.animate-spin),
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Glassmorphism utilities */
@@ -115,6 +134,21 @@ body {
 
 .animate-slide-up {
   animation: slide-up 0.2s ease-out;
+}
+
+@keyframes slide-out-down {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.animate-slide-out-down {
+  animation: slide-out-down 0.15s ease-out forwards;
 }
 
 .animate-fade-in {
