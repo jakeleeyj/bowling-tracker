@@ -71,32 +71,48 @@ export default function StatsFilter({
     }
   }
 
+  const filters = ["last10", "last50", "ytd", "all", "custom"] as FilterType[];
+
   return (
     <>
-      <div className="mb-2 flex flex-wrap gap-1.5">
-        {(["last10", "last50", "ytd", "all", "custom"] as FilterType[]).map(
-          (f) => (
-            <button
-              key={f}
-              onClick={() => handleFilterChange(f)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                currentFilter === f
-                  ? "bg-blue text-white"
-                  : "bg-surface-light text-text-muted active:bg-surface-light/80"
-              }`}
-            >
-              {filterLabels[f]}
-            </button>
-          ),
-        )}
+      <div
+        role="group"
+        aria-label="Date range"
+        className="relative mb-2 flex h-11 rounded-lg bg-surface-light p-[3px]"
+      >
+        <span
+          aria-hidden
+          className="absolute inset-y-[3px] left-[3px] rounded-md bg-blue shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
+          style={{
+            width: `calc((100% - 6px) / ${filters.length})`,
+            transform: `translateX(${filters.indexOf(currentFilter) * 100}%)`,
+          }}
+        />
+        {filters.map((f) => (
+          <button
+            key={f}
+            onClick={() => handleFilterChange(f)}
+            aria-pressed={currentFilter === f}
+            className={`relative flex-1 rounded-md text-xs font-semibold transition-colors duration-200 ${
+              currentFilter === f ? "text-white" : "text-text-muted"
+            }`}
+          >
+            {filterLabels[f]}
+          </button>
+        ))}
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-1.5">
+      <div
+        role="group"
+        aria-label="Event type"
+        className="mb-3 flex flex-wrap gap-1.5"
+      >
         {EVENT_OPTIONS.map((opt) => (
           <button
             key={opt.value}
             onClick={() => handleEventChange(opt.value)}
-            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+            aria-pressed={currentEvent === opt.value}
+            className={`h-10 rounded-full px-3.5 text-[11px] font-semibold transition-[color,background-color,transform] duration-150 active:scale-[0.94] ${
               currentEvent === opt.value
                 ? "bg-purple/20 text-purple"
                 : "bg-surface-light/60 text-text-muted active:bg-surface-light/80"
@@ -111,16 +127,18 @@ export default function StatsFilter({
         <div className="mb-5 flex items-center gap-2">
           <input
             type="date"
+            aria-label="From date"
             value={localDateFrom}
             onChange={(e) => handleDateChange(e.target.value, localDateTo)}
-            className="flex-1 rounded-lg border border-border bg-surface-light px-3 py-2 text-sm text-text-primary outline-none focus:border-blue"
+            className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-3 text-sm text-text-primary outline-none focus:border-blue"
           />
           <span className="text-xs text-text-muted">to</span>
           <input
             type="date"
+            aria-label="To date"
             value={localDateTo}
             onChange={(e) => handleDateChange(localDateFrom, e.target.value)}
-            className="flex-1 rounded-lg border border-border bg-surface-light px-3 py-2 text-sm text-text-primary outline-none focus:border-blue"
+            className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-3 text-sm text-text-primary outline-none focus:border-blue"
           />
         </div>
       )}

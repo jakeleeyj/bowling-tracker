@@ -67,13 +67,13 @@ export default function SeasonBanner() {
     "7d": {
       icon: Clock,
       title: `${season.shortName} ends in ${daysLeft} ${daysLeft === 1 ? "day" : "days"}`,
-      body: "Final stretch — last chance to lock in your rank for the season.",
+      body: "Final stretch. Last chance to lock in your rank for the season.",
       accent: "border-gold/40 bg-gold/10 text-gold",
     },
     started: {
       icon: Sparkles,
       title: `${season.name} has begun`,
-      body: `S${season.number - 1} ended — LP soft-reset toward 1200. Calibration starts fresh.`,
+      body: `S${season.number - 1} ended. LP soft-reset toward 1200. Calibration starts fresh.`,
       accent: "border-green/30 bg-green/10 text-green",
     },
   };
@@ -98,7 +98,7 @@ export default function SeasonBanner() {
       </div>
       <button
         onClick={handleDismiss}
-        className="-mr-1 shrink-0 p-1 opacity-60 transition-opacity active:opacity-100"
+        className="-my-2 -mr-2.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg opacity-60 transition-[opacity,background-color] active:bg-white/5 active:opacity-100"
         aria-label="Dismiss"
       >
         <X size={14} />

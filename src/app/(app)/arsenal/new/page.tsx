@@ -94,7 +94,10 @@ export default function NewBallPage() {
       .single();
     setSaving(false);
     if (error || !ball) {
-      toast(`Couldn't save — ${error?.message ?? "check the values and try again"}`, "error");
+      toast(
+        `Couldn't save. ${error?.message ?? "Check the values and try again."}`,
+        "error",
+      );
       return;
     }
     saveLastSpecs(draft);
@@ -106,7 +109,7 @@ export default function NewBallPage() {
     <div className="animate-fade-in px-4 py-6">
       <div className="mb-6 flex items-center gap-3">
         <BackButton />
-        <h1 className="text-xl font-extrabold text-text-primary">Add a Ball</h1>
+        <h1 className="text-xl font-extrabold text-text-primary">Add a ball</h1>
       </div>
 
       <DrillingSpecsForm draft={draft} onChange={setDraft} />
@@ -114,9 +117,16 @@ export default function NewBallPage() {
       <button
         onClick={save}
         disabled={saving}
-        className="mt-5 w-full rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
+        className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
       >
-        {saving ? "Saving…" : "Add ball"}
+        {saving ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+            Saving
+          </>
+        ) : (
+          "Add ball"
+        )}
       </button>
     </div>
   );

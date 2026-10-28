@@ -125,7 +125,7 @@ export default function GameEntry(props: GameEntryProps) {
   return (
     <div>
       {/* Header */}
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-2 flex items-center gap-2">
         <button
           onClick={() => {
             if (editMode) {
@@ -138,21 +138,49 @@ export default function GameEntry(props: GameEntryProps) {
             props.discardSession();
             router.push("/dashboard");
           }}
-          className="text-red"
+          aria-label={editMode ? "Discard changes" : "Discard session"}
+          className="-ml-3 flex h-11 w-11 items-center justify-center rounded-full text-text-muted transition-[color,background-color,transform] duration-150 active:scale-90 active:bg-red/10 active:text-red"
         >
           <Trash2 size={18} />
         </button>
-        <h1 className="text-base font-bold text-text-primary">
+        <h1 className="mr-auto text-base font-bold text-text-primary">
           {editMode
-            ? "Edit Game"
+            ? "Edit game"
             : `Game ${currentGameIndex + 1} of ${gameCount}`}
         </h1>
-        <div className="w-5" />
+        {!(currentGameComplete && games[currentGameIndex]) && (
+          <div className="relative flex h-11 w-[168px] rounded-lg bg-surface-light p-[3px]">
+            <span
+              aria-hidden
+              className={`absolute inset-y-[3px] left-[3px] w-[calc(50%-3px)] rounded-md bg-blue shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                entryMode === "detailed" ? "translate-x-full" : ""
+              }`}
+            />
+            <button
+              onClick={() => setEntryMode("quick")}
+              aria-pressed={entryMode === "quick"}
+              className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+                entryMode === "quick" ? "text-white" : "text-text-muted"
+              }`}
+            >
+              Quick
+            </button>
+            <button
+              onClick={() => setEntryMode("detailed")}
+              aria-pressed={entryMode === "detailed"}
+              className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+                entryMode === "detailed" ? "text-white" : "text-text-muted"
+              }`}
+            >
+              Detailed
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Game tabs — always visible so user can add more games */}
       {!editMode && (
-        <div className="mb-3 flex gap-1">
+        <div className="mb-2 flex gap-1">
           {Array.from({ length: gameCount }, (_, i) => {
             const isActive = i === currentGameIndex;
             const isDone = games[i] !== undefined;
@@ -161,7 +189,7 @@ export default function GameEntry(props: GameEntryProps) {
               <button
                 key={i}
                 onClick={() => switchToGame(i)}
-                className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-colors ${
+                className={`h-10 flex-1 rounded-lg text-xs font-bold tabular-nums transition-[color,background-color,transform] duration-150 active:scale-[0.96] ${
                   isActive
                     ? "bg-blue text-white"
                     : isDone
@@ -189,7 +217,8 @@ export default function GameEntry(props: GameEntryProps) {
                   switchToGame(gameCount - 2);
                 }
               }}
-              className="flex h-auto w-8 shrink-0 items-center justify-center rounded-lg bg-surface-light text-sm font-bold text-text-muted active:scale-95"
+              aria-label="Remove game"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-light text-sm font-bold text-text-muted transition-transform duration-150 active:scale-90"
             >
               &minus;
             </button>
@@ -197,7 +226,8 @@ export default function GameEntry(props: GameEntryProps) {
           {gameCount < 8 && (
             <button
               onClick={() => setGameCount((c: number) => c + 1)}
-              className="flex h-auto w-8 shrink-0 items-center justify-center rounded-lg bg-surface-light text-sm font-bold text-text-muted active:scale-95"
+              aria-label="Add game"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-light text-sm font-bold text-text-muted transition-transform duration-150 active:scale-90"
             >
               +
             </button>
@@ -237,8 +267,8 @@ export default function GameEntry(props: GameEntryProps) {
               ) : null}
 
               <div className="glass p-4 text-center">
-                <div className="text-xs text-text-muted">Final Score</div>
-                <div className="text-3xl font-extrabold text-text-primary">
+                <div className="text-xs text-text-muted">Final score</div>
+                <div className="animate-scale-in text-3xl font-extrabold tabular-nums text-text-primary">
                   {completedGame.totalScore}
                 </div>
                 {completedGame.entryType === "detailed" &&
@@ -252,7 +282,7 @@ export default function GameEntry(props: GameEntryProps) {
               <div className="flex gap-2">
                 <button
                   onClick={editCurrentGame}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-surface-light py-3.5 text-sm font-bold text-text-secondary active:bg-surface-light/80"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-surface-light py-3.5 text-sm font-bold text-text-secondary transition-transform duration-150 active:scale-[0.97]"
                 >
                   <Pencil size={16} />
                   Edit
@@ -265,7 +295,7 @@ export default function GameEntry(props: GameEntryProps) {
                       return;
                     deleteCurrentGame();
                   }}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red/10 py-3.5 text-sm font-bold text-red active:bg-red/20"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red/10 py-3.5 text-sm font-bold text-red transition-[background-color,transform] duration-150 active:scale-[0.97] active:bg-red/20"
                 >
                   <Trash2 size={16} />
                   Delete
@@ -276,9 +306,16 @@ export default function GameEntry(props: GameEntryProps) {
                 <button
                   onClick={updateExistingGame}
                   disabled={saving}
-                  className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-60"
                 >
-                  {saving ? "Saving..." : "Save Changes"}
+                  {saving ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                      Saving
+                    </>
+                  ) : (
+                    "Save changes"
+                  )}
                 </button>
               ) : (
                 (() => {
@@ -301,9 +338,16 @@ export default function GameEntry(props: GameEntryProps) {
                       <button
                         onClick={saveSession}
                         disabled={saving}
-                        className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-60"
                       >
-                        {saving ? "Saving — don't close..." : "Save Session"}
+                        {saving ? (
+                          <>
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                            Saving, keep the app open
+                          </>
+                        ) : (
+                          "Save session"
+                        )}
                       </button>
                     );
                   }
@@ -315,35 +359,11 @@ export default function GameEntry(props: GameEntryProps) {
         })()
       ) : (
         <>
-          {/* Mode toggle */}
-          <div className="mb-2 flex rounded-lg bg-surface-light p-[3px]">
-            <button
-              onClick={() => setEntryMode("quick")}
-              className={`flex-1 rounded-md py-[6px] text-[13px] transition-colors ${
-                entryMode === "quick"
-                  ? "bg-blue font-semibold text-white"
-                  : "text-text-muted"
-              }`}
-            >
-              Quick
-            </button>
-            <button
-              onClick={() => setEntryMode("detailed")}
-              className={`flex-1 rounded-md py-[6px] text-[13px] transition-colors ${
-                entryMode === "detailed"
-                  ? "bg-blue font-semibold text-white"
-                  : "text-text-muted"
-              }`}
-            >
-              Detailed
-            </button>
-          </div>
-
           {entryMode === "quick" ? (
             <div className="flex flex-col gap-4">
               <div className="glass p-6 text-center">
                 <label className="mb-2 block text-sm text-text-muted">
-                  Total Score
+                  Total score
                 </label>
                 <input
                   type="text"
@@ -366,14 +386,14 @@ export default function GameEntry(props: GameEntryProps) {
                   parseInt(quickScore) < 0 ||
                   parseInt(quickScore) > 300
                 }
-                className="rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-[transform,opacity] duration-150 active:scale-[0.97] disabled:opacity-40 disabled:shadow-none disabled:active:scale-100"
               >
-                <Check size={18} className="mr-2 inline" />
+                <Check size={18} />
                 Done
               </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {/* Scorecard */}
               <FrameScorecard
                 frames={sortedFrames}
@@ -382,30 +402,37 @@ export default function GameEntry(props: GameEntryProps) {
                 onFrameTap={handleFrameTap}
               />
 
-              {/* Score + Max */}
-              <div className="flex gap-2">
-                <div className="glass flex-1 p-2 text-center">
-                  <div className="text-[10px] text-text-muted">Score</div>
-                  <div className="text-xl font-extrabold text-text-primary">
-                    {currentScore}
-                  </div>
-                </div>
-                <div className="glass flex-1 p-2 text-center">
-                  <div className="text-[10px] text-text-muted">
-                    Max Possible
-                  </div>
-                  <div className="text-xl font-extrabold text-green">
-                    {maxPossible}
-                  </div>
-                </div>
+              {/* Frame + score */}
+              <div className="flex items-baseline justify-between px-0.5">
+                <p className="text-xs font-semibold text-text-secondary">
+                  Frame {currentFrame} &middot; Roll {currentRoll}
+                  {availablePins.length < 10 && (
+                    <span className="ml-1.5 font-normal text-text-muted">
+                      {availablePins.length} in play
+                    </span>
+                  )}
+                </p>
+                <p className="flex items-baseline gap-3 text-[11px] text-text-muted">
+                  <span>
+                    Score{" "}
+                    <span
+                      key={currentScore}
+                      className="animate-scale-in inline-block text-lg leading-none font-extrabold tabular-nums text-text-primary"
+                    >
+                      {currentScore}
+                    </span>
+                  </span>
+                  <span>
+                    Max{" "}
+                    <span
+                      key={maxPossible}
+                      className="animate-scale-in inline-block text-lg leading-none font-extrabold tabular-nums text-green"
+                    >
+                      {maxPossible}
+                    </span>
+                  </span>
+                </p>
               </div>
-
-              {/* Frame label */}
-              <p className="text-xs text-text-secondary">
-                Frame {currentFrame} &mdash; Roll {currentRoll}
-                {availablePins.length < 10 &&
-                  ` | ${availablePins.length} pins in play`}
-              </p>
 
               {(() => {
                 const isFrame10 = currentFrame === 10;
@@ -441,40 +468,6 @@ export default function GameEntry(props: GameEntryProps) {
 
                 return (
                   <>
-                    {showToggle && (
-                      <div className="flex rounded-lg bg-surface-light p-[3px]">
-                        {([1, 2, 3] as const).map((shot) => {
-                          const isLive = shot === currentRoll;
-                          const visible =
-                            isLive || shot <= currentRoll || hasPastShot(shot);
-                          if (!visible) return null;
-                          const active = activeShot === shot;
-                          return (
-                            <button
-                              key={shot}
-                              onClick={() =>
-                                setViewOverride(
-                                  isLive ? null : { key: liveKey, shot },
-                                )
-                              }
-                              className={`flex-1 rounded-md py-[5px] text-[12px] transition-colors ${
-                                active
-                                  ? "bg-blue font-semibold text-white"
-                                  : "text-text-muted"
-                              }`}
-                            >
-                              Shot {shot}
-                              {isLive && (
-                                <span className="ml-1 text-[10px] opacity-70">
-                                  live
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-
                     {/* Pin diagram */}
                     <PinDiagram
                       standingPins={
@@ -483,11 +476,70 @@ export default function GameEntry(props: GameEntryProps) {
                       availablePins={pastShotData ? undefined : availablePins}
                       onPinToggle={handlePinToggle}
                       disabled={!!pastShotData}
+                      toolbar={
+                        showToggle ? (
+                          <div className="relative flex w-[156px] shrink-0 rounded-lg bg-surface-light p-[3px]">
+                            {(() => {
+                              const shots = ([1, 2, 3] as const).filter(
+                                (s) =>
+                                  s === currentRoll ||
+                                  s <= currentRoll ||
+                                  hasPastShot(s),
+                              );
+                              const index = Math.max(
+                                0,
+                                shots.indexOf(activeShot),
+                              );
+                              return (
+                                <span
+                                  aria-hidden
+                                  className="absolute inset-y-[3px] left-[3px] rounded-md bg-blue shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
+                                  style={{
+                                    width: `calc((100% - 6px) / ${shots.length})`,
+                                    transform: `translateX(${index * 100}%)`,
+                                  }}
+                                />
+                              );
+                            })()}
+                            {([1, 2, 3] as const).map((shot) => {
+                              const isLive = shot === currentRoll;
+                              const visible =
+                                isLive ||
+                                shot <= currentRoll ||
+                                hasPastShot(shot);
+                              if (!visible) return null;
+                              const active = activeShot === shot;
+                              return (
+                                <button
+                                  key={shot}
+                                  onClick={() =>
+                                    setViewOverride(
+                                      isLive ? null : { key: liveKey, shot },
+                                    )
+                                  }
+                                  aria-pressed={active}
+                                  className={`relative h-8 flex-1 rounded-md text-[12px] font-semibold transition-colors duration-200 ${
+                                    active ? "text-white" : "text-text-muted"
+                                  }`}
+                                >
+                                  R{shot}
+                                  {isLive && (
+                                    <span
+                                      aria-label="live"
+                                      className={`ml-1 inline-block h-1.5 w-1.5 rounded-full align-middle ${active ? "bg-white" : "bg-blue"}`}
+                                    />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : undefined
+                      }
                       label={
                         pastShotData
                           ? pastShotData.precise
                             ? `Standing after R${activeShot}`
-                            : `Going into R${activeShot} — knocked ${pastShotData.knocked ?? "-"}`
+                            : `Going into R${activeShot}, knocked ${pastShotData.knocked ?? "-"}`
                           : "Tap pins left standing"
                       }
                     />
@@ -495,18 +547,19 @@ export default function GameEntry(props: GameEntryProps) {
                 );
               })()}
 
-              {/* Action buttons */}
-              <div className="flex gap-2">
+              {/* Action buttons: pinned above the bottom nav on short screens */}
+              <div className="sticky bottom-[calc(7rem+max(0.75rem,env(safe-area-inset-bottom)))] z-20 -mx-4 flex gap-2 bg-base/80 px-4 py-1.5 backdrop-blur-md lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
                 <button
                   onClick={handleUndo}
                   disabled={history.length === 0}
-                  className="flex w-12 items-center justify-center rounded-xl bg-surface-light text-text-muted active:bg-surface-light/80 disabled:opacity-30"
+                  aria-label="Undo"
+                  className="flex w-12 items-center justify-center rounded-xl bg-surface-light text-text-muted transition-[transform,opacity] duration-150 active:scale-[0.94] disabled:opacity-30 disabled:active:scale-100"
                 >
                   <Undo2 size={18} />
                 </button>
                 <button
                   onClick={handleGutter}
-                  className="rounded-xl bg-surface-light px-3 py-3.5 text-xs font-bold text-text-muted active:bg-surface-light/80"
+                  className="rounded-xl bg-surface-light px-3 py-3 text-xs font-bold tracking-wider text-text-muted transition-transform duration-150 active:scale-[0.94]"
                 >
                   GUTTER
                 </button>
@@ -516,7 +569,7 @@ export default function GameEntry(props: GameEntryProps) {
                       saveHistory();
                       handleStrike();
                     }}
-                    className="flex-1 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97]"
+                    className="flex-1 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-3 text-base font-extrabold tracking-wider text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97]"
                   >
                     STRIKE
                   </button>
@@ -526,14 +579,14 @@ export default function GameEntry(props: GameEntryProps) {
                       saveHistory();
                       handleSpare();
                     }}
-                    className="flex-1 rounded-xl bg-gradient-to-r from-gold to-amber-600 py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-gold/25 transition-transform duration-150 active:scale-[0.97]"
+                    className="flex-1 rounded-xl bg-gradient-to-r from-gold to-amber-600 py-3 text-base font-extrabold tracking-wider text-white shadow-lg shadow-gold/25 transition-transform duration-150 active:scale-[0.97]"
                   >
                     SPARE
                   </button>
                 )}
                 <button
                   onClick={confirmPinSelection}
-                  className="flex-1 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-3.5 text-base font-extrabold tracking-wider text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+                  className="flex-1 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-3 text-base font-extrabold tracking-wider text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
                 >
                   NEXT
                 </button>
@@ -648,9 +701,16 @@ export default function GameEntry(props: GameEntryProps) {
                       updateExistingGame();
                     }}
                     disabled={saving}
-                    className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-60"
                   >
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving ? (
+                      <>
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                        Saving
+                      </>
+                    ) : (
+                      "Save changes"
+                    )}
                   </button>
                 </div>
               )}

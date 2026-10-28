@@ -9,7 +9,8 @@ export default function BackButton() {
   return (
     <button
       onClick={() => router.back()}
-      className="text-text-muted active:scale-90"
+      aria-label="Back"
+      className="-mx-2.5 flex h-10 w-10 items-center justify-center rounded-lg text-text-muted transition-[transform,background-color] duration-150 ease-out active:scale-90 active:bg-white/5"
     >
       <ArrowLeft size={20} />
     </button>

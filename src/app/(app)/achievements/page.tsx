@@ -40,58 +40,57 @@ export default async function AchievementsPage() {
   return (
     <div>
       <h1 className="mb-2 text-xl font-extrabold">Achievements</h1>
-      <p className="mb-5 text-sm text-text-muted">
+      <p className="mb-5 text-sm text-text-muted tabular-nums">
         {earned.length}/{ACHIEVEMENTS.length} unlocked
       </p>
 
       {stats.totalGames === 0 && (
-        <div className="glass mb-6 p-4 text-center">
-          <p className="text-sm text-text-muted">
-            Log your first game to start earning achievements!
+        <div className="glass mb-6 flex flex-col items-center px-6 py-10 text-center">
+          <p className="text-sm font-semibold">No achievements yet</p>
+          <p className="mt-1 text-xs text-text-muted">
+            Log a game to start earning them
           </p>
         </div>
       )}
 
       {earned.length > 0 && (
         <div className="mb-6">
-          <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-secondary">
-            Earned
-          </h2>
-          <div className="flex flex-col gap-2">
+          <h2 className="mb-3 text-sm font-bold">Earned</h2>
+          <ul className="flex flex-col gap-2">
             {earned.map((a) => (
-              <div key={a.id} className="glass flex items-center gap-4 p-4">
-                <div className={a.color}>{ACHIEVEMENT_ICONS[a.iconName]}</div>
-                <div>
-                  <p className="text-sm font-bold">{a.name}</p>
-                  <p className="text-[11px] text-text-muted">{a.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {locked.length > 0 && (
-        <>
-          <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-text-secondary">
-            Locked
-          </h2>
-          <div className="flex flex-col gap-2">
-            {locked.map((a) => (
-              <div
-                key={a.id}
-                className="glass flex items-center gap-4 p-4 opacity-40"
-              >
-                <div className="text-text-muted">
+              <li key={a.id} className="glass flex items-center gap-4 p-4">
+                <div className={`shrink-0 ${a.color}`}>
                   {ACHIEVEMENT_ICONS[a.iconName]}
                 </div>
                 <div>
                   <p className="text-sm font-bold">{a.name}</p>
                   <p className="text-[11px] text-text-muted">{a.description}</p>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
+        </div>
+      )}
+
+      {locked.length > 0 && (
+        <>
+          <h2 className="mb-3 text-sm font-bold">Locked</h2>
+          <ul className="flex flex-col gap-2">
+            {locked.map((a) => (
+              <li
+                key={a.id}
+                className="glass flex items-center gap-4 p-4 opacity-40"
+              >
+                <div className="shrink-0 text-text-muted">
+                  {ACHIEVEMENT_ICONS[a.iconName]}
+                </div>
+                <div>
+                  <p className="text-sm font-bold">{a.name}</p>
+                  <p className="text-[11px] text-text-muted">{a.description}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </>
       )}
     </div>

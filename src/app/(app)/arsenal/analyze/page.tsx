@@ -64,7 +64,7 @@ export default function AnalyzePage() {
     });
     setSaving(false);
     if (error) {
-      toast("Couldn't save — check your connection", "error");
+      toast("Couldn't save. Check your connection.", "error");
     } else {
       setSaved(true);
       toast("Style saved");
@@ -76,15 +76,15 @@ export default function AnalyzePage() {
       <div className="mb-6 flex items-center gap-3">
         <BackButton />
         <h1 className="text-xl font-extrabold text-text-primary">
-          Analyze My Style
+          Analyze my style
         </h1>
       </div>
 
       {!analysis ? (
         <>
           <p className="mb-5 text-xs leading-relaxed text-text-muted">
-            Your speed, rev rate and release numbers define your style — the
-            starting point for every layout decision.
+            Your speed, rev rate and release numbers define your style.
+            It&apos;s the starting point for every layout decision.
           </p>
           <AnalyzeForm onAnalyze={handleAnalyze} />
         </>
@@ -97,14 +97,21 @@ export default function AnalyzePage() {
               <button
                 onClick={saveStyle}
                 disabled={saving}
-                className="rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
               >
-                {saving ? "Saving…" : "Save my style"}
+                {saving ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                    Saving
+                  </>
+                ) : (
+                  "Save my style"
+                )}
               </button>
             ) : (
               <button
                 onClick={() => router.push("/arsenal/layout")}
-                className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97]"
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97]"
               >
                 Get a layout
                 <ArrowRight size={16} />
@@ -112,7 +119,7 @@ export default function AnalyzePage() {
             )}
             <button
               onClick={() => setAnalysis(null)}
-              className="w-full py-2 text-center text-xs text-text-muted active:scale-95"
+              className="w-full py-2.5 text-center text-xs text-text-muted transition-opacity active:opacity-60"
             >
               Start over
             </button>

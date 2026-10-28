@@ -24,13 +24,11 @@ export default function StyleResultCard({
 
   return (
     <div className="glass-strong animate-slide-up p-5">
-      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
-        Your style
-      </p>
+      <h2 className="mb-1 text-sm font-bold">Your style</h2>
       <p className="mb-1 text-2xl font-extrabold capitalize text-text-primary">
         {analysis.style}
       </p>
-      <p className="mb-4 text-sm font-semibold text-blue">
+      <p className="mb-4 text-sm font-semibold tabular-nums text-blue">
         {MATCH_LABELS[analysis.match]} ·{" "}
         {formatSpeed(analysis.specs.ballSpeedMph, speedUnit)} /{" "}
         {Math.round(analysis.specs.revRate)} rpm

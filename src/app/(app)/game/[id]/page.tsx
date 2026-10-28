@@ -55,8 +55,8 @@ export default async function GameDetailPage({
       <div className="mb-4 flex items-center gap-3">
         <BackButton />
         <div className="flex-1">
-          <h1 className="text-lg font-bold">
-            Game {game.game_number} &mdash; {game.total_score}
+          <h1 className="text-lg font-bold tabular-nums">
+            Game {game.game_number}: {game.total_score}
           </h1>
           <p className="text-[10px] text-text-muted">
             {new Date(session.session_date).toLocaleDateString("en-SG", {
@@ -79,27 +79,27 @@ export default async function GameDetailPage({
 
       {/* Stats */}
       <div className="mb-5 flex gap-2">
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+        <div className="glass flex-1 px-3 py-3.5 text-center">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
             Strikes
           </div>
-          <div className="text-2xl font-extrabold text-green">
+          <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
             {game.strike_count}
           </div>
         </div>
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+        <div className="glass flex-1 px-3 py-3.5 text-center">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
             Spares
           </div>
-          <div className="text-2xl font-extrabold text-gold">
+          <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-gold">
             {game.spare_count}
           </div>
         </div>
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+        <div className="glass flex-1 px-3 py-3.5 text-center">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
             Clean
           </div>
-          <div className="text-2xl font-extrabold">
+          <div className="mt-1.5 text-2xl leading-none font-extrabold">
             {game.is_clean ? "Yes" : "No"}
           </div>
         </div>
@@ -109,7 +109,7 @@ export default async function GameDetailPage({
       {frames && frames.length > 0 ? (
         <>
           <div className="glass overflow-hidden rounded-lg">
-            <table className="w-full border-collapse text-center text-[10px]">
+            <table className="w-full border-collapse text-center text-[10px] tabular-nums">
               <thead>
                 <tr>
                   {frames.map((f) => (
@@ -232,8 +232,9 @@ export default async function GameDetailPage({
           </div>
         </>
       ) : (
-        <div className="glass p-8 text-center text-sm text-text-muted">
-          Quick entry — no frame breakdown available
+        <div className="glass flex flex-col items-center px-6 py-10 text-center">
+          <p className="text-sm font-semibold">Quick entry</p>
+          <p className="mt-1 text-xs text-text-muted">No frame breakdown.</p>
         </div>
       )}
 

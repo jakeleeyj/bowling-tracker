@@ -84,8 +84,11 @@ export default function PlayerSessions({
 
   if (sessions.length === 0) {
     return (
-      <div className="glass p-8 text-center">
-        <p className="text-sm text-text-muted">No sessions yet.</p>
+      <div className="glass flex flex-col items-center px-6 py-10 text-center">
+        <p className="text-sm font-semibold">No sessions yet</p>
+        <p className="mt-1 text-xs text-text-muted">
+          Logged sessions appear here.
+        </p>
       </div>
     );
   }

@@ -72,7 +72,11 @@ export default function FrameScorecard({
               <th
                 key={i}
                 style={{ width: "10%" }}
-                className="border border-border px-0 py-[3px] font-normal text-text-muted"
+                className={`border border-border px-0 py-[3px] transition-colors duration-200 ${
+                  i + 1 === currentFrame
+                    ? "bg-blue/15 font-bold text-blue"
+                    : "font-normal text-text-muted"
+                }`}
               >
                 {i + 1}
               </th>
@@ -91,10 +95,13 @@ export default function FrameScorecard({
                 <td
                   key={i}
                   onClick={() => isTappable && onFrameTap?.(i + 1)}
-                  className={`border border-border text-[11px] ${isCurrentFrame ? "bg-blue/10" : ""} ${isTappable ? "cursor-pointer active:bg-blue/5" : ""}`}
+                  className={`border border-border text-[11px] transition-colors duration-150 ${isCurrentFrame ? "bg-blue/10" : ""} ${isTappable ? "cursor-pointer active:bg-blue/15" : ""}`}
                 >
                   {frame ? (
-                    <div className="flex justify-center gap-1 px-[2px]">
+                    <div
+                      key={`${frame.roll1}-${frame.roll2}-${frame.roll3}`}
+                      className="animate-scale-in flex justify-center gap-1 px-[2px]"
+                    >
                       {i < 9 ? (
                         <>
                           {frame.isStrike ? (
@@ -200,10 +207,12 @@ export default function FrameScorecard({
               return (
                 <td
                   key={i}
-                  className="overflow-hidden border border-border text-[12px] font-bold text-text-primary"
+                  className="overflow-hidden border border-border text-[12px] font-bold tabular-nums text-text-primary"
                 >
                   {canDisplay ? (
-                    score
+                    <span key={score} className="animate-fade-in">
+                      {score}
+                    </span>
                   ) : score !== undefined ? (
                     <span className="text-text-muted">...</span>
                   ) : (

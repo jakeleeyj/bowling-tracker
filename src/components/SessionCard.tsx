@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import {
@@ -547,10 +548,10 @@ function SessionStats({
     <div className="mt-2">
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-surface-light/50 py-2 text-[11px] font-semibold text-text-muted active:bg-surface-light"
+        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-surface-light/50 py-2.5 text-[11px] font-semibold text-text-muted transition-colors duration-150 active:bg-surface-light"
       >
         <BarChart3 size={12} />
-        {show ? "Hide Stats" : "View Stats"}
+        {show ? "Hide stats" : "View stats"}
       </button>
 
       {show && (
@@ -589,7 +590,7 @@ function SessionStats({
               </p>
               {singlePinLeaves.length > 0 && (
                 <LeaveGroup
-                  label="Single Pin"
+                  label="Single pin"
                   color="text-green"
                   dotColor="bg-green"
                   leaves={singlePinLeaves}
@@ -597,7 +598,7 @@ function SessionStats({
               )}
               {multiPinLeaves.length > 0 && (
                 <LeaveGroup
-                  label="Multi Pin"
+                  label="Multi pin"
                   color="text-gold"
                   dotColor="bg-gold"
                   leaves={multiPinLeaves}
@@ -700,6 +701,8 @@ export default function SessionCard({
   rankTierName,
 }: SessionCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const expandRef = useRef<HTMLDivElement>(null);
   const [showStats, setShowStats] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -770,11 +773,21 @@ export default function SessionCard({
     router.refresh();
   }
 
+  function toggleExpanded() {
+    if (!mounted) {
+      // Mount collapsed and force a layout so the open transition has a start state
+      flushSync(() => setMounted(true));
+      void expandRef.current?.offsetHeight;
+    }
+    setExpanded(!expanded);
+  }
+
   return (
     <div className="glass overflow-hidden">
       {/* Clickable header */}
       <button
-        onClick={() => setExpanded(!expanded)}
+        onClick={toggleExpanded}
+        aria-expanded={expanded}
         className="flex w-full items-center justify-between p-3 text-left transition-colors duration-150 active:bg-white/[0.03]"
       >
         <div className="flex items-center gap-2.5">
@@ -870,145 +883,156 @@ export default function SessionCard({
       </div>
 
       {/* Expanded: per-game frame breakdown */}
-      {expanded && (
-        <div className="animate-slide-down border-t border-border/50 px-3 py-2">
-          <div className="flex flex-col gap-2">
-            {games.map((game) => {
-              const isHigh = game.total_score === highGame;
-              const isClean = game.is_clean;
-              const hasFrames = game.frames && game.frames.length > 0;
+      {mounted && (
+        <div
+          ref={expandRef}
+          inert={!expanded}
+          className={`grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <div
+              className={`border-t border-border/50 px-3 py-2 transition-opacity duration-200 ${expanded ? "opacity-100" : "opacity-0"}`}
+            >
+              <div className="flex flex-col gap-2">
+                {games.map((game) => {
+                  const isHigh = game.total_score === highGame;
+                  const isClean = game.is_clean;
+                  const hasFrames = game.frames && game.frames.length > 0;
 
-              return (
-                <div key={game.id} className="rounded-md bg-black/20 px-3 py-2">
-                  <div className="mb-1.5 flex items-center justify-between">
-                    <span className="text-xs font-semibold">
-                      Game {game.game_number}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {isClean && (
-                        <span className="text-[9px] font-semibold text-green">
-                          CLEAN
+                  return (
+                    <div key={game.id} className="rounded-md bg-black/20 px-3 py-2">
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <span className="text-xs font-semibold">
+                          Game {game.game_number}
                         </span>
-                      )}
-                      <span
-                        className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : "text-text-primary"}`}
-                      >
-                        {game.total_score}
-                      </span>
-                      {isOwn && (
-                        <button
-                          onClick={() =>
-                            router.push(`/log?editGame=${game.id}`)
-                          }
-                          className="text-text-muted active:scale-90"
-                        >
-                          <Pencil size={10} />
-                        </button>
-                      )}
+                        <div className="flex items-center gap-2">
+                          {isClean && (
+                            <span className="text-[9px] font-semibold text-green">
+                              CLEAN
+                            </span>
+                          )}
+                          <span
+                            className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : "text-text-primary"}`}
+                          >
+                            {game.total_score}
+                          </span>
+                          {isOwn && (
+                            <button
+                              onClick={() =>
+                                router.push(`/log?editGame=${game.id}`)
+                              }
+                              className="text-text-muted active:scale-90"
+                            >
+                              <Pencil size={10} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {hasFrames && <MiniScorecard frames={game.frames!} />}
                     </div>
-                  </div>
-                  {hasFrames && <MiniScorecard frames={game.frames!} />}
-                </div>
-              );
-            })}
-          </div>
-          {/* Session Stats */}
-          <SessionStats
-            games={games}
-            show={showStats}
-            onToggle={() => setShowStats(!showStats)}
-          />
+                  );
+                })}
+              </div>
+              {/* Session Stats */}
+              <SessionStats
+                games={games}
+                show={showStats}
+                onToggle={() => setShowStats(!showStats)}
+              />
 
-          {isOwn && (
-            <div className="mt-2 flex flex-col gap-2">
-              {editingMeta ? (
-                <div className="rounded-lg bg-black/20 p-3">
-                  <div className="mb-2 flex flex-wrap gap-1">
-                    {DEFAULT_VENUES.map((v) => (
-                      <button
-                        key={v}
-                        onClick={() => setEditVenue(editVenue === v ? "" : v)}
-                        className={`rounded-md px-2 py-1 text-[10px] font-medium transition-colors ${
-                          editVenue === v
-                            ? "bg-blue text-white"
-                            : "bg-surface-light text-text-muted"
-                        }`}
-                      >
-                        {v}
-                      </button>
-                    ))}
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Or type a venue..."
-                    value={DEFAULT_VENUES.includes(editVenue) ? "" : editVenue}
-                    onChange={(e) => setEditVenue(e.target.value)}
-                    className="mb-2 w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-xs text-text-primary outline-none focus:border-blue"
-                  />
-                  <div className="mb-2 grid grid-cols-2 gap-1.5">
-                    {EVENT_LABELS.map((label) => (
-                      <button
-                        key={label}
-                        onClick={() =>
-                          setEditEvent(editEvent === label ? "" : label)
-                        }
-                        className={`rounded-md px-2.5 py-1 text-[10px] font-semibold transition-colors ${
-                          editEvent === label
-                            ? "bg-blue text-white"
-                            : "bg-surface-light text-text-muted"
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
+              {isOwn && (
+                <div className="mt-2 flex flex-col gap-2">
+                  {editingMeta ? (
+                    <div className="rounded-lg bg-black/20 p-3">
+                      <div className="mb-2 flex flex-wrap gap-1">
+                        {DEFAULT_VENUES.map((v) => (
+                          <button
+                            key={v}
+                            onClick={() => setEditVenue(editVenue === v ? "" : v)}
+                            className={`rounded-md px-2 py-1 text-[10px] font-medium transition-colors ${
+                              editVenue === v
+                                ? "bg-blue text-white"
+                                : "bg-surface-light text-text-muted"
+                            }`}
+                          >
+                            {v}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Or type a venue"
+                        value={DEFAULT_VENUES.includes(editVenue) ? "" : editVenue}
+                        onChange={(e) => setEditVenue(e.target.value)}
+                        className="mb-2 w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-xs text-text-primary outline-none focus:border-blue"
+                      />
+                      <div className="mb-2 grid grid-cols-2 gap-1.5">
+                        {EVENT_LABELS.map((label) => (
+                          <button
+                            key={label}
+                            onClick={() =>
+                              setEditEvent(editEvent === label ? "" : label)
+                            }
+                            className={`rounded-md px-2.5 py-1 text-[10px] font-semibold transition-colors ${
+                              editEvent === label
+                                ? "bg-blue text-white"
+                                : "bg-surface-light text-text-muted"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSaveMeta}
+                          disabled={savingMeta}
+                          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue/20 py-2.5 text-[11px] font-semibold text-blue transition-colors duration-150 active:bg-blue/30 disabled:opacity-60"
+                        >
+                          {savingMeta && <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue/30 border-t-blue" />}
+                          {savingMeta ? "Saving" : "Save"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingMeta(false);
+                            setEditVenue(venue ?? "");
+                            setEditEvent(eventLabel ?? "");
+                          }}
+                          className="flex-1 rounded-lg bg-surface-light py-2.5 text-[11px] font-semibold text-text-muted transition-colors duration-150 active:bg-white/10"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
                     <button
-                      onClick={handleSaveMeta}
-                      disabled={savingMeta}
-                      className="flex-1 rounded-lg bg-blue/20 py-1.5 text-[11px] font-semibold text-blue active:bg-blue/30 disabled:opacity-50"
+                      onClick={() => setEditingMeta(true)}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-surface-light/50 py-2.5 text-[11px] font-semibold text-text-muted transition-colors duration-150 active:bg-surface-light"
                     >
-                      {savingMeta ? "Saving..." : "Save"}
+                      <Pencil size={10} />
+                      Edit venue / event
                     </button>
-                    <button
-                      onClick={() => {
-                        setEditingMeta(false);
-                        setEditVenue(venue ?? "");
-                        setEditEvent(eventLabel ?? "");
-                      }}
-                      className="flex-1 rounded-lg bg-surface-light py-1.5 text-[11px] font-semibold text-text-muted"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                  )}
+                  <button
+                    onClick={handleShare}
+                    disabled={sharing}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue/10 py-2.5 text-[11px] font-semibold text-blue transition-colors duration-150 active:bg-blue/20 disabled:opacity-60"
+                  >
+                    {sharing ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue/30 border-t-blue" /> : <Share2 size={12} />}
+                    {sharing ? "Generating" : "Share scorecard"}
+                  </button>
+                  <button
+                    onClick={handleDeleteSession}
+                    disabled={deleting}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-red/10 py-2.5 text-[11px] font-semibold text-red transition-colors duration-150 active:bg-red/20 disabled:opacity-60"
+                  >
+                    {deleting ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-red/30 border-t-red" /> : <Trash2 size={12} />}
+                    {deleting ? "Deleting" : "Delete session"}
+                  </button>
                 </div>
-              ) : (
-                <button
-                  onClick={() => setEditingMeta(true)}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-surface-light/50 py-2 text-[11px] font-semibold text-text-muted active:bg-surface-light"
-                >
-                  <Pencil size={10} />
-                  Edit Venue / Event
-                </button>
               )}
-              <button
-                onClick={handleShare}
-                disabled={sharing}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue/10 py-2 text-[11px] font-semibold text-blue active:bg-blue/20 disabled:opacity-50"
-              >
-                <Share2 size={12} />
-                {sharing ? "Generating..." : "Share Scorecard"}
-              </button>
-              <button
-                onClick={handleDeleteSession}
-                disabled={deleting}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-red/10 py-2 text-[11px] font-semibold text-red active:bg-red/20 disabled:opacity-50"
-              >
-                <Trash2 size={12} />
-                {deleting ? "Deleting..." : "Delete Session"}
-              </button>
             </div>
-          )}
+          </div>
         </div>
       )}
 
@@ -1092,13 +1116,14 @@ export default function SessionCard({
               <button
                 onClick={handleCaptureAndShare}
                 disabled={sharing}
-                className="flex-1 rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white active:scale-95 disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
               >
-                {sharing ? "Generating..." : "Share"}
+                {sharing && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+                {sharing ? "Generating" : "Share"}
               </button>
               <button
                 onClick={() => setShowShareOverlay(false)}
-                className="rounded-lg border border-border px-6 py-3 text-sm font-semibold text-text-secondary active:scale-95"
+                className="rounded-lg border border-border px-6 py-3 text-sm font-semibold text-text-secondary transition-[transform,background-color] duration-150 ease-out active:scale-[0.97] active:bg-white/5"
               >
                 Close
               </button>

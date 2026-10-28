@@ -2,6 +2,7 @@ export const revalidate = 300; // revalidate every 5 minutes
 
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import type {
   ProfileRow,
   SessionWithGamesFramesAndProfile,
@@ -125,39 +126,39 @@ export default async function DashboardPage() {
       )}
 
       {/* Quick Stats */}
-      <div className="mb-5 flex gap-2">
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
-            Avg
+      <div className="mb-5 grid grid-cols-3 gap-2">
+        {[
+          { label: "Avg", value: avgScore },
+          { label: "High", value: highScore },
+          { label: "Games", value: totalGames },
+        ].map((stat) => (
+          <div key={stat.label} className="glass px-3 py-3.5 text-center">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              {stat.label}
+            </div>
+            <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
+              {totalGames > 0 ? stat.value : "-"}
+            </div>
           </div>
-          <div className="my-1 text-2xl font-extrabold">{avgScore}</div>
-        </div>
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
-            High
-          </div>
-          <div className="my-1 text-2xl font-extrabold">{highScore}</div>
-        </div>
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
-            Games
-          </div>
-          <div className="my-1 text-2xl font-extrabold">{totalGames}</div>
-        </div>
+        ))}
       </div>
 
       {/* CTA */}
       <Link
         href="/log"
-        className="mb-5 block rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-center text-base font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97]"
+        className="mb-6 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97]"
       >
-        Log a Session
+        <Plus size={18} strokeWidth={2.75} />
+        Log a session
       </Link>
 
       {/* Activity Feed */}
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-bold">Recent Activity</h2>
-        <Link href="/profile" className="text-xs text-blue">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="text-sm font-bold">Recent activity</h2>
+        <Link
+          href="/profile"
+          className="-mr-2 rounded-lg px-2 py-2.5 text-xs font-semibold text-blue transition-opacity active:opacity-60"
+        >
           See all
         </Link>
       </div>

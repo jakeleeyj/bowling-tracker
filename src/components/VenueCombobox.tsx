@@ -72,7 +72,7 @@ export default function VenueCombobox({
         <input
           ref={inputRef}
           type="text"
-          placeholder="Select or type a venue..."
+          placeholder="Select or type a venue"
           value={open ? filter || value : value}
           onChange={(e) => handleInputChange(e.target.value)}
           onFocus={handleFocus}

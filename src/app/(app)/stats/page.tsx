@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import type { OverviewStats, LeaveStats, StatsFilter } from "@/lib/queries";
 import StatsContent from "./stats-content";
 import StatsFilterBar from "./stats-filter";
-import { BowlingSpinner } from "@/components/Skeleton";
+import { Skeleton, SkeletonCard } from "@/components/Skeleton";
 
 interface PageProps {
   searchParams: Promise<{
@@ -17,9 +17,19 @@ interface PageProps {
 
 function StatsLoading() {
   return (
-    <div className="flex flex-col items-center justify-center py-16">
-      <BowlingSpinner />
-      <p className="mt-3 text-sm text-text-muted">Loading stats...</p>
+    <div aria-busy="true" aria-label="Loading stats">
+      <Skeleton className="mb-5 h-11" />
+      <div className="mb-5 grid grid-cols-2 gap-2">
+        {[1, 2, 3, 4].map((i) => (
+          <SkeletonCard key={i} className="h-[76px]" />
+        ))}
+      </div>
+      <SkeletonCard className="mb-5 h-[200px]" />
+      <div className="grid grid-cols-2 gap-2">
+        {[1, 2, 3, 4].map((i) => (
+          <SkeletonCard key={i} className="h-[92px]" />
+        ))}
+      </div>
     </div>
   );
 }

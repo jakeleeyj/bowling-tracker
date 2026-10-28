@@ -204,14 +204,14 @@ export default function FramePinDetail({ frames }: FramePinDetailProps) {
               <p className="mt-2 text-center text-[10px] text-text-muted">
                 {isFrame10
                   ? shotData.knocked === 10
-                    ? "Strike — all 10"
+                    ? "Strike, all 10"
                     : shotData.knocked === 0
-                      ? "Gutter — 0 knocked"
+                      ? "Gutter, 0 knocked"
                       : displayPins.length === 0
                         ? `Knocked ${shotData.knocked ?? "-"}`
                         : shotData.precise
                           ? `${displayPins.join("-")} leave`
-                          : `Knocked ${shotData.knocked} — exact pins not recorded`
+                          : `Knocked ${shotData.knocked}. Exact pins not recorded`
                   : `${displayPins.join("-")} leave`}
               </p>
             </div>

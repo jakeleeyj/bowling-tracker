@@ -46,13 +46,16 @@ export default function DeleteSessionButton({
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="flex-1 rounded-lg bg-red/20 py-3 text-sm font-semibold text-red disabled:opacity-50"
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red/20 py-3 text-sm font-semibold text-red transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
         >
-          {deleting ? "Deleting..." : "Yes, delete"}
+          {deleting && (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-red/30 border-t-red" />
+          )}
+          {deleting ? "Deleting" : "Yes, delete"}
         </button>
         <button
           onClick={() => setConfirming(false)}
-          className="flex-1 rounded-lg bg-surface-light py-3 text-sm font-semibold text-text-secondary"
+          className="flex-1 rounded-lg bg-surface-light py-3 text-sm font-semibold text-text-secondary transition-transform duration-150 ease-out active:scale-[0.97]"
         >
           Cancel
         </button>
@@ -63,10 +66,10 @@ export default function DeleteSessionButton({
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="flex w-full items-center justify-center gap-2 rounded-lg border border-red/30 py-3 text-sm font-semibold text-red"
+      className="flex w-full items-center justify-center gap-2 rounded-lg border border-red/30 py-3 text-sm font-semibold text-red transition-transform duration-150 ease-out active:scale-[0.97]"
     >
       <Trash2 size={16} />
-      Delete Session
+      Delete session
     </button>
   );
 }

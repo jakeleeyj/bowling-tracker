@@ -212,28 +212,41 @@ export default function LayoutPage() {
       .single();
     setSaving(false);
     if (error || !ball) {
-      toast("Couldn't save — check your connection", "error");
+      toast("Couldn't save. Check your connection.", "error");
       return;
     }
     toast("Ball saved to your arsenal");
     router.push(`/arsenal/${ball.id}`);
   }
 
+  const pillThumb = (count: number, index: number) => (
+    <span
+      aria-hidden
+      className="absolute inset-y-[3px] left-[3px] rounded-md bg-blue shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
+      style={{
+        width: `calc((100% - 6px) / ${count})`,
+        transform: `translateX(${index * 100}%)`,
+      }}
+    />
+  );
+
   const customField = (
     label: string,
     value: string,
     setValue: (v: string) => void,
+    inputMode?: "decimal",
   ) => (
-    <div>
-      <label className="mb-1 block text-xs text-text-muted">{label}</label>
+    <label className="block">
+      <span className="mb-1 block text-xs text-text-muted">{label}</span>
       <input
         type="text"
+        inputMode={inputMode}
         placeholder={"e.g. 3 3/8"}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="w-full rounded-lg border border-border bg-surface-light px-3 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+        className="h-11 w-full rounded-lg border border-border bg-surface-light px-3 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
       />
-    </div>
+    </label>
   );
 
   return (
@@ -241,11 +254,12 @@ export default function LayoutPage() {
       <div className="mb-6 flex items-center gap-3">
         <BackButton />
         <h1 className="text-xl font-extrabold text-text-primary">
-          Get a Layout
+          Get a layout
         </h1>
       </div>
 
-      <div className="mb-4 flex rounded-lg bg-surface-light p-1">
+      <div className="relative mb-4 flex h-11 rounded-lg bg-surface-light p-[3px]">
+        {pillThumb(2, mode === "recommended" ? 0 : 1)}
         {(
           [
             ["recommended", "Recommended for me"],
@@ -255,10 +269,9 @@ export default function LayoutPage() {
           <button
             key={value}
             onClick={() => setMode(value)}
-            className={`flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-150 ${
-              mode === value
-                ? "bg-blue/20 text-blue"
-                : "text-text-muted active:scale-95"
+            aria-pressed={mode === value}
+            className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+              mode === value ? "text-white" : "text-text-muted"
             }`}
           >
             {label}
@@ -267,20 +280,20 @@ export default function LayoutPage() {
       </div>
 
       {mode === "recommended" && !latest && (
-        <div className="glass p-6 text-center">
-          <p className="mb-1 text-sm font-bold text-text-primary">
+        <div className="glass flex flex-col items-center px-6 py-10 text-center">
+          <p className="text-sm font-semibold text-text-primary">
             Analyze your style first
           </p>
-          <p className="mb-4 text-xs leading-relaxed text-text-muted">
-            A recommendation is built from your style numbers — takes under a
-            minute. Or switch to Custom to enter a layout directly.
+          <p className="mt-1 text-xs text-text-muted">
+            Recommendations are built from your style numbers. Or switch to
+            Custom layout.
           </p>
           <button
             onClick={() => router.push("/arsenal/analyze")}
-            className="mx-auto flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue to-blue-dark px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97]"
+            className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark px-6 py-4 text-base font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97]"
           >
             <Sparkles size={16} />
-            Analyze My Style
+            Analyze my style
           </button>
         </div>
       )}
@@ -296,22 +309,21 @@ export default function LayoutPage() {
             </div>
             <button
               onClick={() => router.push("/arsenal/analyze")}
-              className="text-xs font-semibold text-blue active:scale-95"
+              className="-mx-2 -my-2.5 px-2 py-2.5 text-xs font-semibold text-blue transition-opacity active:opacity-60"
             >
               Re-analyze
             </button>
           </div>
 
           <div className="glass mb-4 p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
-              Lane condition
-            </p>
+            <h2 className="mb-3 text-sm font-bold">Lane condition</h2>
             <div className="grid grid-cols-3 gap-2">
               {LANES.map(([value, label]) => (
                 <button
                   key={value}
                   onClick={() => setLane(value)}
-                  className={`rounded-lg border py-3 text-xs font-semibold transition-all duration-150 active:scale-[0.97] ${
+                  aria-pressed={lane === value}
+                  className={`h-11 rounded-lg border text-xs font-semibold transition-[transform,background-color,border-color,color] duration-150 active:scale-[0.97] ${
                     lane === value
                       ? "border-blue bg-blue/10 text-blue"
                       : "border-border bg-surface-light text-text-muted"
@@ -327,12 +339,11 @@ export default function LayoutPage() {
 
       {mode === "custom" && (
         <div className="glass mb-4 p-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
-            Your layout
-          </p>
+          <h2 className="mb-3 text-sm font-bold">Your layout</h2>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-xs text-text-muted">Grip</span>
-            <div className="flex gap-1">
+            <div className="relative flex h-11 w-[200px] rounded-lg bg-surface-light p-[3px]">
+              {pillThumb(2, customGrip === "one" ? 0 : 1)}
               {(
                 [
                   ["one", "One-handed"],
@@ -342,10 +353,9 @@ export default function LayoutPage() {
                 <button
                   key={value}
                   onClick={() => setCustomGrip(value)}
-                  className={`rounded px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
-                    customGrip === value
-                      ? "bg-blue/20 text-blue"
-                      : "bg-surface-light text-text-muted active:scale-95"
+                  aria-pressed={customGrip === value}
+                  className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+                    customGrip === value ? "text-white" : "text-text-muted"
                   }`}
                 >
                   {label}
@@ -355,10 +365,11 @@ export default function LayoutPage() {
           </div>
           {isTwoHanded ? (
             <p className="mb-3 rounded-lg bg-surface-light p-2 text-center text-xs font-semibold text-blue">
-              2LS — the 2-hand layout system
+              2LS: the 2-hand layout system
             </p>
           ) : (
-            <div className="mb-3 flex rounded-lg bg-surface-light p-1">
+            <div className="relative mb-3 flex h-11 rounded-lg bg-surface-light p-[3px]">
+              {pillThumb(2, effectiveSystem === "vls" ? 1 : 0)}
               {(
                 [
                   ["dual", "Dual Angle"],
@@ -368,10 +379,9 @@ export default function LayoutPage() {
                 <button
                   key={value}
                   onClick={() => setCustomSystem(value)}
-                  className={`flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-150 ${
-                    effectiveSystem === value
-                      ? "bg-blue/20 text-blue"
-                      : "text-text-muted active:scale-95"
+                  aria-pressed={effectiveSystem === value}
+                  className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+                    effectiveSystem === value ? "text-white" : "text-text-muted"
                   }`}
                 >
                   {label}
@@ -382,9 +392,9 @@ export default function LayoutPage() {
           <div className="grid grid-cols-3 gap-3">
             {effectiveSystem === "dual" && (
               <>
-                {customField("Drill angle °", customDrill, setCustomDrill)}
+                {customField("Drill angle °", customDrill, setCustomDrill, "decimal")}
                 {customField('Pin-to-PAP "', customPin, setCustomPin)}
-                {customField("VAL angle °", customVal, setCustomVal)}
+                {customField("VAL angle °", customVal, setCustomVal, "decimal")}
               </>
             )}
             {effectiveSystem === "vls" && (
@@ -423,7 +433,7 @@ export default function LayoutPage() {
               customPap,
             ) && (
               <p className="mt-2 rounded-lg bg-red/10 p-3 text-[10px] leading-relaxed text-red">
-                These distances can&apos;t meet on the ball with your PAP —
+                These distances can&apos;t meet on the ball with your PAP.
                 Storm&apos;s Lightning Arc for a {customPap.over}&quot; ×{" "}
                 {Math.abs(customPap.up)}&quot; PAP is {lightningArc(customPap)}
                 &quot;, so pin-to-PAP and pin-to-COG must differ by less than
@@ -431,7 +441,7 @@ export default function LayoutPage() {
               </p>
             )}
           <p className="mt-2 text-[10px] leading-relaxed text-text-muted">
-            Enter the numbers you know — the tabs below convert between all
+            Enter the numbers you know. The tabs below convert between all
             three systems automatically.
           </p>
         </div>
@@ -453,24 +463,35 @@ export default function LayoutPage() {
           />
 
           <div className="glass mt-4 p-4">
-            <label className="mb-1 block text-xs text-text-muted">
+            <label
+              htmlFor="ball-name"
+              className="mb-1 block text-xs text-text-muted"
+            >
               Save this layout to a ball
             </label>
             <div className="flex gap-2">
               <input
+                id="ball-name"
                 type="text"
                 value={ballName}
                 onChange={(e) => setBallName(e.target.value)}
                 placeholder="e.g. Storm Phaze II"
                 maxLength={60}
-                className="min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+                className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-4 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
               />
               <button
                 onClick={saveToBall}
                 disabled={!ballName.trim() || saving}
-                className="shrink-0 rounded-lg bg-gradient-to-r from-blue to-blue-dark px-5 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
+                className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark px-5 text-sm font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
               >
-                {saving ? "Saving…" : "Save"}
+                {saving ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                    Saving
+                  </>
+                ) : (
+                  "Save"
+                )}
               </button>
             </div>
           </div>

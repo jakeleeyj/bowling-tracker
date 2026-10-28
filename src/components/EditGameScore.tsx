@@ -58,7 +58,7 @@ export default function EditGameScore({
     return (
       <button
         onClick={() => setEditing(true)}
-        className="flex items-center gap-1 rounded-lg bg-surface-light px-3 py-1.5 text-[11px] font-semibold text-text-secondary active:scale-95"
+        className="flex h-10 items-center gap-1.5 rounded-lg bg-surface-light px-3.5 text-xs font-semibold text-text-secondary transition-transform duration-150 ease-out active:scale-[0.97]"
       >
         <Pencil size={12} />
         Edit
@@ -77,24 +77,31 @@ export default function EditGameScore({
           const v = e.target.value.replace(/[^0-9]/g, "");
           if (v === "" || (parseInt(v) >= 0 && parseInt(v) <= 300)) setScore(v);
         }}
-        className="w-16 rounded-lg border border-border bg-surface-light px-2 py-1.5 text-center text-base font-bold text-text-primary outline-none focus:border-blue"
+        aria-label="Game score"
+        className="h-10 w-16 rounded-lg border border-border bg-surface-light px-2 text-center text-base font-bold tabular-nums text-text-primary outline-none focus:border-blue"
         autoFocus
       />
       <button
         onClick={handleSave}
         disabled={saving}
-        className="flex h-8 w-8 items-center justify-center rounded-lg bg-green/15 text-green active:scale-90 disabled:opacity-50"
+        aria-label="Save score"
+        className="flex h-10 w-10 items-center justify-center rounded-lg bg-green/15 text-green transition-transform duration-150 ease-out active:scale-[0.94] disabled:opacity-60"
       >
-        <Check size={14} strokeWidth={3} />
+        {saving ? (
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-green/30 border-t-green" />
+        ) : (
+          <Check size={16} strokeWidth={3} />
+        )}
       </button>
       <button
         onClick={() => {
           setScore(currentScore.toString());
           setEditing(false);
         }}
-        className="flex h-8 w-8 items-center justify-center rounded-lg bg-red/15 text-red active:scale-90"
+        aria-label="Cancel edit"
+        className="flex h-10 w-10 items-center justify-center rounded-lg bg-red/15 text-red transition-transform duration-150 ease-out active:scale-[0.94]"
       >
-        <X size={14} strokeWidth={3} />
+        <X size={16} strokeWidth={3} />
       </button>
     </div>
   );

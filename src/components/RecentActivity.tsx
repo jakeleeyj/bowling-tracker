@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import SessionCard from "@/components/SessionCard";
+import { BowlingSpinner } from "@/components/Skeleton";
 import { loadMoreSessions } from "@/app/(app)/dashboard/actions";
 import { CALIBRATION_GAMES } from "@/lib/ranking";
 import type { SessionWithGamesFramesAndProfile } from "@/lib/queries";
@@ -90,9 +91,10 @@ export default function RecentActivity({
   return (
     <>
       {sessions.length === 0 && (
-        <div className="glass p-8 text-center">
-          <p className="text-sm text-text-muted">
-            No games yet. Log your first session!
+        <div className="glass flex flex-col items-center px-6 py-10 text-center">
+          <p className="text-sm font-semibold">No sessions yet</p>
+          <p className="mt-1 text-xs text-text-muted">
+            Sessions from you and other bowlers show up here.
           </p>
         </div>
       )}
@@ -170,9 +172,10 @@ export default function RecentActivity({
         <button
           onClick={handleLoadMore}
           disabled={isPending}
-          className="mt-3 w-full rounded-xl bg-surface-light py-3 text-sm font-semibold text-text-muted active:scale-[0.98] disabled:opacity-50"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-surface-light py-3 text-sm font-semibold text-text-secondary transition-[transform,opacity] duration-150 ease-out active:scale-[0.98] disabled:opacity-60"
         >
-          {isPending ? "Loading..." : "Load More"}
+          {isPending && <BowlingSpinner size="sm" />}
+          {isPending ? "Loading" : "Load more"}
         </button>
       )}
     </>

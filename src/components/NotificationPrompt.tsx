@@ -71,13 +71,17 @@ export default function NotificationPrompt() {
       <button
         onClick={handleEnable}
         disabled={loading}
-        className="shrink-0 rounded-lg bg-blue px-3 py-1.5 text-[11px] font-bold text-white active:scale-95 disabled:opacity-50"
+        className="flex h-9 shrink-0 items-center justify-center rounded-lg bg-blue px-3 text-[11px] font-bold text-white transition-transform duration-150 ease-out active:scale-[0.95] disabled:opacity-60"
       >
-        {loading ? "..." : "Enable"}
+        {loading ? (
+          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+        ) : (
+          "Enable"
+        )}
       </button>
       <button
         onClick={handleDismiss}
-        className="shrink-0 p-1 text-text-muted active:scale-90"
+        className="-my-2 -mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-text-muted transition-[transform,background-color] duration-150 ease-out active:scale-90 active:bg-white/5"
         aria-label="Dismiss"
       >
         <X size={14} />

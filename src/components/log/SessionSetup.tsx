@@ -30,9 +30,9 @@ export default function SessionSetup({
         Log a Session
       </h1>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         <div>
-          <label className="mb-1 block text-xs text-text-muted">
+          <label className="mb-1.5 block text-xs text-text-muted">
             Venue (optional)
           </label>
           <VenueCombobox
@@ -42,10 +42,10 @@ export default function SessionSetup({
           />
         </div>
 
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">
+        <fieldset>
+          <legend className="mb-1.5 text-xs text-text-muted">
             Event (optional)
-          </label>
+          </legend>
           <div className="grid grid-cols-2 gap-2">
             {EVENT_LABELS.map((label) => (
               <button
@@ -53,9 +53,10 @@ export default function SessionSetup({
                 onClick={() =>
                   onEventLabelChange(eventLabel === label ? "" : label)
                 }
-                className={`rounded-lg px-4 py-2 text-sm transition-colors ${
+                aria-pressed={eventLabel === label}
+                className={`h-11 rounded-lg px-4 text-sm transition-[color,background-color,transform] duration-150 active:scale-[0.97] ${
                   eventLabel === label
-                    ? "bg-blue text-white"
+                    ? "bg-blue font-semibold text-white"
                     : "bg-surface-light text-text-secondary"
                 }`}
               >
@@ -63,18 +64,19 @@ export default function SessionSetup({
               </button>
             ))}
           </div>
-        </div>
+        </fieldset>
 
-        <div>
-          <label className="mb-1 block text-xs text-text-muted">
+        <fieldset>
+          <legend className="mb-1.5 text-xs text-text-muted">
             How many games?
-          </label>
+          </legend>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <button
                 key={n}
                 onClick={() => onGameCountChange(n)}
-                className={`flex-1 rounded-lg py-2 text-sm font-bold transition-colors ${
+                aria-pressed={gameCount === n}
+                className={`h-11 flex-1 rounded-lg text-sm font-bold tabular-nums transition-[color,background-color,transform] duration-150 active:scale-[0.94] ${
                   gameCount === n
                     ? "bg-blue text-white"
                     : "bg-surface-light text-text-secondary"
@@ -84,13 +86,13 @@ export default function SessionSetup({
               </button>
             ))}
           </div>
-        </div>
+        </fieldset>
 
         <button
           onClick={onStart}
-          className="mt-4 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+          className="mt-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
         >
-          Start Bowling
+          Start bowling
         </button>
       </div>
     </div>

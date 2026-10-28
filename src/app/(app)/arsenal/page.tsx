@@ -55,7 +55,7 @@ export default function ArsenalPage() {
     <div className="animate-fade-in px-4 py-6">
       <div className="mb-6 flex items-center gap-3">
         <BackButton />
-        <h1 className="text-xl font-extrabold text-text-primary">My Arsenal</h1>
+        <h1 className="text-xl font-extrabold text-text-primary">My arsenal</h1>
       </div>
 
       {error && <ErrorCard onRetry={load} />}
@@ -68,19 +68,19 @@ export default function ArsenalPage() {
                 {
                   href: "/arsenal/analyze",
                   icon: <Sparkles size={20} className="text-blue" />,
-                  title: "Analyze My Style",
-                  sub: "Speed, revs & release → your bowler profile",
+                  title: "Analyze my style",
+                  sub: "Speed, revs and release for your bowler profile",
                 },
                 {
                   href: "/arsenal/layout",
                   icon: <Ruler size={20} className="text-gold" />,
-                  title: "Get a Layout",
+                  title: "Get a layout",
                   sub: "Dual Angle, VLS & 2LS from your saved style",
                 },
                 {
                   href: "/arsenal/new",
                   icon: <Plus size={20} className="text-purple" />,
-                  title: "Add a Ball",
+                  title: "Add a ball",
                   sub: "Track specs & drilling for a ball you own",
                 },
               ] as const
@@ -88,7 +88,7 @@ export default function ArsenalPage() {
               <button
                 key={action.href}
                 onClick={() => router.push(action.href)}
-                className="glass flex w-full items-center gap-3 p-4 text-left transition-all duration-150 active:scale-[0.98]"
+                className="glass flex w-full items-center gap-3 p-4 text-left transition-[transform,background-color] duration-150 ease-out active:scale-[0.98] active:bg-white/5"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-light">
                   {action.icon}
@@ -107,14 +107,12 @@ export default function ArsenalPage() {
           </div>
 
           {balls.length === 0 ? (
-            <div className="glass p-6 text-center">
-              <p className="mb-1 text-sm font-bold text-text-primary">
+            <div className="glass flex flex-col items-center px-6 py-10 text-center">
+              <p className="text-sm font-semibold text-text-primary">
                 No balls yet
               </p>
-              <p className="text-xs leading-relaxed text-text-muted">
-                Analyze your style, get a layout, and save it to your first ball
-                — you&apos;ll get a spec sheet you can hand straight to a pro
-                shop.
+              <p className="mt-1 text-xs text-text-muted">
+                Save a layout to a ball to get a spec sheet for your pro shop.
               </p>
             </div>
           ) : (
@@ -128,7 +126,7 @@ export default function ArsenalPage() {
               ))}
               <button
                 onClick={() => router.push("/arsenal/new")}
-                className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border-light py-3 text-sm text-text-muted transition-all duration-150 active:scale-[0.98]"
+                className="flex h-11 items-center justify-center gap-2 rounded-xl border border-dashed border-border-light text-sm text-text-muted transition-[transform,background-color] duration-150 active:scale-[0.97] active:bg-white/5"
               >
                 <Plus size={16} />
                 Add a ball

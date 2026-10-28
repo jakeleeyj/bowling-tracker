@@ -80,9 +80,12 @@ export default function NotificationToggle() {
     <button
       onClick={handleToggle}
       disabled={loading || denied}
-      className={`glass flex items-center gap-3 p-4 text-left ${denied ? "opacity-40" : ""}`}
+      aria-pressed={subscribed}
+      className={`glass flex items-center gap-3 p-4 text-left transition-transform duration-150 ease-out active:scale-[0.98] ${denied ? "opacity-40" : ""} ${loading ? "opacity-60" : ""}`}
     >
-      {subscribed ? (
+      {loading ? (
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+      ) : subscribed ? (
         <Bell size={20} className="text-green" />
       ) : (
         <BellOff size={20} className="text-text-muted" />
@@ -90,18 +93,16 @@ export default function NotificationToggle() {
       <div className="flex-1">
         <span className="text-sm font-semibold">
           {denied
-            ? "Notifications Blocked"
+            ? "Notifications blocked"
             : subscribed
-              ? "Notifications On"
-              : "Enable Notifications"}
+              ? "Notifications on"
+              : "Enable notifications"}
         </span>
-        <p className="text-[10px] text-text-muted">
-          {denied
-            ? "Enable in browser settings"
-            : subscribed
-              ? "You'll be notified when friends bowl"
-              : "Get notified when friends log games"}
-        </p>
+        {denied && (
+          <p className="text-[10px] text-text-muted">
+            Enable in browser settings
+          </p>
+        )}
       </div>
     </button>
   );

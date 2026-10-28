@@ -111,7 +111,7 @@ export default function BallPage() {
       .eq("id", ball.id);
     setSaving(false);
     if (dbError) {
-      toast(`Couldn't save — ${dbError.message}`, "error");
+      toast(`Couldn't save. ${dbError.message}`, "error");
     } else {
       saveLastSpecs(draft);
       toast("Ball saved");
@@ -159,7 +159,7 @@ export default function BallPage() {
         <button
           onClick={() => setConfirmDelete(true)}
           aria-label="Delete ball"
-          className="text-text-muted active:scale-90"
+          className="-mr-2 flex h-10 w-10 items-center justify-center text-text-muted transition-transform duration-150 active:scale-[0.94]"
         >
           <Trash2 size={18} />
         </button>
@@ -179,9 +179,7 @@ export default function BallPage() {
             : undefined;
         return (
           <div className="glass relative mb-5 p-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
-              Layout diagram
-            </p>
+            <h2 className="mb-2 text-sm font-bold">Layout diagram</h2>
             {draft.image_url && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -218,9 +216,7 @@ export default function BallPage() {
       })()}
 
       <div className="glass mb-5 p-4">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
-          Grip chart
-        </p>
+        <h2 className="mb-2 text-sm font-bold">Grip chart</h2>
         <GripChart draft={draft} />
       </div>
 
@@ -230,9 +226,16 @@ export default function BallPage() {
         <button
           onClick={save}
           disabled={saving}
-          className="rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
         >
-          {saving ? "Saving…" : "Save changes"}
+          {saving ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              Saving
+            </>
+          ) : (
+            "Save changes"
+          )}
         </button>
         <SpecSheetButton ball={ball} draft={draft} />
       </div>
@@ -250,13 +253,13 @@ export default function BallPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="flex-1 rounded-lg bg-surface-light py-2.5 text-sm font-semibold text-text-primary active:scale-95"
+                className="h-11 flex-1 rounded-lg bg-surface-light text-sm font-semibold text-text-primary transition-transform duration-150 active:scale-[0.97]"
               >
                 Cancel
               </button>
               <button
                 onClick={remove}
-                className="flex-1 rounded-lg bg-red py-2.5 text-sm font-bold text-white active:scale-95"
+                className="h-11 flex-1 rounded-lg bg-red text-sm font-bold text-white transition-transform duration-150 active:scale-[0.97]"
               >
                 Delete
               </button>
