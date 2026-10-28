@@ -129,23 +129,26 @@ function Field({
   value,
   onChange,
   placeholder,
+  inputMode,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  inputMode?: "decimal";
 }) {
   return (
-    <div>
-      <label className="mb-1 block text-xs text-text-muted">{label}</label>
+    <label className="block">
+      <span className="mb-1 block text-xs text-text-muted">{label}</span>
       <input
         type="text"
+        inputMode={inputMode}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder ?? "e.g. 3 3/8"}
-        className="w-full rounded-lg border border-border bg-surface-light px-3 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+        className="h-11 w-full rounded-lg border border-border bg-surface-light px-3 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
       />
-    </div>
+    </label>
   );
 }
 
@@ -161,12 +164,12 @@ function Select({
   options: string[];
 }) {
   return (
-    <div>
-      <label className="mb-1 block text-xs text-text-muted">{label}</label>
+    <label className="block">
+      <span className="mb-1 block text-xs text-text-muted">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-border bg-surface-light px-3 py-2.5 text-sm capitalize text-text-primary outline-none focus:border-blue"
+        className="h-11 w-full rounded-lg border border-border bg-surface-light px-3 text-sm capitalize text-text-primary outline-none focus:border-blue"
       >
         <option value="">—</option>
         {options.map((o) => (
@@ -175,11 +178,17 @@ function Select({
           </option>
         ))}
       </select>
-    </div>
+    </label>
   );
 }
 
 type LayoutTab = "dual" | "vls" | "2ls";
+
+const LAYOUT_TABS = [
+  ["dual", "Dual Angle"],
+  ["vls", "VLS"],
+  ["2ls", "2LS"],
+] as const;
 
 export default function DrillingSpecsForm({
   draft,
@@ -269,20 +278,23 @@ export default function DrillingSpecsForm({
     onChange(next);
   }
 
-  const layoutField = (key: keyof BallDraft, label: string) => (
+  const layoutField = (
+    key: keyof BallDraft,
+    label: string,
+    inputMode?: "decimal",
+  ) => (
     <Field
       label={label}
       value={(draft[key] as string) ?? ""}
       onChange={(v) => setLayoutField(key, v)}
+      inputMode={inputMode}
     />
   );
 
   return (
     <div className="flex flex-col gap-5">
       <div className="glass p-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
-          Ball
-        </p>
+        <h2 className="mb-3 text-sm font-bold">Ball</h2>
         <div className="mb-3">
           <BallPicker
             picked={
@@ -330,6 +342,7 @@ export default function DrillingSpecsForm({
             value={draft.weight_lbs ?? ""}
             onChange={set("weight_lbs")}
             placeholder="e.g. 15"
+            inputMode="decimal"
           />
           <Select
             label="Coverstock"
@@ -342,12 +355,14 @@ export default function DrillingSpecsForm({
             value={draft.rg ?? ""}
             onChange={set("rg")}
             placeholder="2.46–2.80"
+            inputMode="decimal"
           />
           <Field
             label="Differential"
             value={draft.differential ?? ""}
             onChange={set("differential")}
             placeholder="0–0.060"
+            inputMode="decimal"
           />
           <Select
             label="Core"
@@ -361,30 +376,30 @@ export default function DrillingSpecsForm({
               value={draft.intermediate_diff ?? ""}
               onChange={set("intermediate_diff")}
               placeholder="0–0.060"
+              inputMode="decimal"
             />
           )}
         </div>
       </div>
 
       <div className="glass p-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
-          Layout
-        </p>
-        <div className="mb-3 flex rounded-lg bg-surface-light p-1">
-          {(
-            [
-              ["dual", "Dual Angle"],
-              ["vls", "VLS"],
-              ["2ls", "2LS"],
-            ] as const
-          ).map(([value, label]) => (
+        <h2 className="mb-3 text-sm font-bold">Layout</h2>
+        <div className="relative mb-3 flex h-11 rounded-lg bg-surface-light p-[3px]">
+          <span
+            aria-hidden
+            className="absolute inset-y-[3px] left-[3px] rounded-md bg-blue shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
+            style={{
+              width: "calc((100% - 6px) / 3)",
+              transform: `translateX(${LAYOUT_TABS.findIndex(([v]) => v === layoutTab) * 100}%)`,
+            }}
+          />
+          {LAYOUT_TABS.map(([value, label]) => (
             <button
               key={value}
               onClick={() => setLayoutTab(value)}
-              className={`flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-150 ${
-                layoutTab === value
-                  ? "bg-blue/20 text-blue"
-                  : "text-text-muted active:scale-95"
+              aria-pressed={layoutTab === value}
+              className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+                layoutTab === value ? "text-white" : "text-text-muted"
               }`}
             >
               {label}
@@ -394,9 +409,9 @@ export default function DrillingSpecsForm({
         <div className="grid grid-cols-3 gap-3">
           {layoutTab === "dual" && (
             <>
-              {layoutField("drilling_angle", "Drill angle °")}
+              {layoutField("drilling_angle", "Drill angle °", "decimal")}
               {layoutField("pin_to_pap", 'Pin-to-PAP "')}
-              {layoutField("val_angle", "VAL angle °")}
+              {layoutField("val_angle", "VAL angle °", "decimal")}
             </>
           )}
           {layoutTab === "vls" && (
@@ -415,16 +430,14 @@ export default function DrillingSpecsForm({
           )}
         </div>
         <p className="mt-2 text-[10px] leading-relaxed text-text-muted">
-          Enter the system you know — the others are filled in automatically.
+          The other systems fill in automatically.
         </p>
       </div>
 
       <div className="glass p-4">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-            Drilling specs
-          </p>
-          <label className="flex items-center gap-2 text-xs text-text-muted">
+          <h2 className="text-sm font-bold">Drilling specs</h2>
+          <label className="-my-2 flex min-h-10 items-center gap-2 text-xs text-text-muted">
             <input
               type="checkbox"
               checked={draft.no_thumb}
@@ -516,21 +529,21 @@ export default function DrillingSpecsForm({
             </>
           )}
         </div>
-        <div className="mt-3">
-          <label className="mb-1 block text-xs text-text-muted">
+        <label className="mt-3 block">
+          <span className="mb-1 block text-xs text-text-muted">
             Date drilled
-          </label>
+          </span>
           <input
             type="date"
             value={draft.date_drilled ?? ""}
             onChange={(e) =>
               onChange({ ...draft, date_drilled: e.target.value })
             }
-            className="w-full rounded-lg border border-border bg-surface-light px-3 py-2.5 text-sm text-text-primary outline-none focus:border-blue"
+            className="h-11 w-full rounded-lg border border-border bg-surface-light px-3 text-sm text-text-primary outline-none focus:border-blue"
           />
-        </div>
-        <div className="mt-3">
-          <label className="mb-1 block text-xs text-text-muted">Notes</label>
+        </label>
+        <label className="mt-3 block">
+          <span className="mb-1 block text-xs text-text-muted">Notes</span>
           <textarea
             value={draft.notes ?? ""}
             onChange={(e) => onChange({ ...draft, notes: e.target.value })}
@@ -538,7 +551,7 @@ export default function DrillingSpecsForm({
             maxLength={500}
             className="w-full rounded-lg border border-border bg-surface-light px-3 py-2.5 text-sm text-text-primary outline-none focus:border-blue"
           />
-        </div>
+        </label>
       </div>
     </div>
   );

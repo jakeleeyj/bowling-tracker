@@ -92,7 +92,7 @@ export default function SessionSetup({
           onClick={onStart}
           className="mt-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
         >
-          Start Bowling
+          Start bowling
         </button>
       </div>
     </div>

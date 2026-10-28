@@ -100,7 +100,9 @@ export default function AvatarPicker({
     <div>
       <button
         onClick={() => setShowPicker(!showPicker)}
-        className="group relative"
+        aria-label="Change avatar"
+        aria-expanded={showPicker}
+        className="group relative rounded-full transition-transform duration-150 ease-out active:scale-[0.96]"
         disabled={uploading}
       >
         <Avatar name={name} avatarUrl={currentUrl} size="lg" />
@@ -121,7 +123,8 @@ export default function AvatarPicker({
                 onClick={() => handleColour(i)}
                 disabled={uploading}
                 aria-label={`Colour ${i + 1}`}
-                className={`h-9 w-9 rounded-full bg-gradient-to-br ${g} active:scale-90 disabled:opacity-50 ${
+                aria-pressed={parseGradientTag(currentUrl) === i}
+                className={`h-10 w-10 rounded-full bg-gradient-to-br ${g} transition-[color,background-color,transform] duration-150 active:scale-[0.94] disabled:opacity-60 ${
                   parseGradientTag(currentUrl) === i
                     ? "ring-2 ring-white ring-offset-2 ring-offset-surface"
                     : ""
@@ -138,7 +141,8 @@ export default function AvatarPicker({
                 key={p.id}
                 onClick={() => handlePreset(p.emoji)}
                 disabled={uploading}
-                className="flex h-12 w-full items-center justify-center rounded-lg bg-surface-light text-2xl active:scale-90 disabled:opacity-50"
+                aria-label={`Use ${p.id} avatar`}
+                className="flex h-12 w-full items-center justify-center rounded-lg bg-surface-light text-2xl transition-[color,background-color,transform] duration-150 active:scale-[0.94] disabled:opacity-60"
               >
                 {p.emoji}
               </button>
@@ -147,16 +151,25 @@ export default function AvatarPicker({
           <button
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-xs font-semibold text-text-secondary active:scale-[0.97] disabled:opacity-50"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border-light text-xs font-semibold text-text-secondary transition-[transform,background-color] duration-150 active:scale-[0.97] active:bg-white/5 disabled:opacity-60"
           >
-            <Upload size={14} />
-            {uploading ? "Uploading..." : "Upload Photo"}
+            {uploading ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                Uploading
+              </>
+            ) : (
+              <>
+                <Upload size={14} />
+                Upload photo
+              </>
+            )}
           </button>
           {currentUrl && (
             <button
               onClick={handleRemove}
               disabled={uploading}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold text-text-muted active:scale-[0.97] disabled:opacity-50"
+              className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-lg text-xs font-semibold text-text-muted transition-[transform,background-color] duration-150 active:scale-[0.97] active:bg-white/5 disabled:opacity-60"
             >
               <Trash2 size={14} />
               Remove and use default

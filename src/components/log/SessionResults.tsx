@@ -125,7 +125,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
         <>
           <div className="animate-results-fade mb-1">
             <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">
-              Calibration Complete
+              Calibration complete
             </span>
           </div>
           <div className="animate-results-flash mb-1">
@@ -219,7 +219,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
       {showAchievements && data.unlockedAchievements.length > 0 && (
         <div className="animate-results-fade mb-6 w-full max-w-[300px]">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gold">
-            Achievement Unlocked!
+            Achievement unlocked
           </p>
           <div className="flex flex-col gap-2">
             {data.unlockedAchievements.map((a: AchievementDef) => (
@@ -240,9 +240,9 @@ export default function SessionResults({ data }: { data: ResultsData }) {
 
       {data.isNewPB && (
         <div className="animate-results-flash mb-4 rounded-xl bg-gold/10 px-5 py-3">
-          <p className="text-sm font-extrabold text-gold">New Personal Best!</p>
+          <p className="text-sm font-extrabold text-gold">New personal best</p>
           <p className="text-[10px] text-text-muted">
-            {data.sessionHigh} pins — your new high game
+            {data.sessionHigh} pins, your new high game
           </p>
         </div>
       )}

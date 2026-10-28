@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
+import { Skeleton } from "@/components/Skeleton";
 import { searchCatalog, type CatalogBall } from "@/lib/catalog";
 
 type CatalogState =
@@ -83,7 +84,7 @@ export default function BallPicker({
         <button
           onClick={onClear}
           aria-label="Change ball"
-          className="shrink-0 rounded-full p-2 text-text-muted active:scale-90"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-transform duration-150 active:scale-[0.94]"
         >
           <X size={16} />
         </button>
@@ -94,7 +95,7 @@ export default function BallPicker({
   if (catalog.status === "error") {
     return (
       <p className="text-xs text-text-muted">
-        Ball search is offline, enter specs manually.
+        Ball search is offline. Enter specs manually.
       </p>
     );
   }
@@ -111,12 +112,13 @@ export default function BallPicker({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by ball name, e.g. Portal"
+          aria-label="Search ball catalog"
           autoComplete="off"
-          className="w-full rounded-lg border border-border bg-surface-light py-2.5 pl-9 pr-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+          className="h-11 w-full rounded-lg border border-border bg-surface-light pl-9 pr-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
         />
       </div>
       {catalog.status === "loading" && (
-        <p className="mt-1.5 text-xs text-text-muted">Loading catalog…</p>
+        <Skeleton className="mt-2 h-4 w-32" />
       )}
       {catalog.status === "ready" && query.trim() !== "" && (
         <ul className="glass-strong mt-2 max-h-72 overflow-y-auto">
@@ -133,7 +135,7 @@ export default function BallPicker({
                   onPick(ball);
                   setQuery("");
                 }}
-                className="flex w-full items-center gap-3 px-3 py-2.5 text-left active:bg-surface-light"
+                className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors duration-150 active:bg-surface-light"
               >
                 {ball.thumbUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element

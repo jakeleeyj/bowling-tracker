@@ -23,7 +23,7 @@ export default function RankInfoModal() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 active:bg-white/10"
+        className="-my-1.5 flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition-[background-color,transform] duration-150 active:scale-[0.94] active:bg-white/10"
         aria-label="How ranking works"
       >
         <Info size={14} className="text-text-muted" />
@@ -34,19 +34,26 @@ export default function RankInfoModal() {
           className="fixed inset-0 z-[100] flex items-center justify-center p-4"
           onClick={() => setOpen(false)}
         >
-          <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm" />
+          <div className="absolute inset-0 animate-fade-in bg-surface/80 backdrop-blur-sm" />
 
           <div
-            className="glass-strong relative z-10 w-full max-w-[400px] max-h-[80vh] overflow-y-auto rounded-2xl p-5"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rank-info-title"
+            className="glass-strong relative z-10 max-h-[80vh] w-full max-w-[400px] animate-scale-in overflow-y-auto rounded-2xl p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-text-primary">
-                How Ranking Works
+              <h2
+                id="rank-info-title"
+                className="text-base font-extrabold text-text-primary"
+              >
+                How ranking works
               </h2>
               <button
                 onClick={() => setOpen(false)}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 active:bg-white/10"
+                aria-label="Close"
+                className="-my-1.5 -mr-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition-[background-color,transform] duration-150 active:scale-[0.94] active:bg-white/10"
               >
                 <X size={14} className="text-text-muted" />
               </button>
@@ -56,7 +63,7 @@ export default function RankInfoModal() {
               <p>
                 You earn <span className="font-bold text-text-primary">LP</span>{" "}
                 (League Points) each game based on your score. Games above 185
-                earn LP, games below 185 lose LP. Recent games count more — your
+                earn LP, games below 185 lose LP. Recent games count more. Your
                 last 60 games have full impact, older games gradually fade.
               </p>
               <p>
@@ -74,7 +81,7 @@ export default function RankInfoModal() {
             </div>
 
             <h3 className="mb-2 text-[11px] font-bold uppercase tracking-wide text-text-muted">
-              Rank Tiers
+              Rank tiers
             </h3>
             <div className="space-y-1">
               {RANK_TABLE.map((r) => (
@@ -85,7 +92,9 @@ export default function RankInfoModal() {
                   <span className={`text-[12px] font-bold ${r.color}`}>
                     {r.name}
                   </span>
-                  <span className="text-[11px] text-text-muted">{r.lp} LP</span>
+                  <span className="text-[11px] tabular-nums text-text-muted">
+                    {r.lp} LP
+                  </span>
                 </div>
               ))}
             </div>

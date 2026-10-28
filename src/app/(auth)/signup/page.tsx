@@ -100,7 +100,7 @@ export default function SignupPage() {
           </p>
           <Link
             href="/login"
-            className="mt-6 inline-block text-sm font-medium text-blue"
+            className="-mx-2 mt-4 inline-block px-2 py-2.5 text-sm font-medium text-blue transition-opacity active:opacity-60"
           >
             Go to sign in
           </Link>
@@ -123,48 +123,71 @@ export default function SignupPage() {
       </div>
 
       {/* Form card */}
-      <div className="glass-strong relative z-10 w-full max-w-sm p-6">
+      <div className="glass-strong relative z-10 w-full max-w-sm p-6 lg:max-w-md">
         <form onSubmit={handleSignup} className="flex flex-col gap-3">
           <input
             type="text"
+            name="name"
+            autoComplete="name"
+            aria-label="Display name"
             placeholder="Display name"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             required
-            className="rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+            className="rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-blue"
           />
           <input
             type="email"
+            name="email"
+            autoComplete="email"
+            aria-label="Email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+            className="rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-blue"
           />
           <input
             type="password"
+            name="password"
+            autoComplete="new-password"
+            aria-label="Password"
             placeholder="Password (min 6 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+            className="rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-blue"
           />
 
-          {error && <p className="text-sm text-red">{error}</p>}
+          {error && (
+            <p role="alert" className="text-sm text-red">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
             disabled={loading}
-            className="mt-1 rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold shadow-lg shadow-blue/25 transition-opacity disabled:opacity-50"
+            className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
           >
-            {loading ? "Creating account..." : "Sign Up"}
+            {loading ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                Creating account
+              </>
+            ) : (
+              "Sign up"
+            )}
           </button>
         </form>
 
         <p className="mt-5 text-center text-sm text-text-muted">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-blue">
+          <Link
+            href="/login"
+            className="-mx-2 -my-2.5 inline-block px-2 py-2.5 font-medium text-blue transition-opacity active:opacity-60"
+          >
             Sign in
           </Link>
         </p>

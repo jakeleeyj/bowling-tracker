@@ -22,12 +22,12 @@ function layoutLabel(ball: Ball): string {
         ? { over: Number(ball.pap_over), up: Number(ball.pap_up ?? 0) }
         : { ...TWO_HANDED_PAP };
     const t = dualAngleTo2LS(dual, pap);
-    return `2LS — ${t.pinToPap}" × ${t.psaToPap}" × ${t.pinToCog}"`;
+    return `2LS: ${t.pinToPap}" × ${t.psaToPap}" × ${t.pinToCog}"`;
   }
   if (ball.core_type === "symmetric") {
-    return `VLS — ${dual.pinToPap}" × ${ball.psa_to_pap ?? dualAngleTo2LS(dual).psaToPap}" × ${ball.pin_buffer ?? "?"}"`;
+    return `VLS: ${dual.pinToPap}" × ${ball.psa_to_pap ?? dualAngleTo2LS(dual).psaToPap}" × ${ball.pin_buffer ?? "?"}"`;
   }
-  return `Dual — ${dual.drillingAngle}° × ${dual.pinToPap}" × ${dual.valAngle}°`;
+  return `Dual: ${dual.drillingAngle}° × ${dual.pinToPap}" × ${dual.valAngle}°`;
 }
 
 export default function BallCard({
@@ -40,7 +40,7 @@ export default function BallCard({
   return (
     <button
       onClick={onClick}
-      className="glass flex w-full items-center gap-3 rounded-xl p-4 text-left transition-all duration-150 active:scale-[0.98]"
+      className="glass flex w-full items-center gap-3 rounded-xl p-4 text-left transition-[transform,background-color] duration-150 ease-out active:scale-[0.98] active:bg-white/5"
     >
       {ball.image_url ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -58,7 +58,7 @@ export default function BallCard({
         <p className="truncate text-sm font-bold text-text-primary">
           {ball.name}
         </p>
-        <p className="truncate text-xs text-text-muted">
+        <p className="truncate text-xs tabular-nums text-text-muted">
           {[
             ball.brand,
             ball.weight_lbs ? `${ball.weight_lbs} lbs` : null,

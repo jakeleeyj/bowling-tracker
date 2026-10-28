@@ -8,7 +8,7 @@ type Tab = "overview" | "spares";
 function TrendChart({
   values,
   avg,
-  color = "#3b82f6",
+  color = "var(--color-blue)",
   suffix = "",
   highlights,
 }: {
@@ -113,7 +113,7 @@ function TrendChart({
           y={padding.top - 8}
           textAnchor="end"
           fontSize={7}
-          fill="#64748b"
+          fill="var(--color-text-muted)"
         >
           each point = avg of {bucketSize} games
         </text>
@@ -122,15 +122,15 @@ function TrendChart({
       {values.map((s, i) => {
         const isHighlighted = highlights?.[i] ?? false;
         const dotColor = isHighlighted
-          ? "#22c55e"
+          ? "var(--color-green)"
           : s >= avg
             ? color
-            : "#334155";
+            : "var(--color-surface-light)";
         const dotStroke = isHighlighted
-          ? "#22c55e"
+          ? "var(--color-green)"
           : s >= avg
             ? color
-            : "#64748b";
+            : "var(--color-text-muted)";
         return (
           <g key={i}>
             <circle
@@ -148,7 +148,11 @@ function TrendChart({
                 textAnchor="middle"
                 fontSize={7}
                 fontWeight="bold"
-                fill={isHighlighted ? "#22c55e" : "#e2e8f0"}
+                fill={
+                  isHighlighted
+                    ? "var(--color-green)"
+                    : "var(--color-text-primary)"
+                }
               >
                 {s}
                 {suffix}
@@ -199,15 +203,15 @@ function LeaveItem({
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-semibold">{label} leave</span>
           {isSplitLeave && (
-            <span className="text-[9px] font-semibold text-red">SPLIT</span>
+            <span className="text-[10px] font-semibold text-red">Split</span>
           )}
         </div>
-        <p className="text-[10px] text-text-muted">
+        <p className="text-[10px] text-text-muted tabular-nums">
           {converted}/{attempts} converted
         </p>
       </div>
       <span
-        className={`text-sm font-bold ${rate === 100 ? "text-green" : rate >= 50 ? "text-gold" : "text-text-secondary"}`}
+        className={`text-sm font-bold tabular-nums ${rate === 100 ? "text-green" : rate >= 50 ? "text-gold" : "text-text-secondary"}`}
       >
         {rate}%
       </span>
@@ -227,8 +231,11 @@ export default function StatsContent({ overview, leaves }: Props) {
 
   if (totalGames === 0) {
     return (
-      <div className="glass p-8 text-center">
-        <p className="text-sm text-text-muted">No games in this range.</p>
+      <div className="glass flex flex-col items-center px-6 py-10 text-center">
+        <p className="text-sm font-semibold">No games in this range</p>
+        <p className="mt-1 text-xs text-text-muted">
+          Change the filter or log a game
+        </p>
       </div>
     );
   }
@@ -272,23 +279,25 @@ export default function StatsContent({ overview, leaves }: Props) {
   return (
     <div>
       {/* Tabs */}
-      <div className="mb-5 flex rounded-lg bg-surface-light p-[3px]">
+      <div className="relative mb-5 flex h-11 rounded-lg bg-surface-light p-[3px]">
+        <span
+          aria-hidden
+          className={`absolute inset-y-[3px] left-[3px] w-[calc(50%-3px)] rounded-md bg-blue shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${tab === "spares" ? "translate-x-full" : ""}`}
+        />
         <button
           onClick={() => setTab("overview")}
-          className={`flex-1 rounded-md py-[6px] text-[13px] transition-colors ${
-            tab === "overview"
-              ? "bg-blue font-semibold text-white"
-              : "text-text-muted"
+          aria-pressed={tab === "overview"}
+          className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+            tab === "overview" ? "text-white" : "text-text-muted"
           }`}
         >
           Overview
         </button>
         <button
           onClick={() => setTab("spares")}
-          className={`flex-1 rounded-md py-[6px] text-[13px] transition-colors ${
-            tab === "spares"
-              ? "bg-blue font-semibold text-white"
-              : "text-text-muted"
+          aria-pressed={tab === "spares"}
+          className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+            tab === "spares" ? "text-white" : "text-text-muted"
           }`}
         >
           Spares
@@ -296,143 +305,153 @@ export default function StatsContent({ overview, leaves }: Props) {
       </div>
 
       {totalGames === 0 ? (
-        <div className="glass p-8 text-center">
-          <p className="text-sm text-text-muted">No games in this range.</p>
+        <div className="glass flex flex-col items-center px-6 py-10 text-center">
+          <p className="text-sm font-semibold">No games in this range</p>
+          <p className="mt-1 text-xs text-text-muted">
+            Change the filter or log a game
+          </p>
         </div>
       ) : tab === "overview" ? (
         <>
           {/* Overview stats */}
           <div className="mb-5 grid grid-cols-2 gap-2">
-            <div className="glass p-3 text-center">
-              <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            <div className="glass px-3 py-3.5 text-center">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
                 Average
               </div>
-              <div className="text-2xl font-extrabold">{avg}</div>
-            </div>
-            <div className="glass p-3 text-center">
-              <div className="text-[10px] uppercase tracking-wide text-text-muted">
-                High Game
+              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
+                {avg}
               </div>
-              <div className="text-2xl font-extrabold text-gold">{high}</div>
             </div>
-            <div className="glass p-3 text-center">
-              <div className="text-[10px] uppercase tracking-wide text-text-muted">
-                Low Game
+            <div className="glass px-3 py-3.5 text-center">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                High game
               </div>
-              <div className="text-2xl font-extrabold">{low}</div>
+              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-gold">
+                {high}
+              </div>
             </div>
-            <div className="glass p-3 text-center">
-              <div className="text-[10px] uppercase tracking-wide text-text-muted">
-                Clean Games
+            <div className="glass px-3 py-3.5 text-center">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                Low game
               </div>
-              <div className="text-2xl font-extrabold text-green">
+              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
+                {low}
+              </div>
+            </div>
+            <div className="glass px-3 py-3.5 text-center">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                Clean games
+              </div>
+              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
                 {clean_games}
               </div>
             </div>
           </div>
 
-          {/* Score Trend */}
+          {/* Score trend */}
           <div className="glass mb-5 p-4">
-            <h3 className="mb-2 text-xs font-bold text-text-secondary">
-              Score Trend
-            </h3>
+            <h2 className="mb-2 text-sm font-bold text-text-secondary">
+              Score trend
+            </h2>
             <TrendChart values={scores} avg={avg} highlights={clean_flags} />
           </div>
 
           {/* Strike & Spare rates */}
           <div className="mb-5 grid grid-cols-2 gap-2">
-            <div className="glass p-3">
-              <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            <div className="glass px-3 py-3.5">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
                 Strike %
               </div>
-              <div className="text-2xl font-extrabold text-green">
+              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
                 {strike_rate}%
               </div>
-              <div className="text-[10px] text-text-muted">
+              <div className="mt-1.5 text-[10px] text-text-muted tabular-nums">
                 {strikes}/{total_frames_played}
               </div>
             </div>
-            <div className="glass p-3">
-              <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            <div className="glass px-3 py-3.5">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
                 Spare %
               </div>
-              <div className="text-2xl font-extrabold text-gold">
+              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-gold">
                 {spare_rate}%
               </div>
-              <div className="text-[10px] text-text-muted">
+              <div className="mt-1.5 text-[10px] text-text-muted tabular-nums">
                 {spares_converted}/{spare_opportunities}
               </div>
             </div>
-            <div className="glass p-3">
-              <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            <div className="glass px-3 py-3.5">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
                 Double %
               </div>
-              <div className="text-2xl font-extrabold text-green">
+              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
                 {double_rate}%
               </div>
-              <div className="text-[10px] text-text-muted">
+              <div className="mt-1.5 text-[10px] text-text-muted tabular-nums">
                 {doubles}/{double_opportunities} back-to-back
               </div>
             </div>
-            <div className="glass p-3">
-              <div className="text-[10px] uppercase tracking-wide text-text-muted">
+            <div className="glass px-3 py-3.5">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
                 Pocket %
               </div>
-              <div className="text-2xl font-extrabold text-blue">
+              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-blue">
                 {pocket_rate}%
               </div>
-              <div className="text-[10px] text-text-muted">
+              <div className="mt-1.5 text-[10px] text-text-muted tabular-nums">
                 {pocket_hits}/{first_ball_frames} first balls
               </div>
             </div>
           </div>
 
           {/* Clean Rate */}
-          <div className="glass p-4">
-            <div className="text-[10px] uppercase text-text-muted">
-              Clean Rate
+          <div className="glass px-3 py-3.5">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              Clean rate
             </div>
-            <div className="text-2xl font-extrabold text-green">
+            <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
               {clean_rate}%
             </div>
-            <div className="text-[10px] text-text-muted">
+            <div className="mt-1.5 text-[10px] text-text-muted tabular-nums">
               {clean_games}/{detailed_games} games
             </div>
           </div>
         </>
       ) : /* SPARES TAB */
       total_spare_opportunities === 0 ? (
-        <div className="glass p-8 text-center">
-          <p className="text-sm text-text-muted">
-            Log games with detailed entry to see spare stats.
+        <div className="glass flex flex-col items-center px-6 py-10 text-center">
+          <p className="text-sm font-semibold">No spare data yet</p>
+          <p className="mt-1 text-xs text-text-muted">
+            Log games with detailed entry to fill this
           </p>
         </div>
       ) : (
         <>
           {/* Spare Conversion Rate */}
-          <div className="glass mb-4 p-4">
-            <div className="text-[10px] uppercase text-text-muted">
-              Spare Conversion
+          <div className="glass mb-4 px-3 py-3.5">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              Spare conversion
             </div>
             <div
-              className={`text-2xl font-extrabold ${spare_rate >= 50 ? "text-gold" : "text-text-primary"}`}
+              className={`mt-1.5 text-2xl leading-none font-extrabold tabular-nums ${spare_rate >= 50 ? "text-gold" : "text-text-primary"}`}
             >
               {spare_rate}%
             </div>
-            <div className="text-[10px] text-text-muted">
+            <div className="mt-1.5 text-[10px] text-text-muted tabular-nums">
               {leaves.total_spares_converted}/{total_spare_opportunities}{" "}
               attempts
             </div>
           </div>
 
-          {/* Practice These */}
+          {/* Practice these */}
           {most_missed.length > 0 && (
             <div className="glass mb-4 border border-gold/20 p-4">
-              <h3 className="mb-2 text-xs font-bold text-gold">
-                Practice These
-              </h3>
+              <h2 className="mb-2 text-sm font-bold text-gold">
+                Practice these
+              </h2>
               <p className="mb-3 text-[10px] text-text-muted">
-                Your most missed leaves — focus here to improve
+                Your most missed leaves
               </p>
               <div className="flex flex-col gap-1.5">
                 {most_missed.map((l) => (
@@ -448,31 +467,31 @@ export default function StatsContent({ overview, leaves }: Props) {
             </div>
           )}
 
-          {/* Spare Conversion Trend */}
+          {/* Spare conversion trend */}
           {spare_conv_trend.length > 1 && (
             <div className="glass mb-4 p-4">
-              <h3 className="mb-2 text-xs font-bold text-text-secondary">
-                Spare Conversion Trend
-              </h3>
+              <h2 className="mb-2 text-sm font-bold text-text-secondary">
+                Spare conversion trend
+              </h2>
               <TrendChart
                 values={spare_conv_trend}
                 avg={spare_rate}
-                color="#f59e0b"
+                color="var(--color-gold)"
                 suffix="%"
               />
             </div>
           )}
 
-          {/* Spare Breakdown Summary */}
+          {/* Spare breakdown Summary */}
           {total_spare_opportunities > 0 && (
             <div className="glass mb-4 p-4">
-              <h3 className="mb-3 text-xs font-bold text-text-secondary">
-                Spare Breakdown
-              </h3>
+              <h2 className="mb-3 text-sm font-bold text-text-secondary">
+                Spare breakdown
+              </h2>
               <div className="flex flex-col gap-2.5">
                 {[
                   {
-                    label: "Single Pin",
+                    label: "Single pin",
                     attempts: single_pin.attempts,
                     converted: single_pin.converted,
                     rate: single_pin.rate,
@@ -480,7 +499,7 @@ export default function StatsContent({ overview, leaves }: Props) {
                     barColor: "bg-green",
                   },
                   {
-                    label: "Multi Pin",
+                    label: "Multi pin",
                     attempts: multi_pin.attempts,
                     converted: multi_pin.converted,
                     rate: multi_pin.rate,
@@ -508,11 +527,13 @@ export default function StatsContent({ overview, leaves }: Props) {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-semibold">{label}</p>
-                          <p className="text-[10px] text-text-muted">
+                          <p className="text-[10px] text-text-muted tabular-nums">
                             {converted}/{attempts} converted
                           </p>
                         </div>
-                        <span className={`text-lg font-extrabold ${textColor}`}>
+                        <span
+                          className={`text-lg font-extrabold tabular-nums ${textColor}`}
+                        >
                           {rate}%
                         </span>
                       </div>
@@ -532,10 +553,10 @@ export default function StatsContent({ overview, leaves }: Props) {
           {/* Leave Log — grouped by category */}
           {single_pin_leaves.length > 0 && (
             <div className="glass mb-4 p-4">
-              <h3 className="mb-2 text-xs font-bold text-green">
-                Single Pin Leaves
-              </h3>
-              <p className="mb-3 text-[10px] text-text-muted">
+              <h2 className="mb-2 text-sm font-bold text-green">
+                Single pin leaves
+              </h2>
+              <p className="mb-3 text-[10px] text-text-muted tabular-nums">
                 {single_pin.converted}/{single_pin.attempts} converted (
                 {single_pin.rate}%)
               </p>
@@ -555,10 +576,10 @@ export default function StatsContent({ overview, leaves }: Props) {
 
           {multi_pin_leaves.length > 0 && (
             <div className="glass mb-4 p-4">
-              <h3 className="mb-2 text-xs font-bold text-gold">
-                Multi Pin Leaves
-              </h3>
-              <p className="mb-3 text-[10px] text-text-muted">
+              <h2 className="mb-2 text-sm font-bold text-gold">
+                Multi pin leaves
+              </h2>
+              <p className="mb-3 text-[10px] text-text-muted tabular-nums">
                 {multi_pin.converted}/{multi_pin.attempts} converted (
                 {multi_pin.rate}%)
               </p>
@@ -578,8 +599,8 @@ export default function StatsContent({ overview, leaves }: Props) {
 
           {split_leaves.length > 0 && (
             <div className="glass p-4">
-              <h3 className="mb-2 text-xs font-bold text-red">Split Leaves</h3>
-              <p className="mb-3 text-[10px] text-text-muted">
+              <h2 className="mb-2 text-sm font-bold text-red">Split leaves</h2>
+              <p className="mb-3 text-[10px] text-text-muted tabular-nums">
                 {splits.converted}/{splits.attempts} converted ({splits.rate}%)
               </p>
               <div className="flex flex-col gap-1.5">

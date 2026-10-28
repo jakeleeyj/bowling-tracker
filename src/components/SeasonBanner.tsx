@@ -67,13 +67,13 @@ export default function SeasonBanner() {
     "7d": {
       icon: Clock,
       title: `${season.shortName} ends in ${daysLeft} ${daysLeft === 1 ? "day" : "days"}`,
-      body: "Final stretch — last chance to lock in your rank for the season.",
+      body: "Final stretch. Last chance to lock in your rank for the season.",
       accent: "border-gold/40 bg-gold/10 text-gold",
     },
     started: {
       icon: Sparkles,
       title: `${season.name} has begun`,
-      body: `S${season.number - 1} ended — LP soft-reset toward 1200. Calibration starts fresh.`,
+      body: `S${season.number - 1} ended. LP soft-reset toward 1200. Calibration starts fresh.`,
       accent: "border-green/30 bg-green/10 text-green",
     },
   };

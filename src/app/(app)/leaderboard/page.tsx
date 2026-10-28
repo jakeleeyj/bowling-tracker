@@ -117,7 +117,9 @@ export default async function LeaderboardPage() {
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <span className={`text-[10px] font-semibold ${urgency}`}>
+              <span
+                className={`text-[10px] font-semibold tabular-nums ${urgency}`}
+              >
                 {formatDaysLeft(daysLeft)}
               </span>
             </div>
@@ -153,7 +155,7 @@ export default async function LeaderboardPage() {
                   <span className="text-lg font-extrabold text-text-muted">
                     Calibrating
                   </span>
-                  <p className="text-[11px] text-text-muted">
+                  <p className="text-[11px] tabular-nums text-text-muted">
                     {CALIBRATION_GAMES - currentUserEntry.games} more game
                     {CALIBRATION_GAMES - currentUserEntry.games !== 1
                       ? "s"
@@ -178,7 +180,7 @@ export default async function LeaderboardPage() {
                       <ChevronDown size={16} className="text-red" />
                     )}
                   </div>
-                  <p className="text-[11px] text-text-muted">
+                  <p className="text-[11px] tabular-nums text-text-muted">
                     {formatLP(currentUserEntry.mmr)} LP &bull;{" "}
                     {currentUserEntry.seasonGames > 0 ? (
                       <>
@@ -203,7 +205,7 @@ export default async function LeaderboardPage() {
                   style={{ width: `${currentUserEntry.progress}%` }}
                 />
               </div>
-              <div className="mt-1 flex justify-between text-[9px] text-text-muted">
+              <div className="mt-1 flex justify-between text-[9px] tabular-nums text-text-muted">
                 <span>
                   {currentUserEntry.rank.name}{" "}
                   {currentUserEntry.rank.division ?? ""}
@@ -236,9 +238,10 @@ export default async function LeaderboardPage() {
         </p>
       )}
       {rankings.length === 0 ? (
-        <div className="glass p-8 text-center">
-          <p className="text-sm text-text-muted">
-            No scores yet. Be the first to log a game!
+        <div className="glass flex flex-col items-center px-6 py-10 text-center">
+          <p className="text-sm font-semibold">No scores yet</p>
+          <p className="mt-1 text-xs text-text-muted">
+            Players appear here after their first game.
           </p>
         </div>
       ) : (
@@ -255,14 +258,14 @@ export default async function LeaderboardPage() {
               <Link
                 key={entry.id}
                 href={href}
-                className={`glass flex items-center gap-2.5 p-2.5 active:bg-white/[0.03] ${
+                className={`glass flex items-center gap-2.5 p-2.5 transition-colors duration-150 active:bg-white/[0.03] ${
                   entry.isCurrentUser && !entry.isCalibrating
                     ? `border ${entry.rank.borderColor}`
                     : ""
                 }`}
               >
                 {/* Position */}
-                <span className="w-5 text-center text-xs font-bold text-text-muted">
+                <span className="w-5 text-center text-xs font-bold tabular-nums text-text-muted">
                   {entry.isCalibrating ? "-" : position}
                 </span>
 
@@ -296,7 +299,7 @@ export default async function LeaderboardPage() {
                   <p className="truncate text-[13px] font-semibold text-text-primary">
                     {entry.isCurrentUser ? "You" : entry.name}
                   </p>
-                  <p className="text-[10px] text-text-muted">
+                  <p className="text-[10px] tabular-nums text-text-muted">
                     {entry.isCalibrating ? (
                       <span className="text-text-muted">
                         {entry.isUnranked
@@ -325,7 +328,7 @@ export default async function LeaderboardPage() {
                 </div>
 
                 {/* LP + trend */}
-                <span className="shrink-0 text-xs font-bold text-text-muted">
+                <span className="shrink-0 text-xs font-bold tabular-nums text-text-muted">
                   {entry.isCalibrating ? "--" : `${formatLP(entry.mmr)} LP`}
                 </span>
 

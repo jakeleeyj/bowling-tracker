@@ -1,16 +1,15 @@
-import { BowlingSpinner, Skeleton } from "@/components/Skeleton";
+import { Skeleton, SkeletonCard } from "@/components/Skeleton";
 
 export default function AchievementsLoading() {
   return (
-    <div>
-      <div className="mb-5 flex items-center gap-2">
-        <Skeleton className="h-5 w-5 rounded" />
-        <Skeleton className="h-6 w-32" />
-      </div>
-
-      <div className="flex flex-col items-center py-16">
-        <BowlingSpinner />
-        <p className="mt-3 text-sm text-text-muted">Loading...</p>
+    <div aria-busy="true" aria-label="Loading achievements">
+      <Skeleton className="mb-2 h-7 w-40" />
+      <Skeleton className="mb-5 h-5 w-24" />
+      <Skeleton className="mb-3 h-5 w-16" />
+      <div className="flex flex-col gap-2">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <SkeletonCard key={i} className="h-[70px]" />
+        ))}
       </div>
     </div>
   );

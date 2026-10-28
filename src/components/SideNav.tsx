@@ -88,7 +88,7 @@ export default function SideNav() {
         ) : (
           <Plus size={18} strokeWidth={2.5} className="shrink-0" />
         )}
-        {hasSavedSession ? "Continue Session" : "Log a Session"}
+        {hasSavedSession ? "Continue session" : "Log a session"}
       </button>
 
       {/* Nav items */}

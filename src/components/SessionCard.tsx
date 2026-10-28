@@ -548,10 +548,10 @@ function SessionStats({
     <div className="mt-2">
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-surface-light/50 py-2 text-[11px] font-semibold text-text-muted active:bg-surface-light"
+        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-surface-light/50 py-2.5 text-[11px] font-semibold text-text-muted transition-colors duration-150 active:bg-surface-light"
       >
         <BarChart3 size={12} />
-        {show ? "Hide Stats" : "View Stats"}
+        {show ? "Hide stats" : "View stats"}
       </button>
 
       {show && (
@@ -590,7 +590,7 @@ function SessionStats({
               </p>
               {singlePinLeaves.length > 0 && (
                 <LeaveGroup
-                  label="Single Pin"
+                  label="Single pin"
                   color="text-green"
                   dotColor="bg-green"
                   leaves={singlePinLeaves}
@@ -598,7 +598,7 @@ function SessionStats({
               )}
               {multiPinLeaves.length > 0 && (
                 <LeaveGroup
-                  label="Multi Pin"
+                  label="Multi pin"
                   color="text-gold"
                   dotColor="bg-gold"
                   leaves={multiPinLeaves}
@@ -987,9 +987,10 @@ export default function SessionCard({
                         <button
                           onClick={handleSaveMeta}
                           disabled={savingMeta}
-                          className="flex-1 rounded-lg bg-blue/20 py-1.5 text-[11px] font-semibold text-blue active:bg-blue/30 disabled:opacity-50"
+                          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue/20 py-2.5 text-[11px] font-semibold text-blue transition-colors duration-150 active:bg-blue/30 disabled:opacity-60"
                         >
-                          {savingMeta ? "Saving..." : "Save"}
+                          {savingMeta && <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue/30 border-t-blue" />}
+                          {savingMeta ? "Saving" : "Save"}
                         </button>
                         <button
                           onClick={() => {
@@ -997,7 +998,7 @@ export default function SessionCard({
                             setEditVenue(venue ?? "");
                             setEditEvent(eventLabel ?? "");
                           }}
-                          className="flex-1 rounded-lg bg-surface-light py-1.5 text-[11px] font-semibold text-text-muted"
+                          className="flex-1 rounded-lg bg-surface-light py-2.5 text-[11px] font-semibold text-text-muted transition-colors duration-150 active:bg-white/10"
                         >
                           Cancel
                         </button>
@@ -1006,27 +1007,27 @@ export default function SessionCard({
                   ) : (
                     <button
                       onClick={() => setEditingMeta(true)}
-                      className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-surface-light/50 py-2 text-[11px] font-semibold text-text-muted active:bg-surface-light"
+                      className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-surface-light/50 py-2.5 text-[11px] font-semibold text-text-muted transition-colors duration-150 active:bg-surface-light"
                     >
                       <Pencil size={10} />
-                      Edit Venue / Event
+                      Edit venue / event
                     </button>
                   )}
                   <button
                     onClick={handleShare}
                     disabled={sharing}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue/10 py-2 text-[11px] font-semibold text-blue active:bg-blue/20 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue/10 py-2.5 text-[11px] font-semibold text-blue transition-colors duration-150 active:bg-blue/20 disabled:opacity-60"
                   >
-                    <Share2 size={12} />
-                    {sharing ? "Generating..." : "Share Scorecard"}
+                    {sharing ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue/30 border-t-blue" /> : <Share2 size={12} />}
+                    {sharing ? "Generating" : "Share scorecard"}
                   </button>
                   <button
                     onClick={handleDeleteSession}
                     disabled={deleting}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-red/10 py-2 text-[11px] font-semibold text-red active:bg-red/20 disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-red/10 py-2.5 text-[11px] font-semibold text-red transition-colors duration-150 active:bg-red/20 disabled:opacity-60"
                   >
-                    <Trash2 size={12} />
-                    {deleting ? "Deleting..." : "Delete Session"}
+                    {deleting ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-red/30 border-t-red" /> : <Trash2 size={12} />}
+                    {deleting ? "Deleting" : "Delete session"}
                   </button>
                 </div>
               )}
@@ -1115,13 +1116,14 @@ export default function SessionCard({
               <button
                 onClick={handleCaptureAndShare}
                 disabled={sharing}
-                className="flex-1 rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white active:scale-95 disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
               >
-                {sharing ? "Generating..." : "Share"}
+                {sharing && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+                {sharing ? "Generating" : "Share"}
               </button>
               <button
                 onClick={() => setShowShareOverlay(false)}
-                className="rounded-lg border border-border px-6 py-3 text-sm font-semibold text-text-secondary active:scale-95"
+                className="rounded-lg border border-border px-6 py-3 text-sm font-semibold text-text-secondary transition-[transform,background-color] duration-150 ease-out active:scale-[0.97] active:bg-white/5"
               >
                 Close
               </button>

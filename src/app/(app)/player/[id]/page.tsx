@@ -48,13 +48,13 @@ export default async function PlayerPage({
       <div>
         <Link
           href="/leaderboard"
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted"
+          className="-mt-2.5 mb-1.5 -ml-2 inline-flex items-center gap-1.5 px-2 py-2.5 text-sm text-text-muted transition-opacity active:opacity-60"
         >
           <ArrowLeft size={16} />
           Back
         </Link>
-        <div className="glass p-8 text-center">
-          <p className="text-sm text-text-muted">Player not found.</p>
+        <div className="glass flex flex-col items-center px-6 py-10 text-center">
+          <p className="text-sm font-semibold">Player not found</p>
         </div>
       </div>
     );
@@ -84,7 +84,7 @@ export default async function PlayerPage({
     <div>
       <Link
         href="/leaderboard"
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-muted active:text-text-primary"
+        className="-mt-2.5 mb-1.5 -ml-2 inline-flex items-center gap-1.5 px-2 py-2.5 text-sm text-text-muted transition-opacity active:opacity-60"
       >
         <ArrowLeft size={16} />
         Ranked
@@ -115,28 +115,34 @@ export default async function PlayerPage({
 
       {/* Stats */}
       <div className="mb-5 flex gap-2">
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+        <div className="glass flex-1 px-3 py-3.5 text-center">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
             Avg
           </div>
-          <div className="text-2xl font-extrabold">{avg}</div>
+          <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
+            {avg}
+          </div>
         </div>
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+        <div className="glass flex-1 px-3 py-3.5 text-center">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
             High
           </div>
-          <div className="text-2xl font-extrabold text-gold">{high}</div>
+          <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-gold">
+            {high}
+          </div>
         </div>
-        <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+        <div className="glass flex-1 px-3 py-3.5 text-center">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
             Games
           </div>
-          <div className="text-2xl font-extrabold">{totalGames}</div>
+          <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
+            {totalGames}
+          </div>
         </div>
       </div>
 
       {/* Recent sessions */}
-      <h2 className="mb-3 text-sm font-bold">Recent Sessions</h2>
+      <h2 className="mb-3 text-sm font-bold">Recent sessions</h2>
       <PlayerSessions
         playerId={id}
         playerName={profile.display_name}

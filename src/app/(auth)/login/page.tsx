@@ -75,35 +75,55 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="flex flex-col gap-3">
           <input
             type="email"
+            name="email"
+            autoComplete="email"
+            aria-label="Email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+            className="rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-blue"
           />
           <input
             type="password"
+            name="password"
+            autoComplete="current-password"
+            aria-label="Password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+            className="rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-blue"
           />
 
-          {error && <p className="text-sm text-red">{error}</p>}
+          {error && (
+            <p role="alert" className="text-sm text-red">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
             disabled={loading}
-            className="mt-1 rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold shadow-lg shadow-blue/25 transition-opacity disabled:opacity-50"
+            className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                Signing in
+              </>
+            ) : (
+              "Sign in"
+            )}
           </button>
         </form>
 
         <p className="mt-5 text-center text-sm text-text-muted">
           No account?{" "}
-          <Link href="/signup" className="font-medium text-blue">
+          <Link
+            href="/signup"
+            className="-mx-2 -my-2.5 inline-block px-2 py-2.5 font-medium text-blue transition-opacity active:opacity-60"
+          >
             Sign up
           </Link>
         </p>

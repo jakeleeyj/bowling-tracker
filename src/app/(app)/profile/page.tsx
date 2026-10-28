@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
-import { BowlingSpinner } from "@/components/Skeleton";
+import { Skeleton, SkeletonCard } from "@/components/Skeleton";
 import {
   LogOut,
   Smartphone,
@@ -17,6 +17,7 @@ import {
   Crown,
   Award,
   CircleDot,
+  Check,
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import ErrorCard from "@/components/ErrorCard";
@@ -32,6 +33,7 @@ import { getCurrentSeason } from "@/lib/seasons";
 import { ChevronDown } from "lucide-react";
 
 const SESSIONS_PER_PAGE = 20;
+const HISTORY_FILTERS = ["all", "ytd", "custom"] as const;
 
 interface HistoryFrame {
   frame_number: number;
@@ -330,10 +332,33 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div>
-        <div className="flex flex-col items-center justify-center py-20">
-          <BowlingSpinner />
-          <p className="mt-3 text-sm text-text-muted">Loading profile...</p>
+      <div aria-busy="true" aria-label="Loading profile">
+        <div className="mb-5 flex items-center justify-between">
+          <Skeleton className="h-7 w-12" />
+          <Skeleton className="h-10 w-10 rounded-full" />
+        </div>
+        <SkeletonCard className="mb-5 h-[106px]" />
+        <div className="mb-5 grid grid-cols-3 gap-2">
+          {[1, 2, 3].map((i) => (
+            <SkeletonCard key={i} className="h-[75px]" />
+          ))}
+        </div>
+        <SkeletonCard className="mb-5 h-[74px]" />
+        <Skeleton className="mb-2 h-4 w-24" />
+        <div className="mb-5 flex gap-1.5">
+          <Skeleton className="h-9 w-28" />
+          <Skeleton className="h-9 w-24" />
+        </div>
+        <div className="mb-5 flex h-10 items-center justify-between">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-3 w-10" />
+        </div>
+        <Skeleton className="mb-3 h-4 w-28" />
+        <Skeleton className="mb-3 h-11 w-[240px]" />
+        <div className="flex flex-col gap-2">
+          {[1, 2, 3].map((i) => (
+            <SkeletonCard key={i} className="h-[88px]" />
+          ))}
         </div>
       </div>
     );
@@ -359,7 +384,8 @@ export default function ProfilePage() {
         <button
           onClick={() => setShowSettings(!showSettings)}
           aria-label={showSettings ? "Close settings" : "Open settings"}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-light transition-transform active:scale-90"
+          aria-expanded={showSettings}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-light transition-transform duration-150 ease-out active:scale-[0.94]"
         >
           {showSettings ? (
             <X size={18} className="text-text-secondary" />
@@ -385,22 +411,31 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-text-muted">
-                  Display Name
+                <label
+                  htmlFor="profile-display-name"
+                  className="mb-1 block text-xs text-text-muted"
+                >
+                  Display name
                 </label>
                 <input
+                  id="profile-display-name"
                   type="text"
+                  autoComplete="nickname"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   maxLength={20}
-                  className="w-full rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none focus:border-blue"
+                  className="w-full rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none transition-colors focus:border-blue"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-text-muted">
+                <label
+                  htmlFor="profile-email"
+                  className="mb-1 block text-xs text-text-muted"
+                >
                   Email
                 </label>
                 <input
+                  id="profile-email"
                   type="email"
                   value={email}
                   disabled
@@ -410,25 +445,38 @@ export default function ProfilePage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 active:scale-[0.97] disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
               >
-                {saved ? "Saved!" : saving ? "Saving..." : "Save Changes"}
+                {saved ? (
+                  <>
+                    <Check size={16} />
+                    Saved
+                  </>
+                ) : saving ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                    Saving
+                  </>
+                ) : (
+                  "Save changes"
+                )}
               </button>
             </div>
           </div>
 
           <button
             onClick={() => setShowInstall(!showInstall)}
-            className="glass flex items-center gap-3 p-4 text-left"
+            aria-expanded={showInstall}
+            className="glass flex items-center gap-3 p-4 text-left transition-transform duration-150 ease-out active:scale-[0.98]"
           >
             <Smartphone size={20} className="text-blue" />
-            <span className="text-sm font-semibold">Install as App</span>
+            <span className="text-sm font-semibold">Install app</span>
           </button>
 
           {showInstall && (
             <div className="glass p-4 text-sm text-text-secondary">
               <p className="mb-3 font-semibold text-text-primary">
-                Add to your home screen:
+                Add to home screen
               </p>
               <div className="mb-3">
                 <p className="mb-1 font-medium">iPhone / iPad (Safari)</p>
@@ -473,10 +521,10 @@ export default function ProfilePage() {
 
           <button
             onClick={handleLogout}
-            className="flex items-center justify-center gap-2 rounded-lg border border-red/30 py-3 text-sm font-semibold text-red active:scale-[0.97]"
+            className="flex items-center justify-center gap-2 rounded-lg border border-red/30 py-3 text-sm font-semibold text-red transition-[transform,background-color] duration-150 active:scale-[0.97] active:bg-red/10"
           >
             <LogOut size={16} />
-            Sign Out
+            Sign out
           </button>
         </div>
       )}
@@ -494,50 +542,48 @@ export default function ProfilePage() {
 
       {/* Quick Stats */}
       {statsTotalGames > 0 && (
-        <div className="mb-5 flex gap-2">
-          <div className="glass flex-1 p-3 text-center">
-            <div className="text-[10px] uppercase tracking-wide text-text-muted">
-              Avg
+        <div className="mb-5 grid grid-cols-3 gap-2">
+          {[
+            { label: "Avg", value: statsAvg },
+            { label: "High", value: statsHigh },
+            { label: "Games", value: statsTotalGames },
+          ].map((stat) => (
+            <div key={stat.label} className="glass px-3 py-3.5 text-center">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                {stat.label}
+              </div>
+              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
+                {stat.value}
+              </div>
             </div>
-            <div className="my-1 text-2xl font-extrabold">{statsAvg}</div>
-          </div>
-          <div className="glass flex-1 p-3 text-center">
-            <div className="text-[10px] uppercase tracking-wide text-text-muted">
-              High
-            </div>
-            <div className="my-1 text-2xl font-extrabold">{statsHigh}</div>
-          </div>
-          <div className="glass flex-1 p-3 text-center">
-            <div className="text-[10px] uppercase tracking-wide text-text-muted">
-              Games
-            </div>
-            <div className="my-1 text-2xl font-extrabold">
-              {statsTotalGames}
-            </div>
-          </div>
+          ))}
         </div>
       )}
 
       {/* My Arsenal */}
       <button
         onClick={() => router.push("/arsenal")}
-        className="glass mb-5 flex w-full items-center gap-3 p-4 text-left transition-all duration-150 active:scale-[0.98]"
+        className="glass mb-5 flex w-full items-center gap-3 p-4 text-left transition-transform duration-150 ease-out active:scale-[0.98]"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple/15 text-purple">
           <CircleDot size={20} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-text-primary">My Arsenal</p>
+          <p className="text-sm font-bold text-text-primary">My arsenal</p>
           <p className="truncate text-xs text-text-muted">
-            Ball flight analysis, layouts & drilling specs
+            Ball flight analysis, layouts and drilling specs
           </p>
         </div>
-        <ChevronDown size={16} className="-rotate-90 text-text-muted" />
+        <ChevronDown
+          size={16}
+          aria-hidden
+          className="-rotate-90 text-text-muted"
+        />
       </button>
 
       {/* Season Medals */}
       <div className="mb-5">
-        <h2 className="mb-2 text-sm font-bold">Rank History</h2>
+        <h2 className="mb-2 text-sm font-bold">Rank history</h2>
         <div className="flex flex-wrap gap-1.5">
           {/* Current season — in progress */}
           {rank && statsTotalGames > 0 && (
@@ -573,7 +619,7 @@ export default function ProfilePage() {
                 key={sr.season_number}
                 className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 ${srRank.borderColor}`}
               >
-                <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-bold text-text-muted">
+                <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-bold tabular-nums text-text-muted">
                   S{sr.season_number}
                 </span>
                 <span className={`text-xs font-bold ${srRank.color}`}>
@@ -584,9 +630,12 @@ export default function ProfilePage() {
             );
           })}
           {statsTotalGames === 0 && seasonResults.length === 0 && (
-            <p className="text-xs text-text-muted">
-              Play your first game to start ranking
-            </p>
+            <div className="glass flex w-full flex-col items-center px-6 py-10 text-center">
+              <p className="text-sm font-semibold">No ranks yet</p>
+              <p className="mt-1 text-xs text-text-muted">
+                Play your first game to start ranking
+              </p>
+            </div>
           )}
         </div>
       </div>
@@ -595,18 +644,19 @@ export default function ProfilePage() {
       <div className="mb-5">
         <button
           onClick={() => setShowAchievements(!showAchievements)}
-          className="mb-2 flex w-full items-center justify-between"
+          aria-expanded={showAchievements}
+          className="-mt-2.5 -mb-0.5 flex h-10 w-full items-center justify-between transition-opacity active:opacity-60"
         >
           <h2 className="text-sm font-bold">Achievements</h2>
           <div className="flex items-center gap-1.5">
             {achievementStats && (
-              <span className="text-[10px] text-text-muted">
+              <span className="text-[10px] tabular-nums text-text-muted">
                 {earned.length}/{ACHIEVEMENTS.length}
               </span>
             )}
             <ChevronDown
               size={14}
-              className={`text-text-muted transition-transform ${
+              className={`text-text-muted transition-transform duration-200 ${
                 showAchievements ? "rotate-180" : ""
               }`}
             />
@@ -643,13 +693,22 @@ export default function ProfilePage() {
 
       {/* Game History */}
       <div>
-        <h2 className="mb-3 text-sm font-bold">Game History</h2>
+        <h2 className="mb-3 text-sm font-bold">Game history</h2>
 
-        {/* Filter pills */}
-        <div className="mb-3 flex gap-1.5">
-          {(["all", "ytd", "custom"] as const).map((f) => (
+        {/* Filter */}
+        <div className="relative mb-3 flex h-11 w-[240px] rounded-lg bg-surface-light p-[3px]">
+          <span
+            aria-hidden
+            className="absolute inset-y-[3px] left-[3px] rounded-md bg-blue shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
+            style={{
+              width: `calc((100% - 6px) / ${HISTORY_FILTERS.length})`,
+              transform: `translateX(${HISTORY_FILTERS.indexOf(historyFilter) * 100}%)`,
+            }}
+          />
+          {HISTORY_FILTERS.map((f) => (
             <button
               key={f}
+              aria-pressed={historyFilter === f}
               onClick={() => {
                 setHistoryFilter(f);
                 if (f === "custom" && !historyDateFrom) {
@@ -661,10 +720,8 @@ export default function ProfilePage() {
                   setHistoryDateTo(to);
                 }
               }}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                historyFilter === f
-                  ? "bg-blue text-white"
-                  : "bg-surface-light text-text-muted active:bg-surface-light/80"
+              className={`relative flex-1 rounded-md text-xs font-semibold transition-colors duration-200 ${
+                historyFilter === f ? "text-white" : "text-text-muted"
               }`}
             >
               {f === "all" ? "All" : f === "ytd" ? "YTD" : "Custom"}
@@ -676,23 +733,28 @@ export default function ProfilePage() {
           <div className="mb-3 flex items-center gap-2">
             <input
               type="date"
+              aria-label="From date"
               value={historyDateFrom}
               onChange={(e) => setHistoryDateFrom(e.target.value)}
-              className="flex-1 rounded-lg border border-border bg-surface-light px-3 py-2 text-sm text-text-primary outline-none focus:border-blue"
+              className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-3 text-sm text-text-primary outline-none transition-colors focus:border-blue"
             />
             <span className="text-xs text-text-muted">to</span>
             <input
               type="date"
+              aria-label="To date"
               value={historyDateTo}
               onChange={(e) => setHistoryDateTo(e.target.value)}
-              className="flex-1 rounded-lg border border-border bg-surface-light px-3 py-2 text-sm text-text-primary outline-none focus:border-blue"
+              className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-3 text-sm text-text-primary outline-none transition-colors focus:border-blue"
             />
           </div>
         )}
 
         {sessions.length === 0 && historyFilter === "all" && (
-          <div className="glass p-8 text-center">
-            <p className="text-sm text-text-muted">No sessions yet.</p>
+          <div className="glass flex flex-col items-center px-6 py-10 text-center">
+            <p className="text-sm font-semibold">No sessions yet</p>
+            <p className="mt-1 text-xs text-text-muted">
+              Games you log show up here
+            </p>
           </div>
         )}
 
@@ -719,9 +781,9 @@ export default function ProfilePage() {
             });
             if (filtered.length === 0 && historyFilter !== "all") {
               return (
-                <div className="glass p-8 text-center">
-                  <p className="text-sm text-text-muted">
-                    No sessions in this range.
+                <div className="glass flex flex-col items-center px-6 py-10 text-center">
+                  <p className="text-sm font-semibold">
+                    No sessions in this range
                   </p>
                 </div>
               );

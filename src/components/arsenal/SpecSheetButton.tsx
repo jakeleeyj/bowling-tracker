@@ -40,10 +40,19 @@ export default function SpecSheetButton({
       <button
         onClick={share}
         disabled={sharing}
-        className="flex items-center justify-center gap-2 rounded-lg border border-border-light bg-surface-light py-3 text-sm font-bold text-text-primary transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
+        className="flex items-center justify-center gap-2 rounded-xl border border-border-light bg-surface-light py-4 text-base font-bold text-text-primary transition-[transform,background-color] duration-150 active:scale-[0.97] active:bg-white/5 disabled:opacity-60"
       >
-        <Share2 size={16} />
-        {sharing ? "Creating…" : "Share spec sheet"}
+        {sharing ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+            Creating
+          </>
+        ) : (
+          <>
+            <Share2 size={16} />
+            Share spec sheet
+          </>
+        )}
       </button>
       <div className="pointer-events-none fixed -left-[2000px] top-0">
         <SpecSheetCard ref={cardRef} draft={draft} ballImage={ballImage} />

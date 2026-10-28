@@ -77,19 +77,24 @@ export default function LayoutResultCard({
   return (
     <div className="animate-slide-up flex flex-col gap-4">
       <div className="glass p-5">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
-          Layout
-        </p>
+        <h2 className="mb-3 text-sm font-bold">Layout</h2>
         {availableSystems.length > 1 && (
-          <div className="mb-3 flex rounded-lg bg-surface-light p-1">
+          <div className="relative mb-3 flex h-11 rounded-lg bg-surface-light p-[3px]">
+            <span
+              aria-hidden
+              className="absolute inset-y-[3px] left-[3px] rounded-md bg-blue shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
+              style={{
+                width: `calc((100% - 6px) / ${availableSystems.length})`,
+                transform: `translateX(${availableSystems.indexOf(activeSystem) * 100}%)`,
+              }}
+            />
             {availableSystems.map((key) => (
               <button
                 key={key}
                 onClick={() => pick(key)}
-                className={`flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-150 ${
-                  activeSystem === key
-                    ? "bg-blue/20 text-blue"
-                    : "text-text-muted active:scale-95"
+                aria-pressed={activeSystem === key}
+                className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+                  activeSystem === key ? "text-white" : "text-text-muted"
                 }`}
               >
                 {systemViews[key].label}
@@ -101,7 +106,7 @@ export default function LayoutResultCard({
           <p className="text-xs text-text-muted">
             {systemViews[activeSystem].label}
           </p>
-          <p className="text-2xl font-extrabold text-text-primary">
+          <p className="text-2xl font-extrabold tabular-nums text-text-primary">
             {systemViews[activeSystem].value}
           </p>
           <p className="mt-1 text-[10px] text-text-muted">
@@ -123,9 +128,7 @@ export default function LayoutResultCard({
 
       {layout.reasons.length > 0 && (
         <div className="glass p-5">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
-            Why this layout
-          </p>
+          <h2 className="mb-3 text-sm font-bold">Why this layout</h2>
           <ul className="flex flex-col gap-2.5">
             {layout.reasons.map((reason, i) => (
               <li

@@ -47,14 +47,14 @@ function LogStep({ session }: { session: ReturnType<typeof useSessionState> }) {
         {session.saving ? (
           <div className="flex items-center gap-2 text-sm text-text-muted">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue border-t-transparent" />
-            Syncing...
+            Syncing
           </div>
         ) : (
           <button
             onClick={() => session.startNewWhilePending()}
             className="rounded-xl bg-gradient-to-r from-blue to-blue-dark px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
           >
-            Log Another Session
+            Log another session
           </button>
         )}
       </div>
@@ -66,7 +66,7 @@ function LogStep({ session }: { session: ReturnType<typeof useSessionState> }) {
     return (
       <div>
         <h1 className="mb-2 text-xl font-extrabold text-text-primary">
-          Resume Session?
+          Resume session?
         </h1>
         <p className="mb-6 text-sm text-text-muted">
           You have an unfinished session. Pick up where you left off?
@@ -76,7 +76,7 @@ function LogStep({ session }: { session: ReturnType<typeof useSessionState> }) {
             onClick={session.resumeSession}
             className="rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
           >
-            Resume Session
+            Resume session
           </button>
           <button
             onClick={() => {
@@ -86,7 +86,7 @@ function LogStep({ session }: { session: ReturnType<typeof useSessionState> }) {
             }}
             className="rounded-xl border border-border-light py-3 text-sm font-semibold text-text-secondary transition-[transform,background-color] duration-150 active:scale-[0.97] active:bg-white/5"
           >
-            Start New Session
+            Start new session
           </button>
         </div>
       </div>

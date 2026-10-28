@@ -27,7 +27,7 @@ const FIELD_HELP: Record<string, string> = {
   tilt: "How much the ball spins like a top. 0–15° is normal, 30°+ means you're a spinner. If unsure, leave the default.",
   rotation:
     "How much side-turn you put on the ball. 0° = end-over-end, 90° = full sideways. Most players are 30–60°.",
-  pap: 'Your Positive Axis Point — where your ball\'s rotation axis sits, measured from the grip center. A pro shop can mark it, or find it from the track flare rings. Typical: 4–5" over, 0–1" up. Leave blank if unknown.',
+  pap: 'Your Positive Axis Point: where your ball\'s rotation axis sits, measured from the grip center. A pro shop can mark it, or find it from the track flare rings. Typical: 4–5" over, 0–1" up. Leave blank if unknown.',
 };
 
 export interface AnalyzeInput {
@@ -146,6 +146,17 @@ export default function AnalyzeForm({
     localStorage.setItem(HAND_KEY, h);
   }
 
+  const pillThumb = (count: number, index: number) => (
+    <span
+      aria-hidden
+      className="absolute inset-y-[3px] left-[3px] rounded-md bg-blue shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
+      style={{
+        width: `calc((100% - 6px) / ${count})`,
+        transform: `translateX(${index * 100}%)`,
+      }}
+    />
+  );
+
   const numberField = (
     label: string,
     helpKey: string,
@@ -156,11 +167,17 @@ export default function AnalyzeForm({
   ) => (
     <div>
       <div className="mb-1 flex items-center gap-1.5">
-        <label className="block text-xs text-text-muted">{label}</label>
+        <label
+          htmlFor={`analyze-${helpKey}`}
+          className="block text-xs text-text-muted"
+        >
+          {label}
+        </label>
         <button
           onClick={() => setOpenHelp(openHelp === helpKey ? null : helpKey)}
           aria-label={`Help for ${label}`}
-          className="-m-2 p-2 text-text-muted active:scale-90"
+          aria-expanded={openHelp === helpKey}
+          className="-my-3 -ml-1 flex h-10 w-10 items-center justify-center text-text-muted transition-transform duration-150 active:scale-[0.94]"
         >
           <HelpCircle size={12} />
         </button>
@@ -172,13 +189,14 @@ export default function AnalyzeForm({
         </p>
       )}
       <input
+        id={`analyze-${helpKey}`}
         type="number"
         inputMode="decimal"
         min={limits.min}
         max={limits.max}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="w-full rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none focus:border-blue"
+        className="h-11 w-full rounded-lg border border-border bg-surface-light px-4 text-base tabular-nums text-text-primary outline-none focus:border-blue"
       />
     </div>
   );
@@ -186,12 +204,11 @@ export default function AnalyzeForm({
   return (
     <div className="flex flex-col gap-5">
       <div className="glass p-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted">
-          Your numbers
-        </p>
+        <h2 className="mb-3 text-sm font-bold">Your numbers</h2>
         <div className="mb-3 flex items-center justify-between">
           <span className="text-xs text-text-muted">Grip</span>
-          <div className="flex gap-1">
+          <div className="relative flex h-11 w-[200px] rounded-lg bg-surface-light p-[3px]">
+            {pillThumb(2, twoHanded ? 1 : 0)}
             {(
               [
                 [false, "One-handed"],
@@ -201,10 +218,9 @@ export default function AnalyzeForm({
               <button
                 key={label}
                 onClick={() => switchGrip(two)}
-                className={`rounded px-2.5 py-1 text-xs font-semibold transition-all duration-150 ${
-                  twoHanded === two
-                    ? "bg-blue/20 text-blue"
-                    : "bg-surface-light text-text-muted active:scale-95"
+                aria-pressed={twoHanded === two}
+                className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+                  twoHanded === two ? "text-white" : "text-text-muted"
                 }`}
               >
                 {label}
@@ -214,15 +230,15 @@ export default function AnalyzeForm({
         </div>
         <div className="mb-3 flex items-center justify-between">
           <span className="text-xs text-text-muted">Bowling hand</span>
-          <div className="flex gap-1">
+          <div className="relative flex h-11 w-[200px] rounded-lg bg-surface-light p-[3px]">
+            {pillThumb(2, hand === "right" ? 0 : 1)}
             {(["right", "left"] as const).map((h) => (
               <button
                 key={h}
                 onClick={() => switchHand(h)}
-                className={`rounded px-2.5 py-1 text-xs font-semibold capitalize transition-all duration-150 ${
-                  hand === h
-                    ? "bg-blue/20 text-blue"
-                    : "bg-surface-light text-text-muted active:scale-95"
+                aria-pressed={hand === h}
+                className={`relative flex-1 rounded-md text-[13px] font-semibold capitalize transition-colors duration-200 ${
+                  hand === h ? "text-white" : "text-text-muted"
                 }`}
               >
                 {h}
@@ -230,19 +246,19 @@ export default function AnalyzeForm({
             ))}
           </div>
         </div>
-        <div className="mb-4 flex rounded-lg bg-surface-light p-1">
+        <div className="relative mb-4 flex h-11 rounded-lg bg-surface-light p-[3px]">
+          {pillThumb(2, mode === "preset" ? 0 : 1)}
           {(["preset", "manual"] as const).map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
-              className={`flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-150 ${
-                mode === m
-                  ? "bg-blue/20 text-blue"
-                  : "text-text-muted active:scale-95"
+              aria-pressed={mode === m}
+              className={`relative flex-1 rounded-md text-xs font-semibold transition-colors duration-200 ${
+                mode === m ? "text-white" : "text-text-muted"
               }`}
             >
               {m === "preset"
-                ? "Not sure — pick my style"
+                ? "Not sure? Pick my style"
                 : "I know my numbers"}
             </button>
           ))}
@@ -262,7 +278,8 @@ export default function AnalyzeForm({
               <button
                 key={key}
                 onClick={() => setPreset(key)}
-                className={`rounded-lg border p-3 text-left transition-all duration-150 active:scale-[0.97] ${
+                aria-pressed={preset === key}
+                className={`rounded-lg border p-3 text-left transition-[transform,background-color,border-color] duration-150 active:scale-[0.97] ${
                   preset === key
                     ? "border-blue bg-blue/10"
                     : "border-border bg-surface-light"
@@ -282,15 +299,15 @@ export default function AnalyzeForm({
               "speed",
               speed,
               setSpeed,
-              <span className="flex gap-1">
+              <span className="relative flex h-10 w-28 rounded-lg bg-surface-light p-[3px]">
+                {pillThumb(2, speedUnit === "kmh" ? 0 : 1)}
                 {(["kmh", "mph"] as const).map((u) => (
                   <button
                     key={u}
                     onClick={() => switchUnit(u)}
-                    className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase transition-all duration-150 ${
-                      speedUnit === u
-                        ? "bg-blue/20 text-blue"
-                        : "bg-surface-light text-text-muted active:scale-95"
+                    aria-pressed={speedUnit === u}
+                    className={`relative flex-1 rounded-md text-xs font-semibold transition-colors duration-200 ${
+                      speedUnit === u ? "text-white" : "text-text-muted"
                     }`}
                   >
                     {u === "kmh" ? "km/h" : "mph"}
@@ -330,13 +347,14 @@ export default function AnalyzeForm({
             )}
             <div>
               <div className="mb-1 flex items-center gap-1.5">
-                <label className="block text-xs text-text-muted">
+                <span className="block text-xs text-text-muted">
                   PAP (optional)
-                </label>
+                </span>
                 <button
                   onClick={() => setOpenHelp(openHelp === "pap" ? null : "pap")}
                   aria-label="Help for PAP"
-                  className="-m-2 p-2 text-text-muted active:scale-90"
+                  aria-expanded={openHelp === "pap"}
+                  className="-my-3 -ml-1 flex h-10 w-10 items-center justify-center text-text-muted transition-transform duration-150 active:scale-[0.94]"
                 >
                   <HelpCircle size={12} />
                 </button>
@@ -353,14 +371,16 @@ export default function AnalyzeForm({
                   value={papOver}
                   onChange={(e) => setPapOver(e.target.value)}
                   placeholder={'over (e.g. 4 1/2")'}
-                  className="min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+                  aria-label="PAP over"
+                  className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-4 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
                 />
                 <input
                   type="text"
                   value={papUp}
                   onChange={(e) => setPapUp(e.target.value)}
                   placeholder={'up (e.g. 1/2")'}
-                  className="min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-4 py-3 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
+                  aria-label="PAP up"
+                  className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface-light px-4 text-base text-text-primary outline-none placeholder:text-text-muted focus:border-blue"
                 />
               </div>
             </div>
@@ -370,7 +390,7 @@ export default function AnalyzeForm({
 
       <button
         onClick={submit}
-        className="rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-all duration-150 active:scale-[0.97]"
+        className="rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97]"
       >
         Analyze
       </button>

@@ -145,7 +145,7 @@ export default function GameEntry(props: GameEntryProps) {
         </button>
         <h1 className="mr-auto text-base font-bold text-text-primary">
           {editMode
-            ? "Edit Game"
+            ? "Edit game"
             : `Game ${currentGameIndex + 1} of ${gameCount}`}
         </h1>
         {!(currentGameComplete && games[currentGameIndex]) && (
@@ -267,7 +267,7 @@ export default function GameEntry(props: GameEntryProps) {
               ) : null}
 
               <div className="glass p-4 text-center">
-                <div className="text-xs text-text-muted">Final Score</div>
+                <div className="text-xs text-text-muted">Final score</div>
                 <div className="animate-scale-in text-3xl font-extrabold tabular-nums text-text-primary">
                   {completedGame.totalScore}
                 </div>
@@ -314,7 +314,7 @@ export default function GameEntry(props: GameEntryProps) {
                       Saving
                     </>
                   ) : (
-                    "Save Changes"
+                    "Save changes"
                   )}
                 </button>
               ) : (
@@ -346,7 +346,7 @@ export default function GameEntry(props: GameEntryProps) {
                             Saving, keep the app open
                           </>
                         ) : (
-                          "Save Session"
+                          "Save session"
                         )}
                       </button>
                     );
@@ -363,7 +363,7 @@ export default function GameEntry(props: GameEntryProps) {
             <div className="flex flex-col gap-4">
               <div className="glass p-6 text-center">
                 <label className="mb-2 block text-sm text-text-muted">
-                  Total Score
+                  Total score
                 </label>
                 <input
                   type="text"
@@ -709,7 +709,7 @@ export default function GameEntry(props: GameEntryProps) {
                         Saving
                       </>
                     ) : (
-                      "Save Changes"
+                      "Save changes"
                     )}
                   </button>
                 </div>

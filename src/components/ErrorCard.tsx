@@ -16,9 +16,9 @@ export default function ErrorCard({
       {onRetry && (
         <button
           onClick={onRetry}
-          className="rounded-lg bg-surface-light px-4 py-2 text-xs font-semibold text-text-primary active:scale-95"
+          className="h-10 rounded-lg bg-surface-light px-4 text-xs font-semibold text-text-primary transition-transform duration-150 ease-out active:scale-[0.97]"
         >
-          Try Again
+          Try again
         </button>
       )}
     </div>
