@@ -10,7 +10,14 @@ import {
   Crown,
   Award,
 } from "lucide-react";
-import { getRank, getDivisionProgress, CALIBRATION_GAMES } from "@/lib/ranking";
+import {
+  getRank,
+  getDivisionProgress,
+  formatLP,
+  formatLPDelta,
+  formatCalibrationGamesLeft,
+  CALIBRATION_GAMES,
+} from "@/lib/ranking";
 import RankEmblem from "@/components/RankEmblem";
 import type { ResultsData } from "@/hooks/useSessionState";
 import type { AchievementDef } from "@/lib/achievements";
@@ -36,7 +43,7 @@ function AnimatedCounter({
     }
     requestAnimationFrame(tick);
   }, [from, to, duration]);
-  return <>{value}</>;
+  return <>{formatLP(value)}</>;
 }
 
 const RESULTS_ICON_MAP: Record<string, React.ReactNode> = {
@@ -105,9 +112,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
           </div>
           <div className="animate-results-fade mb-6 mt-1">
             <p className="text-sm text-text-muted">
-              {CALIBRATION_GAMES - data.totalGamesAfter} more game
-              {CALIBRATION_GAMES - data.totalGamesAfter !== 1 ? "s" : ""} to set
-              your rank
+              {formatCalibrationGamesLeft(data.totalGamesAfter)}
             </p>
             <div className="mx-auto mt-3 flex w-full max-w-[120px] gap-1.5">
               {Array.from({ length: CALIBRATION_GAMES }, (_, i) => (
@@ -150,12 +155,6 @@ export default function SessionResults({ data }: { data: ResultsData }) {
             <div className="text-4xl font-extrabold tabular-nums text-text-primary">
               <AnimatedCounter from={0} to={data.newLp} />
               <span className="text-lg text-text-muted"> LP</span>
-            </div>
-            <div
-              className={`mt-1 text-sm font-semibold ${lpDiff > 0 ? "text-green" : lpDiff < 0 ? "text-red" : "text-text-muted"}`}
-            >
-              {lpDiff > 0 ? "+" : ""}
-              {lpDiff} LP
             </div>
           </div>
         </>
@@ -209,8 +208,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
             <div
               className={`mt-1 text-sm font-semibold ${lpDiff > 0 ? "text-green" : lpDiff < 0 ? "text-red" : "text-text-muted"}`}
             >
-              {lpDiff > 0 ? "+" : ""}
-              {lpDiff} LP
+              {formatLPDelta(lpDiff)}
             </div>
           </div>
         </>

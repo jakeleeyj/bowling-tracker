@@ -4,7 +4,12 @@ import { useState, useTransition } from "react";
 import SessionCard from "@/components/SessionCard";
 import { BowlingSpinner } from "@/components/Skeleton";
 import { loadMoreSessions } from "@/app/(app)/dashboard/actions";
-import { CALIBRATION_GAMES } from "@/lib/ranking";
+import {
+  CALIBRATION_GAMES,
+  gamesBeforeEachSession,
+  isCalibrationSession,
+  lpAfterEachSession,
+} from "@/lib/ranking";
 import type { SessionWithGamesFramesAndProfile } from "@/lib/queries";
 import type { getRank } from "@/lib/ranking";
 
@@ -20,7 +25,6 @@ interface RecentActivityProps {
   userRanks: Record<string, ReturnType<typeof getRank>>;
   userGameCounts: Record<string, number>;
   userLps: Record<string, number>;
-  gamesBeforeSession: Record<string, Record<string, number>>;
 }
 
 export default function RecentActivity({
@@ -30,60 +34,31 @@ export default function RecentActivity({
   userRanks,
   userGameCounts,
   userLps,
-  gamesBeforeSession: initialGamesBeforeSession,
 }: RecentActivityProps) {
   const [sessions, setSessions] = useState<SessionCardData[]>(initialSessions);
   const [hasMore, setHasMore] = useState(initialHasMore);
-  const [gamesBeforeMap, setGamesBeforeMap] = useState(
-    initialGamesBeforeSession,
-  );
   const [isPending, startTransition] = useTransition();
 
-  // LP each player landed on after each session: walk the feed newest-first,
-  // starting from their current LP and backing out each session's delta.
-  // The chain stops at sessions without a cached delta (pre-season).
-  const lpAfterMap: Record<string, number> = {};
-  const lpRunning: Record<string, number | null> = {};
-  for (const { session, lpChange } of sessions) {
-    const u = session.user_id;
-    if (!(u in lpRunning)) lpRunning[u] = userLps[u] ?? null;
-    const cur = lpRunning[u];
-    if (cur !== null && lpChange !== undefined) {
-      lpAfterMap[session.id] = cur;
-      lpRunning[u] = cur - lpChange;
-    } else {
-      lpRunning[u] = null;
-    }
-  }
+  const feed = sessions.map(({ session }) => session);
+  const gamesBeforeMap = gamesBeforeEachSession(feed, userGameCounts);
+  const lpAfterMap = lpAfterEachSession(
+    feed,
+    Object.fromEntries(sessions.map((c) => [c.session.id, c.lpChange])),
+    userLps,
+  );
 
   function handleLoadMore() {
+    const last = sessions[sessions.length - 1];
+    if (!last) return;
     startTransition(async () => {
-      const result = await loadMoreSessions(sessions.length);
-      const newCards: SessionCardData[] = result.sessions.map((s) => ({
-        session: s,
-        lpChange: result.lpChanges[s.id],
-      }));
-
-      // Recalculate gamesBeforeSession for all sessions including new ones
-      const allCards = [...sessions, ...newCards];
-      const updated: Record<string, Record<string, number>> = {};
-      const perUser: Record<string, SessionCardData[]> = {};
-      for (const card of allCards) {
-        const u = card.session.user_id;
-        if (!perUser[u]) perUser[u] = [];
-        perUser[u].push(card);
-      }
-      for (const [u, cards] of Object.entries(perUser)) {
-        updated[u] = {};
-        let remaining = userGameCounts[u] ?? 0;
-        for (const card of cards) {
-          remaining -= card.session.games.length;
-          updated[u][card.session.id] = remaining;
-        }
-      }
-
-      setGamesBeforeMap(updated);
-      setSessions(allCards);
+      const result = await loadMoreSessions(last.session.created_at);
+      setSessions((prev) => {
+        const seen = new Set(prev.map((c) => c.session.id));
+        const newCards: SessionCardData[] = result.sessions
+          .filter((s) => !seen.has(s.id))
+          .map((s) => ({ session: s, lpChange: result.lpChanges[s.id] }));
+        return [...prev, ...newCards];
+      });
       setHasMore(result.hasMore);
     });
   }
@@ -101,9 +76,9 @@ export default function RecentActivity({
 
       <div className="flex flex-col gap-2">
         {sessions.map(({ session, lpChange }) => {
-          const gamesBefore =
-            gamesBeforeMap[session.user_id]?.[session.id] ?? 0;
-          const isCalibrationSession = gamesBefore < CALIBRATION_GAMES;
+          const isCalibration = isCalibrationSession(
+            gamesBeforeMap[session.id] ?? 0,
+          );
           const sessionProfile = session.profiles;
           const sessionGames = [...session.games].sort(
             (a, b) => a.game_number - b.game_number,
@@ -146,7 +121,7 @@ export default function RecentActivity({
               isOwn={isOwnSession}
               lpChange={lpChange}
               lpAfter={lpAfterMap[session.id]}
-              isCalibrationSession={isCalibrationSession}
+              isCalibrationSession={isCalibration}
               rankLabel={
                 userRanks[session.user_id] &&
                 (userGameCounts[session.user_id] ?? 0) >= CALIBRATION_GAMES

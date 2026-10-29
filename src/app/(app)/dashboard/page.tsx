@@ -83,20 +83,6 @@ export default async function DashboardPage() {
 
   const displayName = profile?.display_name ?? "Bowler";
 
-  // Track which sessions include calibration games (per user)
-  // Walk newest-first, subtracting each session's games from the known total
-  const gamesBeforeSession: Record<string, Record<string, number>> = {};
-  const userRemaining: Record<string, number> = {};
-  for (const s of sessions ?? []) {
-    const u = s.user_id;
-    if (!(u in userRemaining)) {
-      userRemaining[u] = userGameCounts[u] ?? 0;
-    }
-    userRemaining[u] -= s.games.length;
-    gamesBeforeSession[u] = gamesBeforeSession[u] ?? {};
-    gamesBeforeSession[u][s.id] = userRemaining[u];
-  }
-
   return (
     <div>
       {/* Header */}
@@ -173,7 +159,6 @@ export default async function DashboardPage() {
         userRanks={userRanks}
         userGameCounts={userGameCounts}
         userLps={userLps}
-        gamesBeforeSession={gamesBeforeSession}
       />
     </div>
   );

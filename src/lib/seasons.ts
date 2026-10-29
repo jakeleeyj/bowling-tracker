@@ -39,6 +39,27 @@ function generateSeason(half: "H1" | "H2", year: number, num: number): Season {
   };
 }
 
+const SGT_DATE = new Intl.DateTimeFormat("en-SG", {
+  timeZone: "Asia/Singapore",
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+});
+
+// Calendar date in Singapore, regardless of the server's timezone (Vercel = UTC)
+function sgtDateParts(date: Date): { year: number; month: number; day: number } {
+  const parts = SGT_DATE.formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value);
+  return { year: get("year"), month: get("month"), day: get("day") };
+}
+
+/** Today's date in Singapore as YYYY-MM-DD (for session_date) */
+export function sgtToday(date: Date = new Date()): string {
+  const { year, month, day } = sgtDateParts(date);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 export function getCurrentSeason(): Season {
   const now = new Date();
 
@@ -49,10 +70,10 @@ export function getCurrentSeason(): Season {
 
   // Generate calendar-half seasons from H2 2026 onward.
   // Numbering: H2 2026 = S2, H1 2027 = S3, H2 2027 = S4, ...
-  const year = now.getFullYear();
-  const month = now.getMonth(); // 0-indexed
-  const half = month < 6 ? "H1" : "H2";
+  const { year, month } = sgtDateParts(now); // month is 1-12
+  const half = month <= 6 ? "H1" : "H2";
   const num = 2 * (year - 2026) + (half === "H1" ? 1 : 2);
+  if (num < 2) return SEASONS[0];
 
   return generateSeason(half, year, num);
 }

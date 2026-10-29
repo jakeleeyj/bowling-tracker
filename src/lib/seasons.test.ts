@@ -1,8 +1,18 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  vi,
+} from "vitest";
 import {
   getCurrentSeason,
   getPreviousSeason,
   getSeasonByNumber,
+  sgtToday,
 } from "./seasons";
 
 describe("season rollover", () => {
@@ -62,5 +72,79 @@ describe("season rollover", () => {
       new Date("2028-01-01T00:00:00+08:00").toISOString(),
     );
     expect(getSeasonByNumber(0)).toBeNull();
+  });
+});
+
+// Vercel runs in UTC; the cron fires at 16:00 UTC = 00:00 SGT. Seasons follow
+// the Singapore calendar, so force UTC here to catch server-local date math.
+describe("season boundary in Asia/Singapore time", () => {
+  const originalTz = process.env.TZ;
+
+  beforeAll(() => {
+    process.env.TZ = "UTC";
+  });
+
+  afterAll(() => {
+    process.env.TZ = originalTz;
+  });
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("1 Jul 00:30 SGT resolves to the July season", () => {
+    vi.setSystemTime(new Date("2026-06-30T16:30:00Z"));
+    expect(getCurrentSeason().number).toBe(2);
+  });
+
+  it("30 Jun 23:30 SGT resolves to the June-side season", () => {
+    vi.setSystemTime(new Date("2026-06-30T15:30:00Z"));
+    expect(getCurrentSeason().number).toBe(1);
+  });
+
+  it("1 Jan 00:30 SGT resolves to the January season (generated path)", () => {
+    vi.setSystemTime(new Date("2026-12-31T16:30:00Z"));
+    expect(getCurrentSeason().number).toBe(3);
+  });
+
+  it("31 Dec 23:30 SGT resolves to the July-side season (generated path)", () => {
+    vi.setSystemTime(new Date("2026-12-31T15:30:00Z"));
+    expect(getCurrentSeason().number).toBe(2);
+  });
+
+  it("the end-season cron tick on 30 Jun closes Season 1", () => {
+    vi.setSystemTime(new Date("2026-06-30T16:00:00Z"));
+    expect(getPreviousSeason()?.number).toBe(1);
+  });
+
+  it("the end-season cron tick on 31 Dec closes Season 2", () => {
+    vi.setSystemTime(new Date("2026-12-31T16:00:00Z"));
+    expect(getPreviousSeason()?.number).toBe(2);
+  });
+
+  it("the cron tick the night before a rollover does nothing new", () => {
+    vi.setSystemTime(new Date("2027-06-29T16:00:00Z"));
+    expect(getCurrentSeason().number).toBe(3);
+    expect(getPreviousSeason()?.number).toBe(2);
+  });
+
+  it("returns the real Season 1 in the gap after its last second", () => {
+    vi.setSystemTime(new Date("2026-06-30T15:59:59.500Z"));
+    expect(getCurrentSeason().start.toISOString()).toBe(
+      new Date("2026-03-19T00:00:00+08:00").toISOString(),
+    );
+  });
+});
+
+describe("sgtToday", () => {
+  it("uses the Singapore calendar date, not UTC", () => {
+    // 2026-10-28 23:30 UTC = 2026-10-29 07:30 SGT
+    expect(sgtToday(new Date("2026-10-28T23:30:00Z"))).toBe("2026-10-29");
+    // 2026-10-29 15:59 UTC = 2026-10-29 23:59 SGT
+    expect(sgtToday(new Date("2026-10-29T15:59:00Z"))).toBe("2026-10-29");
   });
 });

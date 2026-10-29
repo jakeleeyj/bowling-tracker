@@ -63,13 +63,19 @@ export default function RankInfoModal() {
               <p>
                 You earn <span className="font-bold text-text-primary">LP</span>{" "}
                 (League Points) each game based on your score. Games above 185
-                earn LP, games below 185 lose LP. Recent games count more. Your
-                last 60 games have full impact, older games gradually fade.
+                earn LP, games below 185 lose LP. Recent games count more: each
+                older game counts 1.25% less, down to a 25% floor.
               </p>
               <p>
                 Your first{" "}
-                <span className="font-bold text-text-primary">4 games</span> are
-                calibration matches worth 5x LP to set your starting rank.
+                <span className="font-bold text-text-primary">4 games</span>{" "}
+                ever are calibration matches worth 5x LP to set your starting
+                rank.
+              </p>
+              <p>
+                When a season ends, your LP moves 70% of the way back to 1,200.
+                The next season starts from there, and only its games count
+                toward LP.
               </p>
               <p>
                 Competitive sessions earn more:{" "}

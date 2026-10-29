@@ -8,7 +8,13 @@ import RankEmblem from "@/components/RankEmblem";
 import SeasonBanner from "@/components/SeasonBanner";
 import type { ProfileRow } from "@/lib/queries";
 import Avatar from "@/components/Avatar";
-import { getRank, formatLP, CALIBRATION_GAMES } from "@/lib/ranking";
+import {
+  getRank,
+  getDivisionProgress,
+  formatLP,
+  formatCalibrationGamesLeft,
+  CALIBRATION_GAMES,
+} from "@/lib/ranking";
 import {
   getCurrentSeason,
   getSeasonDaysLeft,
@@ -63,7 +69,7 @@ export default async function LeaderboardPage() {
         avatarUrl: profile.avatar_url,
         mmr: r?.lp ?? 0,
         rank,
-        progress: r?.progress ?? 0,
+        progress: getDivisionProgress(r?.lp ?? 0),
         avg: r?.season_avg ?? 0,
         high: r?.high ?? 0,
         games: totalGames,
@@ -156,11 +162,7 @@ export default async function LeaderboardPage() {
                     Calibrating
                   </span>
                   <p className="text-[11px] tabular-nums text-text-muted">
-                    {CALIBRATION_GAMES - currentUserEntry.games} more game
-                    {CALIBRATION_GAMES - currentUserEntry.games !== 1
-                      ? "s"
-                      : ""}{" "}
-                    to set your rank
+                    {formatCalibrationGamesLeft(currentUserEntry.games)}
                   </p>
                 </>
               ) : (
@@ -185,7 +187,8 @@ export default async function LeaderboardPage() {
                     {currentUserEntry.seasonGames > 0 ? (
                       <>
                         avg {currentUserEntry.avg} &bull;{" "}
-                        {currentUserEntry.seasonGames} games
+                        {currentUserEntry.seasonGames} game
+                        {currentUserEntry.seasonGames !== 1 ? "s" : ""}
                       </>
                     ) : (
                       <>no games this season</>
@@ -304,7 +307,7 @@ export default async function LeaderboardPage() {
                       <span className="text-text-muted">
                         {entry.isUnranked
                           ? "No games yet"
-                          : `Calibrating \u2022 ${entry.games} games`}
+                          : `Calibrating \u2022 ${formatCalibrationGamesLeft(entry.games)}`}
                       </span>
                     ) : (
                       <>
@@ -317,7 +320,8 @@ export default async function LeaderboardPage() {
                           <>
                             avg {entry.avg}
                             {" \u2022 "}
-                            {entry.seasonGames} games
+                            {entry.seasonGames} game
+                            {entry.seasonGames !== 1 ? "s" : ""}
                           </>
                         ) : (
                           "no games this season"

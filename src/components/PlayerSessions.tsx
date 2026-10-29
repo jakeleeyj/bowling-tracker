@@ -14,10 +14,16 @@ interface PlayerSessionsProps {
   initialSessions: SessionWithGamesFramesAndProfile[];
   initialHasMore: boolean;
   totalGames: number;
+  currentLp: number;
   initialLpChanges: Record<string, number>;
 }
 
-import { CALIBRATION_GAMES } from "@/lib/ranking";
+import {
+  CALIBRATION_GAMES,
+  gamesBeforeEachSession,
+  isCalibrationSession,
+  lpAfterEachSession,
+} from "@/lib/ranking";
 
 export default function PlayerSessions({
   playerId,
@@ -26,12 +32,15 @@ export default function PlayerSessions({
   initialSessions,
   initialHasMore,
   totalGames,
+  currentLp,
   initialLpChanges,
 }: PlayerSessionsProps) {
   const supabase = createClient();
   const [sessions, setSessions] =
     useState<SessionWithGamesFramesAndProfile[]>(initialSessions);
   const [hasMore, setHasMore] = useState(initialHasMore);
+  const [lpChanges, setLpChanges] =
+    useState<Record<string, number>>(initialLpChanges);
   const [loading, setLoading] = useState(false);
   const loadingRef = useRef(false);
 
@@ -40,24 +49,36 @@ export default function PlayerSessions({
     loadingRef.current = true;
     setLoading(true);
 
+    const last = sessions[sessions.length - 1];
     const { data } = (await supabase
       .from("sessions")
       .select("*, profiles(*), games(*, frames(*))")
       .eq("user_id", playerId)
+      .lt("created_at", last?.created_at ?? new Date().toISOString())
       .order("created_at", { ascending: false })
-      .range(sessions.length, sessions.length + SESSIONS_PER_PAGE - 1)) as {
+      .limit(SESSIONS_PER_PAGE)) as {
       data: SessionWithGamesFramesAndProfile[] | null;
     };
 
     if (data) {
-      setSessions((prev) => [...prev, ...data]);
+      if (data.length > 0 && totalGames >= CALIBRATION_GAMES) {
+        const { data: deltas } = await supabase.rpc("get_session_lp_deltas", {
+          p_session_ids: data.map((s) => s.id),
+        });
+        const moreChanges = (deltas ?? {}) as Record<string, number>;
+        setLpChanges((prev) => ({ ...prev, ...moreChanges }));
+      }
+      setSessions((prev) => {
+        const seen = new Set(prev.map((s) => s.id));
+        return [...prev, ...data.filter((s) => !seen.has(s.id))];
+      });
       setHasMore(data.length === SESSIONS_PER_PAGE);
     } else {
       setHasMore(false);
     }
     setLoading(false);
     loadingRef.current = false;
-  }, [supabase, playerId, sessions.length]);
+  }, [supabase, playerId, sessions, totalGames]);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -74,13 +95,13 @@ export default function PlayerSessions({
     return () => observer.disconnect();
   }, [hasMore, loadMore]);
 
-  // Track calibration: walk oldest-first to count games chronologically
-  const gamesBeforeSession: Record<string, number> = {};
-  let running = 0;
-  for (const s of [...sessions].reverse()) {
-    gamesBeforeSession[s.id] = running;
-    running += s.games.length;
-  }
+  const gamesBeforeSession = gamesBeforeEachSession(sessions, {
+    [playerId]: totalGames,
+  });
+  const lpAfterSession = lpAfterEachSession(sessions, lpChanges, {
+    [playerId]: currentLp,
+  });
+  const showLp = totalGames >= CALIBRATION_GAMES;
 
   if (sessions.length === 0) {
     return (
@@ -115,8 +136,9 @@ export default function PlayerSessions({
           timeZone: "Asia/Singapore",
         });
 
-        const isCalibrationSession =
-          (gamesBeforeSession[session.id] ?? 0) < CALIBRATION_GAMES;
+        const isCalibration = isCalibrationSession(
+          gamesBeforeSession[session.id] ?? 0,
+        );
 
         return (
           <SessionCard
@@ -132,12 +154,9 @@ export default function PlayerSessions({
             games={sessionGames}
             avatarUrl={avatarUrl}
             isOwn={false}
-            isCalibrationSession={isCalibrationSession}
-            lpChange={
-              totalGames >= CALIBRATION_GAMES
-                ? initialLpChanges[session.id]
-                : undefined
-            }
+            isCalibrationSession={isCalibration}
+            lpChange={showLp ? lpChanges[session.id] : undefined}
+            lpAfter={showLp ? lpAfterSession[session.id] : undefined}
           />
         );
       })}

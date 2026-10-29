@@ -16,7 +16,7 @@ import { useToast } from "@/components/Toast";
 import Avatar from "@/components/Avatar";
 import RankEmblem from "@/components/RankEmblem";
 import { isSplit } from "@/lib/bowling";
-import { EVENT_LABELS, formatLP } from "@/lib/ranking";
+import { EVENT_LABELS, formatLP, formatLPDelta } from "@/lib/ranking";
 import ShareCard from "@/components/ShareCard";
 import { shareSession } from "@/lib/shareSession";
 import { getFrame10ShotPins } from "@/lib/bowling";
@@ -856,14 +856,13 @@ export default function SessionCard({
             <p className="text-[10px] text-text-muted">
               {dateLabel} &bull;{" "}
               {isCalibrationSession ? (
-                <span className="font-semibold text-blue">Calibrated</span>
+                <span className="font-semibold text-blue">Calibration</span>
               ) : lpChange !== undefined ? (
                 <>
                   <span
                     className={`font-semibold ${lpChange > 0 ? "text-green" : lpChange < 0 ? "text-red" : ""}`}
                   >
-                    {lpChange > 0 ? "+" : ""}
-                    {lpChange} LP
+                    {formatLPDelta(lpChange)}
                   </span>
                   {lpAfter !== undefined && (
                     <span> &rarr; {formatLP(lpAfter)}</span>

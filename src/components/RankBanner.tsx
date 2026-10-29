@@ -5,6 +5,7 @@ import {
   getRank,
   getDivisionProgress,
   formatLP,
+  formatCalibrationGamesLeft,
   CALIBRATION_GAMES,
 } from "@/lib/ranking";
 import { getCurrentSeason } from "@/lib/seasons";
@@ -98,8 +99,7 @@ export default function RankBanner({
                 </span>
               </div>
               <p className="text-[11px] text-text-muted">
-                {CALIBRATION_GAMES - totalGames} more game
-                {CALIBRATION_GAMES - totalGames !== 1 ? "s" : ""} to rank
+                {formatCalibrationGamesLeft(totalGames)}
               </p>
             </>
           )}

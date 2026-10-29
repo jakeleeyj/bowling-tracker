@@ -21,7 +21,13 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import ErrorCard from "@/components/ErrorCard";
-import { getRank, CALIBRATION_GAMES } from "@/lib/ranking";
+import {
+  getRank,
+  CALIBRATION_GAMES,
+  gamesBeforeEachSession,
+  isCalibrationSession,
+  lpAfterEachSession,
+} from "@/lib/ranking";
 import type { PlayerLP } from "@/lib/queries";
 import SessionCard from "@/components/SessionCard";
 import RankBanner from "@/components/RankBanner";
@@ -61,6 +67,7 @@ interface HistoryGame {
 
 interface HistorySession {
   id: string;
+  user_id: string;
   session_date: string;
   created_at: string;
   venue: string | null;
@@ -289,24 +296,37 @@ export default function ProfilePage() {
       return;
     }
 
+    const last = sessions[sessions.length - 1];
     const { data: moreSessions } = (await supabase
       .from("sessions")
       .select("*, games(*, frames(*))")
       .eq("user_id", user.id)
+      .lt("created_at", last?.created_at ?? new Date().toISOString())
       .order("created_at", { ascending: false })
-      .range(sessions.length, sessions.length + SESSIONS_PER_PAGE - 1)) as {
+      .limit(SESSIONS_PER_PAGE)) as {
       data: HistorySession[] | null;
     };
 
     if (moreSessions) {
-      setSessions((prev) => [...prev, ...moreSessions]);
+      const moreIds = moreSessions.map((s) => s.id);
+      if (moreIds.length > 0) {
+        const { data: deltas } = await supabase.rpc("get_session_lp_deltas", {
+          p_session_ids: moreIds,
+        });
+        const moreChanges = (deltas ?? {}) as Record<string, number>;
+        setSessionLpChanges((prev) => ({ ...prev, ...moreChanges }));
+      }
+      setSessions((prev) => {
+        const seen = new Set(prev.map((s) => s.id));
+        return [...prev, ...moreSessions.filter((s) => !seen.has(s.id))];
+      });
       setHasMoreSessions(moreSessions.length === SESSIONS_PER_PAGE);
     } else {
       setHasMoreSessions(false);
     }
     setLoadingMore(false);
     loadingMoreRef.current = false;
-  }, [supabase, sessions.length]);
+  }, [supabase, sessions]);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -788,13 +808,18 @@ export default function ProfilePage() {
                 </div>
               );
             }
-            // Track calibration: walk oldest-first to count games chronologically
-            const gamesBeforeSession: Record<string, number> = {};
-            let running = 0;
-            for (const s of [...filtered].reverse()) {
-              gamesBeforeSession[s.id] = running;
-              running += s.games.length;
-            }
+            // Walk the full loaded list (not the filtered one) so counts
+            // and LP totals stay correct when a filter hides sessions
+            const owner = sessions[0]?.user_id ?? "";
+            const gamesBeforeSession = gamesBeforeEachSession(sessions, {
+              [owner]: statsTotalGames,
+            });
+            const lpAfterSession = lpAfterEachSession(
+              sessions,
+              sessionLpChanges,
+              { [owner]: lp },
+            );
+            const showLp = statsTotalGames >= CALIBRATION_GAMES;
 
             return filtered.map((session) => {
               const sessionGames = [...session.games].sort(
@@ -807,8 +832,9 @@ export default function ProfilePage() {
                         sessionGames.length,
                     )
                   : 0;
-              const isCalibrationSession =
-                (gamesBeforeSession[session.id] ?? 0) < CALIBRATION_GAMES;
+              const isCalibration = isCalibrationSession(
+                gamesBeforeSession[session.id] ?? 0,
+              );
 
               const createdAt = new Date(session.created_at);
               const dateLabel = createdAt.toLocaleDateString("en-SG", {
@@ -833,12 +859,9 @@ export default function ProfilePage() {
                   games={sessionGames}
                   avatarUrl={avatarUrl}
                   isOwn
-                  isCalibrationSession={isCalibrationSession}
-                  lpChange={
-                    (achievementStats?.totalGames ?? 0) >= CALIBRATION_GAMES
-                      ? sessionLpChanges[session.id]
-                      : undefined
-                  }
+                  isCalibrationSession={isCalibration}
+                  lpChange={showLp ? sessionLpChanges[session.id] : undefined}
+                  lpAfter={showLp ? lpAfterSession[session.id] : undefined}
                 />
               );
             });
