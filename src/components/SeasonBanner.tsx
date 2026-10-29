@@ -73,7 +73,7 @@ export default function SeasonBanner() {
     started: {
       icon: Sparkles,
       title: `${season.name} has begun`,
-      body: `S${season.number - 1} ended. LP soft-reset toward 1200. Calibration starts fresh.`,
+      body: `S${season.number - 1} ended. LP soft-reset toward 1,200.`,
       accent: "border-green/30 bg-green/10 text-green",
     },
   };

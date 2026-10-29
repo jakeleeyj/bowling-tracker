@@ -60,8 +60,8 @@ export default function BottomNav() {
         <div
           className={`flex h-[52px] w-[52px] items-center justify-center rounded-full transition-transform duration-150 active:scale-95 ${
             hasSavedSession
-              ? "bg-gradient-to-br from-blue to-emerald-600 shadow-[0_4px_20px_rgba(59,130,246,0.3),0_0_40px_rgba(16,185,129,0.1)]"
-              : "bg-gradient-to-br from-blue to-blue-dark shadow-[0_4px_20px_rgba(59,130,246,0.4),0_0_40px_rgba(59,130,246,0.15)]"
+              ? "bg-gradient-to-br from-blue to-emerald-600 shadow-[0_4px_20px_color-mix(in_srgb,var(--color-blue)_30%,transparent),0_0_40px_rgba(16,185,129,0.1)]"
+              : "bg-gradient-to-br from-blue to-blue-dark shadow-[0_4px_20px_color-mix(in_srgb,var(--color-blue)_40%,transparent),0_0_40px_color-mix(in_srgb,var(--color-blue)_15%,transparent)]"
           } ${isLogActive ? "ring-2 ring-white/20" : ""}`}
         >
           {hasSavedSession ? (

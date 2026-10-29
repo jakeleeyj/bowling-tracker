@@ -10,7 +10,14 @@ import {
   Crown,
   Award,
 } from "lucide-react";
-import { getRank, getDivisionProgress, CALIBRATION_GAMES } from "@/lib/ranking";
+import {
+  getRank,
+  getDivisionProgress,
+  formatLP,
+  formatLPDelta,
+  formatCalibrationGamesLeft,
+  CALIBRATION_GAMES,
+} from "@/lib/ranking";
 import RankEmblem from "@/components/RankEmblem";
 import type { ResultsData } from "@/hooks/useSessionState";
 import type { AchievementDef } from "@/lib/achievements";
@@ -26,17 +33,19 @@ function AnimatedCounter({
 }) {
   const [value, setValue] = useState(from);
   useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const start = performance.now();
+    let frame = 0;
     function tick(now: number) {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
+      const progress = reduce ? 1 : Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       setValue(Math.round(from + (to - from) * eased));
-      if (progress < 1) requestAnimationFrame(tick);
+      if (progress < 1) frame = requestAnimationFrame(tick);
     }
-    requestAnimationFrame(tick);
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
   }, [from, to, duration]);
-  return <>{value}</>;
+  return <>{formatLP(value)}</>;
 }
 
 const RESULTS_ICON_MAP: Record<string, React.ReactNode> = {
@@ -68,6 +77,19 @@ export default function SessionResults({ data }: { data: ResultsData }) {
   const displayRank =
     data.rankChanged && !showRankChange ? data.oldRank : data.newRank;
   const progress = getDivisionProgress(data.newLp);
+  // Bar starts where the player was and fills to where they are now
+  const startProgress = data.rankChanged
+    ? data.isRankUp
+      ? 0
+      : 100
+    : getDivisionProgress(data.oldLp);
+  const [barProgress, setBarProgress] = useState(
+    wasCalibrating ? 0 : startProgress,
+  );
+  useEffect(() => {
+    const timer = setTimeout(() => setBarProgress(progress), 600);
+    return () => clearTimeout(timer);
+  }, [progress]);
 
   useEffect(() => {
     if (data.rankChanged && !wasCalibrating) {
@@ -89,11 +111,22 @@ export default function SessionResults({ data }: { data: ResultsData }) {
       className="flex min-h-[70vh] flex-col items-center justify-center text-center"
       onClick={skipAnimations}
     >
-      <div className="animate-results-emblem mb-4">
-        <RankEmblem
-          tierName={isCalibrating ? getRank(0).name : data.newRank.name}
-          size={96}
-        />
+      <div className="relative mb-4">
+        {showRankChange && data.isRankUp && (
+          <div
+            aria-hidden
+            className={`animate-rank-burst pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,currentColor_45%,transparent)_0%,transparent_65%)] ${data.newRank.color}`}
+          />
+        )}
+        <div
+          key={isCalibrating ? "calibrating" : displayRank.name}
+          className="animate-results-emblem relative"
+        >
+          <RankEmblem
+            tierName={isCalibrating ? getRank(0).name : displayRank.name}
+            size={96}
+          />
+        </div>
       </div>
 
       {isCalibrating ? (
@@ -105,9 +138,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
           </div>
           <div className="animate-results-fade mb-6 mt-1">
             <p className="text-sm text-text-muted">
-              {CALIBRATION_GAMES - data.totalGamesAfter} more game
-              {CALIBRATION_GAMES - data.totalGamesAfter !== 1 ? "s" : ""} to set
-              your rank
+              {formatCalibrationGamesLeft(data.totalGamesAfter)}
             </p>
             <div className="mx-auto mt-3 flex w-full max-w-[120px] gap-1.5">
               {Array.from({ length: CALIBRATION_GAMES }, (_, i) => (
@@ -137,25 +168,19 @@ export default function SessionResults({ data }: { data: ResultsData }) {
           <div className="animate-results-fade mb-1 w-full max-w-[200px]">
             <div className="h-1.5 overflow-hidden rounded-full bg-surface-light">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-blue to-green"
-                style={{ width: `${progress}%` }}
+                className={`h-full rounded-full bg-current transition-[width] duration-[1600ms] ease-out ${data.newRank.color}`}
+                style={{ width: `${barProgress}%` }}
               />
             </div>
             <div className="mt-1 flex justify-between text-[9px] text-text-muted">
               <span>{data.newRank.division ?? data.newRank.name}</span>
-              <span>{progress}%</span>
+              <span className="tabular-nums">{progress}%</span>
             </div>
           </div>
           <div className="animate-results-fade mb-6 mt-3">
             <div className="text-4xl font-extrabold tabular-nums text-text-primary">
               <AnimatedCounter from={0} to={data.newLp} />
               <span className="text-lg text-text-muted"> LP</span>
-            </div>
-            <div
-              className={`mt-1 text-sm font-semibold ${lpDiff > 0 ? "text-green" : lpDiff < 0 ? "text-red" : "text-text-muted"}`}
-            >
-              {lpDiff > 0 ? "+" : ""}
-              {lpDiff} LP
             </div>
           </div>
         </>
@@ -171,15 +196,15 @@ export default function SessionResults({ data }: { data: ResultsData }) {
           {data.rankChanged && showRankChange && (
             <div className="animate-results-flash mb-2">
               <span
-                className={`text-sm font-bold ${data.isRankUp ? "text-gold" : "text-red"}`}
+                className={`text-xs font-extrabold uppercase tracking-[0.2em] ${data.isRankUp ? data.newRank.color : "text-red"}`}
               >
                 {data.isRankUp
                   ? data.newRank.name !== data.oldRank.name
-                    ? "RANK UP!"
-                    : "DIVISION UP!"
+                    ? "Rank up"
+                    : "Division up"
                   : data.newRank.name !== data.oldRank.name
-                    ? "RANK DOWN"
-                    : "DIVISION DOWN"}
+                    ? "Rank down"
+                    : "Division down"}
               </span>
             </div>
           )}
@@ -187,17 +212,13 @@ export default function SessionResults({ data }: { data: ResultsData }) {
           <div className="animate-results-fade mb-1 w-full max-w-[200px]">
             <div className="h-1.5 overflow-hidden rounded-full bg-surface-light">
               <div
-                className={`h-full rounded-full transition-all duration-[2500ms] ${
-                  lpDiff >= 0
-                    ? "bg-gradient-to-r from-blue to-green"
-                    : "bg-gradient-to-r from-red to-gold"
-                }`}
-                style={{ width: `${progress}%` }}
+                className={`h-full rounded-full bg-current shadow-[0_0_10px_color-mix(in_srgb,currentColor_60%,transparent)] transition-[width] duration-[1600ms] ease-out ${data.newRank.color}`}
+                style={{ width: `${barProgress}%` }}
               />
             </div>
             <div className="mt-1 flex justify-between text-[9px] text-text-muted">
               <span>{displayRank.division ?? displayRank.name}</span>
-              <span>{progress}%</span>
+              <span className="tabular-nums">{progress}%</span>
             </div>
           </div>
 
@@ -209,8 +230,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
             <div
               className={`mt-1 text-sm font-semibold ${lpDiff > 0 ? "text-green" : lpDiff < 0 ? "text-red" : "text-text-muted"}`}
             >
-              {lpDiff > 0 ? "+" : ""}
-              {lpDiff} LP
+              {formatLPDelta(lpDiff)}
             </div>
           </div>
         </>
@@ -249,22 +269,26 @@ export default function SessionResults({ data }: { data: ResultsData }) {
 
       <div className="mb-6 flex w-full max-w-[300px] gap-2">
         <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase text-text-muted">Avg</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">Avg</div>
           <div className="text-lg font-extrabold tabular-nums">{data.sessionAvg}</div>
         </div>
         <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase text-text-muted">High</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">High</div>
           <div className="text-lg font-extrabold tabular-nums">{data.sessionHigh}</div>
         </div>
         <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] uppercase text-text-muted">Total</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">Total</div>
           <div className="text-lg font-extrabold tabular-nums">{data.totalPins}</div>
         </div>
       </div>
 
       <div className="mb-8 flex w-full max-w-[300px] flex-wrap justify-center gap-2">
         {data.gameScores.map((score: number, i: number) => (
-          <div key={i} className="glass min-w-[48px] flex-1 p-2 text-center">
+          <div
+            key={i}
+            className="glass animate-results-fade min-w-[48px] flex-1 p-2 text-center"
+            style={{ animationDelay: `${0.8 + i * 0.08}s` }}
+          >
             <div className="text-[9px] text-text-muted">G{i + 1}</div>
             <div className="text-sm font-bold tabular-nums text-text-primary">{score}</div>
           </div>

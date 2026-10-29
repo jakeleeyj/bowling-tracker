@@ -43,7 +43,7 @@ function payloadFor(
     case "started":
       return {
         title: `${season.name} has begun`,
-        body: `S${season.number - 1} ended — LP soft-reset toward 1200. Calibration starts fresh.`,
+        body: `S${season.number - 1} ended. LP soft-reset toward 1,200.`,
         url: "/leaderboard",
       };
   }

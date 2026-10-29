@@ -150,6 +150,7 @@ export default async function PlayerPage({
         initialSessions={sessions ?? []}
         initialHasMore={(sessions?.length ?? 0) === 20}
         totalGames={totalGames}
+        currentLp={lp}
         initialLpChanges={sessionLpChanges}
       />
     </div>

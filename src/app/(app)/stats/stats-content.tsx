@@ -1,9 +1,79 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { OverviewStats, LeaveStats } from "@/lib/queries";
+import { PIN_LAYOUT } from "@/lib/bowling";
 
 type Tab = "overview" | "spares";
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+// Monotone cubic path (Fritsch-Carlson style): never overshoots the data,
+// so the curve can't invent peaks or dips between points.
+function smoothPath(pts: Point[]): string {
+  if (pts.length === 0) return "";
+  if (pts.length === 1) return `M${pts[0].x},${pts[0].y}`;
+  if (pts.length === 2) {
+    return `M${pts[0].x},${pts[0].y}L${pts[1].x},${pts[1].y}`;
+  }
+  const slopes: number[] = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const dx = pts[i + 1].x - pts[i].x;
+    slopes.push(dx === 0 ? 0 : (pts[i + 1].y - pts[i].y) / dx);
+  }
+  const tangents = pts.map((_, i) => {
+    if (i === 0) return slopes[0];
+    if (i === pts.length - 1) return slopes[slopes.length - 1];
+    const a = slopes[i - 1];
+    const b = slopes[i];
+    return a * b <= 0 ? 0 : (2 * a * b) / (a + b);
+  });
+  let d = `M${pts[0].x},${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const dx = (pts[i + 1].x - pts[i].x) / 3;
+    d += `C${pts[i].x + dx},${pts[i].y + tangents[i] * dx} ${pts[i + 1].x - dx},${pts[i + 1].y - tangents[i + 1] * dx} ${pts[i + 1].x},${pts[i + 1].y}`;
+  }
+  return d;
+}
+
+function Sparkline({ values }: { values: number[] }) {
+  const recent = values.slice(-10);
+  if (recent.length < 2) return null;
+  const width = 56;
+  const height = 16;
+  const pad = 2;
+  const min = Math.min(...recent);
+  const range = Math.max(...recent) - min;
+  const pts = recent.map((v, i) => ({
+    x: pad + (i / (recent.length - 1)) * (width - pad * 2),
+    y:
+      range === 0
+        ? height / 2
+        : height - pad - ((v - min) / range) * (height - pad * 2),
+  }));
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      width={width}
+      height={height}
+      aria-hidden
+      className="mx-auto mt-2 block"
+    >
+      <path
+        d={smoothPath(pts)}
+        fill="none"
+        stroke="var(--color-blue)"
+        strokeOpacity={0.7}
+        strokeWidth={1.25}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 function TrendChart({
   values,
@@ -18,6 +88,7 @@ function TrendChart({
   suffix?: string;
   highlights?: boolean[];
 }) {
+  const gradientId = `trend-fill-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   if (values.length === 0) return null;
 
   // Long ranges (Lifetime): bucket into averaged points so the line stays
@@ -55,9 +126,15 @@ function TrendChart({
   const toY = (v: number) =>
     padding.top + chartH - ((v - yMin) / yRange) * chartH;
 
-  const points = values.map((s, i) => `${toX(i)},${toY(s)}`);
-  const linePath = `M${points.join("L")}`;
+  const points: Point[] = values.map((s, i) => ({ x: toX(i), y: toY(s) }));
+  const linePath = smoothPath(points);
+  const baseY = padding.top + chartH;
+  const areaPath =
+    points.length > 1
+      ? `${linePath}L${points[points.length - 1].x},${baseY}L${points[0].x},${baseY}Z`
+      : "";
   const avgY = toY(avg);
+  const lastIndex = values.length - 1;
 
   const showValueLabels =
     values.length <= 10 &&
@@ -65,6 +142,13 @@ function TrendChart({
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="w-full">
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.25} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+
       {[0.25, 0.5, 0.75].map((pct) => (
         <line
           key={pct}
@@ -82,21 +166,22 @@ function TrendChart({
         y1={avgY}
         x2={width - padding.right}
         y2={avgY}
-        stroke={color}
+        stroke="var(--color-text-muted)"
         strokeWidth={0.75}
         strokeDasharray="4 3"
-        opacity={0.4}
+        opacity={0.6}
       />
       <text
         x={padding.left + 2}
         y={avgY - 5}
         fontSize={7}
-        fill={color}
-        opacity={0.7}
+        fill="var(--color-text-muted)"
       >
         avg {avg}
         {suffix}
       </text>
+
+      {areaPath && <path d={areaPath} fill={`url(#${gradientId})`} />}
 
       <path
         d={linePath}
@@ -131,22 +216,34 @@ function TrendChart({
           : s >= avg
             ? color
             : "var(--color-text-muted)";
+        const isLatest = i === lastIndex;
         return (
           <g key={i}>
+            {isLatest && (
+              <circle
+                cx={toX(i)}
+                cy={toY(s)}
+                r={7}
+                fill="none"
+                stroke={isHighlighted ? "var(--color-green)" : color}
+                strokeOpacity={0.4}
+                strokeWidth={1}
+              />
+            )}
             <circle
               cx={toX(i)}
               cy={toY(s)}
-              r={3}
-              fill={dotColor}
-              stroke={dotStroke}
+              r={isLatest ? 4 : 3}
+              fill={isLatest && !isHighlighted ? color : dotColor}
+              stroke={isLatest && !isHighlighted ? color : dotStroke}
               strokeWidth={1}
             />
-            {showValueLabels && (
+            {(showValueLabels || isLatest) && (
               <text
                 x={toX(i)}
-                y={toY(s) - 8}
+                y={toY(s) - (isLatest ? 11 : 8)}
                 textAnchor="middle"
-                fontSize={7}
+                fontSize={isLatest ? 8 : 7}
                 fontWeight="bold"
                 fill={
                   isHighlighted
@@ -181,17 +278,17 @@ function LeaveItem({
 
   return (
     <div className="flex items-center gap-3 rounded-lg bg-black/20 px-3 py-2">
-      <div className="flex w-10 flex-col items-center gap-[1px]">
-        {([[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]] as const).map((row, ri) => (
+      <div className="flex w-10 shrink-0 flex-col items-center gap-[2px]">
+        {PIN_LAYOUT.map((row, ri) => (
           <div key={ri} className="flex gap-[2px]">
             {row.map((pin) => (
               <div
                 key={pin}
-                className={`h-[5px] w-[5px] rounded-full ${
+                className={`h-[6px] w-[6px] rounded-full ${
                   pins.includes(pin)
                     ? isSplitLeave
                       ? "bg-red"
-                      : "bg-blue"
+                      : "bg-gold"
                     : "bg-white/8"
                 }`}
               />
@@ -322,6 +419,7 @@ export default function StatsContent({ overview, leaves }: Props) {
               <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
                 {avg}
               </div>
+              <Sparkline values={scores} />
             </div>
             <div className="glass px-3 py-3.5 text-center">
               <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">

@@ -195,15 +195,19 @@ export function getRank(lp: number): RankTier {
   };
 }
 
-// Progress within current division (0-100%)
+// Progress bar value (0-100), one rule shared with SQL refresh_player_ranking:
+// - Iron to Diamond: progress within the current division
+// - Master, Grandmaster: progress across the whole tier, floored
+// - Challenger: always 100 (no ceiling)
 export function getDivisionProgress(lp: number): number {
   const tier =
     TIERS.find((t) => lp >= t.min && lp < t.max) ?? TIERS[TIERS.length - 1];
 
-  // Challenger has no cap — show progress within 200 LP chunks
-  if (tier.name === "Challenger") {
-    const position = (lp - tier.min) % 200;
-    return Math.round((position / 200) * 100);
+  if (tier.name === "Challenger") return 100;
+
+  if (tier.name === "Master" || tier.name === "Grandmaster") {
+    const pct = Math.floor(((lp - tier.min) / (tier.max - tier.min)) * 100);
+    return Math.min(Math.max(pct, 0), 100);
   }
 
   const range = tier.max - tier.min;
@@ -213,9 +217,79 @@ export function getDivisionProgress(lp: number): number {
   return Math.min(Math.round((withinDiv / divSize) * 100), 100);
 }
 
-// For display: LP as comma-formatted number
+// For display: LP as comma-formatted number (locale pinned so every device
+// renders the same separators)
 export function formatLP(lp: number): string {
-  return lp.toLocaleString();
+  return lp.toLocaleString("en-SG");
+}
+
+// For display: an LP change, e.g. "+12 LP", "−12 LP" (true minus), "0 LP"
+export function formatLPDelta(delta: number): string {
+  if (delta > 0) return `+${formatLP(delta)} LP`;
+  if (delta < 0) return `\u2212${formatLP(Math.abs(delta))} LP`;
+  return "0 LP";
+}
+
+// "3 more games to rank" for a player still calibrating
+export function formatCalibrationGamesLeft(totalGames: number): string {
+  const left = Math.max(CALIBRATION_GAMES - totalGames, 0);
+  return `${left} more game${left === 1 ? "" : "s"} to rank`;
+}
+
+// A session counts as calibration if any of its games were among the
+// player's first CALIBRATION_GAMES games ever.
+export function isCalibrationSession(gamesBefore: number): boolean {
+  return gamesBefore < CALIBRATION_GAMES;
+}
+
+interface FeedSession {
+  id: string;
+  user_id: string;
+  games: readonly unknown[];
+}
+
+// Lifetime games each player had before each session. Sessions must be
+// newest-first and contiguous per player from their latest session (a feed or
+// history page, unfiltered). Counts back from the lifetime totals, so the
+// result for a session never depends on how many pages are loaded.
+export function gamesBeforeEachSession(
+  sessions: readonly FeedSession[],
+  lifetimeGames: Record<string, number>,
+): Record<string, number> {
+  const result: Record<string, number> = {};
+  const remaining: Record<string, number> = {};
+  for (const s of sessions) {
+    const u = s.user_id;
+    if (!(u in remaining)) remaining[u] = lifetimeGames[u] ?? 0;
+    remaining[u] -= s.games.length;
+    result[s.id] = remaining[u];
+  }
+  return result;
+}
+
+// LP each player landed on after each session: walk newest-first from their
+// current LP, backing out each session's delta. The chain stops at the first
+// session without a delta (e.g. a previous season).
+export function lpAfterEachSession(
+  sessions: readonly Omit<FeedSession, "games">[],
+  lpChanges: Record<string, number | undefined>,
+  currentLps: Record<string, number>,
+): Record<string, number> {
+  const result: Record<string, number> = {};
+  const running: Record<string, number | null> = {};
+  for (const s of sessions) {
+    const u = s.user_id;
+    if (!(u in running)) running[u] = currentLps[u] ?? null;
+    const cur = running[u];
+    const change = lpChanges[s.id];
+    if (cur !== null && change !== undefined) {
+      result[s.id] = cur;
+      running[u] = cur - change;
+    } else {
+      running[u] = null;
+    }
+  }
+  return result;
 }
 
 // Keep old name working

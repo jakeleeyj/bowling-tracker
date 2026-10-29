@@ -5,14 +5,17 @@ import type { SessionWithGamesFramesAndProfile } from "@/lib/queries";
 
 const PAGE_SIZE = 10;
 
-export async function loadMoreSessions(offset: number) {
+// Keyset pagination: sessions older than the last one already shown, so a
+// session logged meanwhile can't shift the page and duplicate a card.
+export async function loadMoreSessions(beforeCreatedAt: string) {
   const supabase = await createClient();
 
   const { data: sessions } = await supabase
     .from("sessions")
     .select("*, profiles(*), games(*, frames(*))")
+    .lt("created_at", beforeCreatedAt)
     .order("created_at", { ascending: false })
-    .range(offset, offset + PAGE_SIZE - 1);
+    .limit(PAGE_SIZE);
 
   const typed = (sessions ?? []) as SessionWithGamesFramesAndProfile[];
 

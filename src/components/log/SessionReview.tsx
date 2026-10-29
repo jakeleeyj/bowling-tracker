@@ -38,7 +38,7 @@ export default function SessionReview({
       <p className="mb-4 text-sm text-text-muted">
         {venue && `${venue} • `}
         {eventLabel && `${eventLabel} • `}
-        {games.length} games
+        {games.length} game{games.length !== 1 ? "s" : ""}
       </p>
 
       <div className="mb-4 flex gap-3">

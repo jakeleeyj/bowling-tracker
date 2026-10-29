@@ -16,7 +16,7 @@ import { useToast } from "@/components/Toast";
 import Avatar from "@/components/Avatar";
 import RankEmblem from "@/components/RankEmblem";
 import { isSplit } from "@/lib/bowling";
-import { EVENT_LABELS, formatLP } from "@/lib/ranking";
+import { EVENT_LABELS, formatLP, formatLPDelta } from "@/lib/ranking";
 import ShareCard from "@/components/ShareCard";
 import { shareSession } from "@/lib/shareSession";
 import { getFrame10ShotPins } from "@/lib/bowling";
@@ -73,6 +73,51 @@ const EVENT_COLORS: Record<string, string> = {
   Casual: "bg-green/12 text-green",
   Funbowl: "bg-pink/12 text-pink",
 };
+
+type BadgeKind = "perfect" | "200+" | "turkey" | "clean";
+
+const BADGE_STYLES: Record<BadgeKind, { label: string; className: string }> = {
+  perfect: { label: "Perfect", className: "bg-gold/15 text-gold" },
+  "200+": { label: "200+", className: "bg-gold/15 text-gold" },
+  turkey: { label: "Turkey", className: "bg-blue/15 text-blue" },
+  clean: { label: "Clean", className: "bg-green/15 text-green" },
+};
+
+function hasTurkey(frames: FrameInfo[]): boolean {
+  const shots: boolean[] = [];
+  const ordered = [...frames].sort((a, b) => a.frame_number - b.frame_number);
+  for (const f of ordered) {
+    if (f.frame_number < 10) {
+      shots.push(f.is_strike || f.roll_1 === 10);
+      continue;
+    }
+    const firstStrike = f.roll_1 === 10;
+    const secondStrike = firstStrike && f.roll_2 === 10;
+    const thirdStrike =
+      f.roll_3 === 10 &&
+      (secondStrike || (!firstStrike && f.roll_1 + (f.roll_2 ?? 0) === 10));
+    shots.push(firstStrike);
+    if (f.roll_2 !== null) shots.push(secondStrike);
+    if (f.roll_3 !== null) shots.push(thirdStrike);
+  }
+  let run = 0;
+  for (const isStrike of shots) {
+    run = isStrike ? run + 1 : 0;
+    if (run >= 3) return true;
+  }
+  return false;
+}
+
+function getSessionBadges(games: SessionGame[]): BadgeKind[] {
+  const found: BadgeKind[] = [];
+  const hasPerfect = games.some((g) => g.total_score === 300);
+  if (hasPerfect) found.push("perfect");
+  else if (games.some((g) => g.total_score >= 200)) found.push("200+");
+  if (games.some((g) => g.frames && g.frames.length > 0 && hasTurkey(g.frames)))
+    found.push("turkey");
+  if (games.some((g) => g.is_clean)) found.push("clean");
+  return found.slice(0, 2);
+}
 
 function PinIcon({ className }: { className?: string }) {
   return (
@@ -782,6 +827,8 @@ export default function SessionCard({
     setExpanded(!expanded);
   }
 
+  const badges = getSessionBadges(games);
+
   return (
     <div className="glass overflow-hidden">
       {/* Clickable header */}
@@ -790,9 +837,9 @@ export default function SessionCard({
         aria-expanded={expanded}
         className="flex w-full items-center justify-between p-3 text-left transition-colors duration-150 active:bg-white/[0.03]"
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex min-w-0 items-center gap-2.5">
           <Avatar name={realName} avatarUrl={avatarUrl} size="sm" />
-          <div>
+          <div className="min-w-0">
             <span className="flex items-center text-[13px] font-semibold">
               {name}
               {rankTierName && (
@@ -809,14 +856,13 @@ export default function SessionCard({
             <p className="text-[10px] text-text-muted">
               {dateLabel} &bull;{" "}
               {isCalibrationSession ? (
-                <span className="font-semibold text-blue">Calibrated</span>
+                <span className="font-semibold text-blue">Calibration</span>
               ) : lpChange !== undefined ? (
                 <>
                   <span
                     className={`font-semibold ${lpChange > 0 ? "text-green" : lpChange < 0 ? "text-red" : ""}`}
                   >
-                    {lpChange > 0 ? "+" : ""}
-                    {lpChange} LP
+                    {formatLPDelta(lpChange)}
                   </span>
                   {lpAfter !== undefined && (
                     <span> &rarr; {formatLP(lpAfter)}</span>
@@ -826,8 +872,8 @@ export default function SessionCard({
                 <>avg {avg}</>
               )}
             </p>
-            {(venue || eventLabel) && (
-              <span className="mt-0.5 flex items-center gap-1.5">
+            {(venue || eventLabel || badges.length > 0) && (
+              <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
                 {venue && (
                   <span className="flex items-center gap-1 text-[10px] text-text-secondary">
                     <PinIcon />
@@ -841,11 +887,19 @@ export default function SessionCard({
                     {eventLabel}
                   </span>
                 )}
+                {badges.map((kind) => (
+                  <span
+                    key={kind}
+                    className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${BADGE_STYLES[kind].className}`}
+                  >
+                    {BADGE_STYLES[kind].label}
+                  </span>
+                ))}
               </span>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <div className="text-right">
             <div className="text-lg font-extrabold leading-tight">
               {totalPins}
@@ -870,7 +924,7 @@ export default function SessionCard({
           return (
             <div
               key={game.id}
-              className={`w-14 rounded-md bg-black/30 py-[5px] text-center ${isHigh ? "border border-gold/35" : isClean ? "border border-green/35" : "border border-transparent"}`}
+              className={`w-14 rounded-md bg-black/30 py-[5px] text-center tabular-nums ${isHigh ? "border border-gold/35" : isClean ? "border border-green/35" : "border border-transparent"}`}
             >
               <span
                 className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : ""}`}

@@ -13,6 +13,7 @@ import {
   countStrikes,
   countSpares,
 } from "@/lib/bowling";
+import { sgtToday } from "@/lib/seasons";
 import { useToast } from "@/components/Toast";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
 import {
@@ -137,6 +138,10 @@ export function useSessionState() {
   const [currentFrame, setCurrentFrame] = useState(1);
   const [currentRoll, setCurrentRoll] = useState<1 | 2 | 3>(1);
   const [standingPins, setStandingPins] = useState<number[]>([]);
+  const [lastMark, setLastMark] = useState<{
+    type: "strike" | "spare";
+    id: number;
+  } | null>(null);
   const [saving, setSaving] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
 
@@ -324,7 +329,7 @@ export function useSessionState() {
         const { data: updated } = await supabase
           .from("sessions")
           .update({
-            session_date: new Date().toISOString().split("T")[0],
+            session_date: sgtToday(),
             venue: syncData.venue || null,
             event_label: syncData.eventLabel || null,
             game_count: syncData.games.length,
@@ -342,7 +347,7 @@ export function useSessionState() {
         .from("sessions")
         .insert({
           user_id: userId,
-          session_date: new Date().toISOString().split("T")[0],
+          session_date: sgtToday(),
           venue: syncData.venue || null,
           event_label: syncData.eventLabel || null,
           game_count: syncData.games.length,
@@ -442,8 +447,22 @@ export function useSessionState() {
       } = await supabase.auth.getUser();
       if (!user) {
         setSaving(false);
-        toast("Not logged in — please sign in to sync", "error");
+        toast("Not logged in. Sign in to sync.", "error");
         return;
+      }
+
+      // Clear games from any half-saved attempt first, so the "before" LP
+      // doesn't already include them
+      for (const item of queue) {
+        if (!item.idempotencyKey) continue;
+        const { data: existing } = await supabase
+          .from("sessions")
+          .select("id")
+          .eq("idempotency_key", item.idempotencyKey)
+          .maybeSingle();
+        if (existing) {
+          await supabase.from("games").delete().eq("session_id", existing.id);
+        }
       }
 
       // Season-scoped LP before syncing — from the server cache, not client math
@@ -850,9 +869,14 @@ export function useSessionState() {
     }
   }
 
+  function flashMark(type: "strike" | "spare") {
+    setLastMark((prev) => ({ type, id: (prev?.id ?? 0) + 1 }));
+  }
+
   function handleStrike() {
     haptic([15, 50, 15]);
     if (currentFrame <= 9) {
+      flashMark("strike");
       const frame: FrameData = {
         frameNumber: currentFrame,
         roll1: 10,
@@ -878,6 +902,7 @@ export function useSessionState() {
     if (currentFrame <= 9) {
       const existingFrame = frames.find((f) => f.frameNumber === currentFrame);
       if (!existingFrame) return;
+      flashMark("spare");
 
       const remaining =
         existingFrame.pinsRemaining?.length ?? 10 - existingFrame.roll1;
@@ -944,6 +969,7 @@ export function useSessionState() {
   }
 
   function handlePinToggle(pin: number) {
+    haptic(3);
     setStandingPins((prev) =>
       prev.includes(pin) ? prev.filter((p) => p !== pin) : [...prev, pin],
     );
@@ -984,6 +1010,7 @@ export function useSessionState() {
           existingFrame.pinsRemaining?.length ?? 10 - existingFrame.roll1;
         const roll2Pins = previousRemaining - standingPins.length;
         const isSpare = standingPins.length === 0;
+        if (isSpare) flashMark("spare");
 
         const updatedFrame: FrameData = {
           ...existingFrame,
@@ -1032,6 +1059,7 @@ export function useSessionState() {
     if (!existing || isReedit) {
       // Roll 1 of 10th frame (fresh entry OR re-edit overwrite)
       const isStrike = pins === 10;
+      if (isStrike) flashMark("strike");
       const frame: FrameData = {
         frameNumber: 10,
         roll1: pins,
@@ -1057,6 +1085,8 @@ export function useSessionState() {
     } else if (existing.roll2 === null) {
       // Roll 2 of 10th frame
       const isSpare = !existing.isStrike && existing.roll1 + pins === 10;
+      if (existing.isStrike && pins === 10) flashMark("strike");
+      else if (isSpare) flashMark("spare");
       // Store remaining pins after roll 2
       const roll2Pins =
         standingPins.length > 0
@@ -1274,6 +1304,22 @@ export function useSessionState() {
       return;
     }
 
+    // Retry of a half-saved session: delete its orphaned games (cascades to
+    // frames) BEFORE reading old LP and existing games, so the "before"
+    // snapshot doesn't already include this session.
+    let retrySessionId: string | null = null;
+    if (idempotencyKey) {
+      const { data: existing } = await supabase
+        .from("sessions")
+        .select("id")
+        .eq("idempotency_key", idempotencyKey)
+        .maybeSingle();
+      if (existing) {
+        await supabase.from("games").delete().eq("session_id", existing.id);
+        retrySessionId = existing.id;
+      }
+    }
+
     // Parallel: get profile name + existing games + current LP at once
     const [profileResult, gamesResult, oldLpResult] = await Promise.all([
       supabase
@@ -1315,32 +1361,22 @@ export function useSessionState() {
 
     const totalPins = games.reduce((sum, g) => sum + g.totalScore, 0);
 
-    // Check for existing session from a previous partial save (idempotency)
+    // Previous partial save: reuse its session row with current data
     let session: Database["public"]["Tables"]["sessions"]["Row"] | null = null;
-    if (idempotencyKey) {
-      const { data: existing } = await supabase
+    if (retrySessionId) {
+      const { data: updated } = await supabase
         .from("sessions")
-        .select("id")
-        .eq("idempotency_key", idempotencyKey)
-        .maybeSingle();
-      if (existing) {
-        // Previous partial save — delete orphaned games (cascades to frames)
-        await supabase.from("games").delete().eq("session_id", existing.id);
-        // Update the session with current data
-        const { data: updated } = await supabase
-          .from("sessions")
-          .update({
-            session_date: new Date().toISOString().split("T")[0],
-            venue: venue || null,
-            event_label: eventLabel || null,
-            game_count: games.length,
-            total_pins: totalPins,
-          })
-          .eq("id", existing.id)
-          .select()
-          .single();
-        session = updated;
-      }
+        .update({
+          session_date: sgtToday(),
+          venue: venue || null,
+          event_label: eventLabel || null,
+          game_count: games.length,
+          total_pins: totalPins,
+        })
+        .eq("id", retrySessionId)
+        .select()
+        .single();
+      session = updated;
     }
 
     if (!session) {
@@ -1348,7 +1384,7 @@ export function useSessionState() {
         .from("sessions")
         .insert({
           user_id: user.id,
-          session_date: new Date().toISOString().split("T")[0],
+          session_date: sgtToday(),
           venue: venue || null,
           event_label: eventLabel || null,
           game_count: games.length,
@@ -1758,6 +1794,7 @@ export function useSessionState() {
     deleteCurrentGame,
     switchToGame,
     haptic,
+    lastMark,
     handleStrike,
     handleSpare,
     handleGutter,
