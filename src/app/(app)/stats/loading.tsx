@@ -3,7 +3,9 @@ import { Skeleton, SkeletonCard } from "@/components/Skeleton";
 export default function StatsLoading() {
   return (
     <div aria-busy="true" aria-label="Loading stats">
-      <h1 className="mb-5 text-xl font-extrabold">Stats</h1>
+      <h1 className="mb-5 text-[28px] leading-[34px] font-extrabold tracking-tight">
+        Stats
+      </h1>
       <Skeleton className="mb-2 h-11" />
       <div className="mb-3 flex flex-wrap gap-1.5">
         {[1, 2, 3, 4, 5].map((i) => (
