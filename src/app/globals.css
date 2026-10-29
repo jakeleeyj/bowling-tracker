@@ -24,10 +24,7 @@
 }
 
 body {
-  /* Faint film grain over the base colour */
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .035 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
-    var(--color-base);
+  background: var(--color-base);
   color: var(--color-text-primary);
   font-family: var(--font-sans), system-ui, sans-serif;
   min-height: 100dvh;
