@@ -5,7 +5,7 @@ export default function ProfileLoading() {
     <div aria-busy="true" aria-label="Loading profile">
       {/* Header */}
       <div className="mb-5 flex items-center justify-between">
-        <Skeleton className="h-7 w-12" />
+        <Skeleton className="h-[34px] w-14" />
         <Skeleton className="h-10 w-10 rounded-full" />
       </div>
 
