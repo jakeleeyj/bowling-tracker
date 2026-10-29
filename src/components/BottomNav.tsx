@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useTransitionRouter } from "@/components/ViewTransitions";
 import { Home, Plus, BarChart3, Swords, User } from "lucide-react";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
 
@@ -17,7 +18,7 @@ const rightItems = [
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const router = useRouter();
+  const router = useTransitionRouter();
   const { confirmLeave } = useUnsavedGuard();
 
   function handleNav(href: string) {
@@ -50,7 +51,7 @@ export default function BottomNav() {
   }, [pathname]);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-[480px] overflow-visible lg:hidden [transform:translateZ(0)] [will-change:transform]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 [view-transition-name:app-nav] mx-auto max-w-[480px] overflow-visible lg:hidden [transform:translateZ(0)] [will-change:transform]">
       {/* Floating circle — above the notch */}
       <button
         onClick={() => handleNav("/log")}

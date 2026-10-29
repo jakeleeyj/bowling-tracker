@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Loader } from "lucide-react";
 import { useSessionState } from "@/hooks/useSessionState";
 import { LoadingScreen } from "@/components/Skeleton";
+import { useConfirm } from "@/components/ConfirmSheet";
 import SessionSetup from "@/components/log/SessionSetup";
 import GameEntry from "@/components/log/GameEntry";
 import SessionResults from "@/components/log/SessionResults";
@@ -24,6 +25,7 @@ function LogPage() {
 }
 
 function LogStep({ session }: { session: ReturnType<typeof useSessionState> }) {
+  const confirm = useConfirm();
   // Results screen
   if (session.step === "results" && session.resultsData) {
     return <SessionResults data={session.resultsData} />;
@@ -79,10 +81,13 @@ function LogStep({ session }: { session: ReturnType<typeof useSessionState> }) {
             Resume session
           </button>
           <button
-            onClick={() => {
-              if (!confirm("Discard your current session and start fresh?"))
-                return;
-              session.discardSession();
+            onClick={async () => {
+              const ok = await confirm({
+                title: "Discard your unfinished session?",
+                confirmLabel: "Discard and start new",
+                destructive: true,
+              });
+              if (ok) session.discardSession();
             }}
             className="rounded-xl border border-border-light py-3 text-sm font-semibold text-text-secondary transition-[transform,background-color] duration-150 active:scale-[0.97] active:bg-white/5"
           >

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import ErrorCard from "@/components/ErrorCard";
+import LargeTitle from "@/components/LargeTitle";
 import {
   getRank,
   CALIBRATION_GAMES,
@@ -387,7 +388,7 @@ export default function ProfilePage() {
   if (error) {
     return (
       <div>
-        <h1 className="mb-5 text-xl font-extrabold">Me</h1>
+        <LargeTitle title="Me" className="mb-5" />
         <ErrorCard
           message="Failed to load profile"
           onRetry={() => window.location.reload()}
@@ -400,7 +401,7 @@ export default function ProfilePage() {
     <div>
       {/* Header */}
       <div className="mb-5 flex items-center justify-between">
-        <h1 className="text-xl font-extrabold">Me</h1>
+        <LargeTitle title="Me" />
         <button
           onClick={() => setShowSettings(!showSettings)}
           aria-label={showSettings ? "Close settings" : "Open settings"}

@@ -92,11 +92,16 @@ export default async function PlayerPage({
 
       {/* Player header */}
       <div className="mb-5 flex items-center gap-3">
-        <Avatar
-          name={profile.display_name}
-          avatarUrl={profile.avatar_url}
-          size="lg"
-        />
+        <span
+          className="shrink-0"
+          style={{ viewTransitionName: `avatar-${profile.id}` }}
+        >
+          <Avatar
+            name={profile.display_name}
+            avatarUrl={profile.avatar_url}
+            size="lg"
+          />
+        </span>
         <div>
           <h1 className="text-xl font-extrabold">{profile.display_name}</h1>
         </div>

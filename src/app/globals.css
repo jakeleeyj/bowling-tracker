@@ -17,6 +17,10 @@
   --color-green: #22c55e;
   --color-red: #ef4444;
   --font-sans: var(--font-inter);
+  /* Springs: snappy (~4% overshoot) and soft (settles without bounce) */
+  --ease-spring: linear(0, 0.051, 0.171, 0.323, 0.48, 0.626, 0.751, 0.851, 0.927, 0.98, 1.015, 1.035, 1.044, 1.046, 1.042, 1.036, 1.029, 1.022, 1.016, 1.01, 1.006, 1.003, 1, 0.999, 1);
+  --ease-spring-soft: linear(0, 0.032, 0.11, 0.211, 0.32, 0.428, 0.528, 0.618, 0.696, 0.763, 0.818, 0.863, 0.898, 0.926, 0.948, 0.965, 0.977, 0.986, 0.992, 0.997, 0.999, 1.001, 1.002, 1.003, 1);
+  --default-transition-timing-function: var(--ease-spring);
 }
 
 body {
@@ -137,7 +141,7 @@ body {
 }
 
 .animate-slide-down {
-  animation: slide-down 0.2s ease-out;
+  animation: slide-down 0.45s var(--ease-spring-soft);
 }
 
 @keyframes slide-up {
@@ -152,7 +156,7 @@ body {
 }
 
 .animate-slide-up {
-  animation: slide-up 0.2s ease-out;
+  animation: slide-up 0.45s var(--ease-spring-soft);
 }
 
 @keyframes slide-out-down {
@@ -168,6 +172,138 @@ body {
 
 .animate-slide-out-down {
   animation: slide-out-down 0.15s ease-out forwards;
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-fade-out {
+  animation: fade-out 0.25s ease-in forwards;
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.animate-sheet-in {
+  animation: sheet-in 0.5s var(--ease-spring-soft);
+}
+
+.animate-sheet-out {
+  animation: sheet-out 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@media (min-width: 1024px) {
+  .animate-sheet-in {
+    animation: scale-in 0.35s var(--ease-spring);
+  }
+  .animate-sheet-out {
+    animation: fade-out 0.2s ease-in forwards;
+  }
+}
+
+/* Page transitions (View Transitions API) */
+::view-transition-group(*) {
+  animation-duration: 0.5s;
+  animation-timing-function: var(--ease-spring-soft);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+}
+
+html[data-nav="forward"]::view-transition-old(root) {
+  animation: 0.4s var(--ease-spring-soft) both vt-out-left;
+}
+html[data-nav="forward"]::view-transition-new(root) {
+  animation: 0.45s var(--ease-spring-soft) both vt-in-right;
+}
+html[data-nav="back"]::view-transition-old(root) {
+  animation: 0.4s var(--ease-spring-soft) both vt-out-right;
+}
+html[data-nav="back"]::view-transition-new(root) {
+  animation: 0.45s var(--ease-spring-soft) both vt-in-left;
+}
+
+/* Nav bars stay live so their own active-state transitions play */
+::view-transition-old(app-nav) {
+  display: none;
+}
+::view-transition-new(app-nav) {
+  animation: none;
+}
+
+@keyframes vt-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(28%);
+  }
+}
+@keyframes vt-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-10%);
+  }
+}
+@keyframes vt-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-10%);
+  }
+}
+@keyframes vt-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(28%);
+  }
+}
+
+/* Browsers with view transitions animate pages there instead */
+.animate-page-enter {
+  animation: fade-in 0.15s ease-out;
+}
+@supports (view-transition-name: none) {
+  .animate-page-enter {
+    animation: none;
+  }
+}
+
+/* Rank card glint: one slow pass, then rest */
+@keyframes sheen {
+  0% {
+    background-position: 130% 0;
+  }
+  22%,
+  100% {
+    background-position: -30% 0;
+  }
+}
+
+.animate-sheen {
+  animation: sheen 7s cubic-bezier(0.4, 0, 0.2, 1) 1.2s infinite both;
+}
+
+@keyframes pill-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.9);
+  }
+}
+
+.animate-pill-in {
+  animation: pill-in 0.5s var(--ease-spring) 0.3s both;
 }
 
 @keyframes mark-flash {
@@ -200,7 +336,7 @@ body {
 }
 
 .animate-scale-in {
-  animation: scale-in 0.2s ease-out;
+  animation: scale-in 0.35s var(--ease-spring);
 }
 
 /* Results screen animations */
@@ -270,7 +406,7 @@ body {
 }
 
 .animate-results-flash {
-  animation: results-flash 0.4s ease-out both;
+  animation: results-flash 0.5s var(--ease-spring) both;
 }
 
 .glow-purple::after {

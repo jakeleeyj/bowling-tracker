@@ -13,6 +13,7 @@ import {
   Share2,
 } from "lucide-react";
 import { useToast } from "@/components/Toast";
+import { useConfirm } from "@/components/ConfirmSheet";
 import Avatar from "@/components/Avatar";
 import RankEmblem from "@/components/RankEmblem";
 import { isSplit } from "@/lib/bowling";
@@ -757,6 +758,7 @@ export default function SessionCard({
   const [editEvent, setEditEvent] = useState(eventLabel ?? "");
   const [savingMeta, setSavingMeta] = useState(false);
   const router = useRouter();
+  const confirm = useConfirm();
   const { toast } = useToast();
   const highGame =
     games.length > 0 ? Math.max(...games.map((g) => g.total_score)) : 0;
@@ -798,7 +800,13 @@ export default function SessionCard({
   }
 
   async function handleDeleteSession() {
-    if (!confirm("Delete this entire session and all its games?")) return;
+    const ok = await confirm({
+      title: "Delete this session?",
+      message: "All its games will be deleted.",
+      confirmLabel: "Delete session",
+      destructive: true,
+    });
+    if (!ok) return;
     setDeleting(true);
     const supabase = createClient();
 

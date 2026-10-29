@@ -10,6 +10,7 @@ import type {
 } from "@/lib/queries";
 import RecentActivity from "@/components/RecentActivity";
 import Avatar from "@/components/Avatar";
+import LargeTitle from "@/components/LargeTitle";
 import NotificationPrompt from "@/components/NotificationPrompt";
 import SeasonBanner from "@/components/SeasonBanner";
 import RankBanner from "@/components/RankBanner";
@@ -89,7 +90,7 @@ export default async function DashboardPage() {
       <div className="mb-5 flex items-center justify-between">
         <div>
           <p className="text-[13px] text-text-muted">Welcome back</p>
-          <h1 className="text-xl font-extrabold">{displayName}</h1>
+          <LargeTitle title={displayName} />
         </div>
         <Avatar name={displayName} avatarUrl={profile?.avatar_url} size="md" />
       </div>

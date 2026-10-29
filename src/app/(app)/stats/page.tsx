@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { OverviewStats, LeaveStats, StatsFilter } from "@/lib/queries";
 import StatsContent from "./stats-content";
 import StatsFilterBar from "./stats-filter";
+import LargeTitle from "@/components/LargeTitle";
 import { Skeleton, SkeletonCard } from "@/components/Skeleton";
 
 interface PageProps {
@@ -89,7 +90,7 @@ export default async function StatsPage({ searchParams }: PageProps) {
 
   return (
     <div>
-      <h1 className="mb-5 text-xl font-extrabold">Stats</h1>
+      <LargeTitle title="Stats" className="mb-5" />
       <StatsFilterBar
         currentFilter={filter}
         dateFrom={dateFrom}

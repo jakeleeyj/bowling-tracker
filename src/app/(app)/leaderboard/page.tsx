@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { Swords, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import RankInfoModal from "@/components/RankInfoModal";
+import LargeTitle from "@/components/LargeTitle";
 import RankEmblem from "@/components/RankEmblem";
 import SeasonBanner from "@/components/SeasonBanner";
 import type { ProfileRow } from "@/lib/queries";
@@ -107,13 +108,13 @@ export default async function LeaderboardPage() {
         return (
           <div className="mb-5">
             <div className="flex items-center gap-2">
-              <Swords size={20} className="text-blue" />
-              <h1 className="flex-1 text-xl font-extrabold text-text-primary">
+              <Swords size={24} className="text-blue" />
+              <LargeTitle title="Ranked" className="flex-1 text-text-primary">
                 Ranked
-                <span className="ml-1.5 text-sm font-semibold text-text-muted">
+                <span className="ml-1.5 text-sm font-semibold tracking-normal text-text-muted">
                   {season.name}
                 </span>
-              </h1>
+              </LargeTitle>
               <RankInfoModal />
             </div>
             <div className="mt-2 flex items-center gap-2">
@@ -291,11 +292,16 @@ export default async function LeaderboardPage() {
                 )}
 
                 {/* Avatar */}
-                <Avatar
-                  name={entry.name}
-                  avatarUrl={entry.avatarUrl}
-                  size="sm"
-                />
+                <span
+                  className="shrink-0"
+                  style={{ viewTransitionName: `avatar-${entry.id}` }}
+                >
+                  <Avatar
+                    name={entry.name}
+                    avatarUrl={entry.avatarUrl}
+                    size="sm"
+                  />
+                </span>
 
                 {/* Name + rank */}
                 <div className="min-w-0 flex-1">

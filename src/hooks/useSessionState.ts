@@ -14,6 +14,7 @@ import {
   countSpares,
 } from "@/lib/bowling";
 import { offlinePlayedAt, sgtToday } from "@/lib/seasons";
+import { haptic } from "@/lib/haptics";
 import { useToast } from "@/components/Toast";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
 import {
@@ -200,6 +201,11 @@ export function useSessionState() {
       const data = JSON.parse(saved);
       if (data.step !== "game") return; // Only restore active sessions
 
+      // The session pill links here with ?resume=1 to skip the prompt
+      if (searchParams.get("resume")) {
+        resumeSession();
+        return;
+      }
       // Show resume prompt — actual state restore happens in resumeSession()
       setStep("resume");
     } catch {
@@ -869,12 +875,6 @@ export function useSessionState() {
     saveEditorState(currentGameIndex);
     setCurrentGameIndex(gameIndex);
     loadEditorState(gameIndex);
-  }
-
-  function haptic(pattern: number | number[]) {
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(pattern);
-    }
   }
 
   function flashMark(type: "strike" | "spare") {

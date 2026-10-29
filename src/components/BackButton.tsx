@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "@/components/ViewTransitions";
 import { ArrowLeft } from "lucide-react";
 
 export default function BackButton() {
-  const router = useRouter();
+  const router = useTransitionRouter();
 
   return (
     <button
