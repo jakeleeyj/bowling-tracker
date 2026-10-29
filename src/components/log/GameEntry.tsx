@@ -10,6 +10,7 @@ import {
   getFrame10ShotPins,
 } from "@/lib/bowling";
 import RollingNumber from "@/components/RollingNumber";
+import { useConfirm } from "@/components/ConfirmSheet";
 import PinDiagram from "@/components/PinDiagram";
 import FrameScorecard from "@/components/FrameScorecard";
 import FramePinDetail from "@/components/FramePinDetail";
@@ -73,6 +74,7 @@ interface GameEntryProps {
 
 export default function GameEntry(props: GameEntryProps) {
   const router = useRouter();
+  const confirm = useConfirm();
   // Only flash marks made after this screen mounted, not one left over from before
   const [mountMarkId] = useState(() => props.lastMark?.id ?? 0);
   // The user's pick is tied to the (game, frame, roll) it was made in so any
@@ -142,14 +144,27 @@ export default function GameEntry(props: GameEntryProps) {
       {/* Header */}
       <div className="mb-2 flex items-center gap-2">
         <button
-          onClick={() => {
+          onClick={async () => {
             if (editMode) {
-              if (!confirm("Discard changes?")) return;
+              const ok = await confirm({
+                title: "Discard changes?",
+                confirmLabel: "Discard",
+                cancelLabel: "Keep editing",
+                destructive: true,
+              });
+              if (!ok) return;
               setHasUnsaved(false);
               router.back();
               return;
             }
-            if (!confirm("Discard this session?")) return;
+            const ok = await confirm({
+              title: "Discard this session?",
+              message: "Games you've entered will be lost.",
+              confirmLabel: "Discard session",
+              cancelLabel: "Keep bowling",
+              destructive: true,
+            });
+            if (!ok) return;
             props.discardSession();
             router.push("/dashboard");
           }}
@@ -303,12 +318,14 @@ export default function GameEntry(props: GameEntryProps) {
                   Edit
                 </button>
                 <button
-                  onClick={() => {
-                    if (
-                      !confirm("Delete this game? You'll need to re-enter it.")
-                    )
-                      return;
-                    deleteCurrentGame();
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: "Delete this game?",
+                      message: "You'll need to re-enter it.",
+                      confirmLabel: "Delete game",
+                      destructive: true,
+                    });
+                    if (ok) deleteCurrentGame();
                   }}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red/10 py-3.5 text-sm font-bold text-red transition-[background-color,transform] duration-150 active:scale-[0.97] active:bg-red/20"
                 >
