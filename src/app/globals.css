@@ -17,6 +17,10 @@
   --color-green: #22c55e;
   --color-red: #ef4444;
   --font-sans: var(--font-inter);
+  /* Springs: snappy (~4% overshoot) and soft (settles without bounce) */
+  --ease-spring: linear(0, 0.051, 0.171, 0.323, 0.48, 0.626, 0.751, 0.851, 0.927, 0.98, 1.015, 1.035, 1.044, 1.046, 1.042, 1.036, 1.029, 1.022, 1.016, 1.01, 1.006, 1.003, 1, 0.999, 1);
+  --ease-spring-soft: linear(0, 0.032, 0.11, 0.211, 0.32, 0.428, 0.528, 0.618, 0.696, 0.763, 0.818, 0.863, 0.898, 0.926, 0.948, 0.965, 0.977, 0.986, 0.992, 0.997, 0.999, 1.001, 1.002, 1.003, 1);
+  --default-transition-timing-function: var(--ease-spring);
 }
 
 body {
@@ -137,7 +141,7 @@ body {
 }
 
 .animate-slide-down {
-  animation: slide-down 0.2s ease-out;
+  animation: slide-down 0.45s var(--ease-spring-soft);
 }
 
 @keyframes slide-up {
@@ -152,7 +156,7 @@ body {
 }
 
 .animate-slide-up {
-  animation: slide-up 0.2s ease-out;
+  animation: slide-up 0.45s var(--ease-spring-soft);
 }
 
 @keyframes slide-out-down {
@@ -200,7 +204,7 @@ body {
 }
 
 .animate-scale-in {
-  animation: scale-in 0.2s ease-out;
+  animation: scale-in 0.35s var(--ease-spring);
 }
 
 /* Results screen animations */
@@ -270,7 +274,7 @@ body {
 }
 
 .animate-results-flash {
-  animation: results-flash 0.4s ease-out both;
+  animation: results-flash 0.5s var(--ease-spring) both;
 }
 
 .glow-purple::after {

@@ -9,6 +9,7 @@ import {
   calculateFrameScores,
   getFrame10ShotPins,
 } from "@/lib/bowling";
+import RollingNumber from "@/components/RollingNumber";
 import PinDiagram from "@/components/PinDiagram";
 import FrameScorecard from "@/components/FrameScorecard";
 import FramePinDetail from "@/components/FramePinDetail";
@@ -429,21 +430,17 @@ export default function GameEntry(props: GameEntryProps) {
                 <p className="flex items-baseline gap-3 text-[11px] text-text-muted">
                   <span>
                     Score{" "}
-                    <span
-                      key={currentScore}
-                      className="animate-scale-in inline-block text-lg leading-none font-extrabold tabular-nums text-text-primary"
-                    >
-                      {currentScore}
-                    </span>
+                    <RollingNumber
+                      value={currentScore}
+                      className="text-lg leading-none font-extrabold text-text-primary"
+                    />
                   </span>
                   <span>
                     Max{" "}
-                    <span
-                      key={maxPossible}
-                      className="animate-scale-in inline-block text-lg leading-none font-extrabold tabular-nums text-green"
-                    >
-                      {maxPossible}
-                    </span>
+                    <RollingNumber
+                      value={maxPossible}
+                      className="text-lg leading-none font-extrabold text-green"
+                    />
                   </span>
                 </p>
               </div>
