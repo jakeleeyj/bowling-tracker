@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import RankEmblem from "@/components/RankEmblem";
-import RankShine from "@/components/RankShine";
 import {
   getRank,
   getDivisionProgress,
@@ -37,13 +36,10 @@ export default function RankBanner({
   const content = (
     <>
       {calibrated && (
-        <>
-          <div
-            aria-hidden
-            className={`pointer-events-none absolute inset-0 ${rank.color} bg-[radial-gradient(90%_120%_at_0%_0%,color-mix(in_srgb,currentColor_16%,transparent),transparent_60%)]`}
-          />
-          <RankShine tierColor={rank.color} />
-        </>
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute inset-0 ${rank.color} bg-[radial-gradient(90%_120%_at_0%_0%,color-mix(in_srgb,currentColor_16%,transparent),transparent_60%)]`}
+        />
       )}
       <div className="relative flex items-center gap-3 p-3">
         {calibrated ? (

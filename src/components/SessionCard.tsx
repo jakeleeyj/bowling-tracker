@@ -75,51 +75,6 @@ const EVENT_COLORS: Record<string, string> = {
   Funbowl: "bg-pink/12 text-pink",
 };
 
-type BadgeKind = "perfect" | "200+" | "turkey" | "clean";
-
-const BADGE_STYLES: Record<BadgeKind, { label: string; className: string }> = {
-  perfect: { label: "Perfect", className: "bg-gold/15 text-gold" },
-  "200+": { label: "200+", className: "bg-gold/15 text-gold" },
-  turkey: { label: "Turkey", className: "bg-blue/15 text-blue" },
-  clean: { label: "Clean", className: "bg-green/15 text-green" },
-};
-
-function hasTurkey(frames: FrameInfo[]): boolean {
-  const shots: boolean[] = [];
-  const ordered = [...frames].sort((a, b) => a.frame_number - b.frame_number);
-  for (const f of ordered) {
-    if (f.frame_number < 10) {
-      shots.push(f.is_strike || f.roll_1 === 10);
-      continue;
-    }
-    const firstStrike = f.roll_1 === 10;
-    const secondStrike = firstStrike && f.roll_2 === 10;
-    const thirdStrike =
-      f.roll_3 === 10 &&
-      (secondStrike || (!firstStrike && f.roll_1 + (f.roll_2 ?? 0) === 10));
-    shots.push(firstStrike);
-    if (f.roll_2 !== null) shots.push(secondStrike);
-    if (f.roll_3 !== null) shots.push(thirdStrike);
-  }
-  let run = 0;
-  for (const isStrike of shots) {
-    run = isStrike ? run + 1 : 0;
-    if (run >= 3) return true;
-  }
-  return false;
-}
-
-function getSessionBadges(games: SessionGame[]): BadgeKind[] {
-  const found: BadgeKind[] = [];
-  const hasPerfect = games.some((g) => g.total_score === 300);
-  if (hasPerfect) found.push("perfect");
-  else if (games.some((g) => g.total_score >= 200)) found.push("200+");
-  if (games.some((g) => g.frames && g.frames.length > 0 && hasTurkey(g.frames)))
-    found.push("turkey");
-  if (games.some((g) => g.is_clean)) found.push("clean");
-  return found.slice(0, 2);
-}
-
 function PinIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -835,7 +790,6 @@ export default function SessionCard({
     setExpanded(!expanded);
   }
 
-  const badges = getSessionBadges(games);
 
   return (
     <div className="glass overflow-hidden">
@@ -880,7 +834,7 @@ export default function SessionCard({
                 <>avg {avg}</>
               )}
             </p>
-            {(venue || eventLabel || badges.length > 0) && (
+            {(venue || eventLabel) && (
               <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
                 {venue && (
                   <span className="flex items-center gap-1 text-[10px] text-text-secondary">
@@ -895,14 +849,6 @@ export default function SessionCard({
                     {eventLabel}
                   </span>
                 )}
-                {badges.map((kind) => (
-                  <span
-                    key={kind}
-                    className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${BADGE_STYLES[kind].className}`}
-                  >
-                    {BADGE_STYLES[kind].label}
-                  </span>
-                ))}
               </span>
             )}
           </div>
