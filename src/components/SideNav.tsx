@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useTransitionRouter } from "@/components/ViewTransitions";
 import {
   Home,
   Plus,
@@ -22,7 +23,7 @@ const navItems = [
 
 export default function SideNav() {
   const pathname = usePathname();
-  const router = useRouter();
+  const router = useTransitionRouter();
   const { confirmLeave } = useUnsavedGuard();
 
   function handleNav(href: string) {
@@ -53,7 +54,7 @@ export default function SideNav() {
   }, [pathname]);
 
   return (
-    <nav className="hidden lg:flex lg:shrink-0 lg:flex-col lg:sticky lg:top-0 lg:h-dvh w-[240px] z-50 bg-surface border-r border-border px-3 py-6">
+    <nav className="hidden [view-transition-name:app-nav] lg:flex lg:shrink-0 lg:flex-col lg:sticky lg:top-0 lg:h-dvh w-[240px] z-50 bg-surface border-r border-border px-3 py-6">
       {/* App name */}
       <div className="px-3 mb-8">
         <span className="text-lg font-bold text-text-primary tracking-tight">

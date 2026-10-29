@@ -291,11 +291,16 @@ export default async function LeaderboardPage() {
                 )}
 
                 {/* Avatar */}
-                <Avatar
-                  name={entry.name}
-                  avatarUrl={entry.avatarUrl}
-                  size="sm"
-                />
+                <span
+                  className="shrink-0"
+                  style={{ viewTransitionName: `avatar-${entry.id}` }}
+                >
+                  <Avatar
+                    name={entry.name}
+                    avatarUrl={entry.avatarUrl}
+                    size="sm"
+                  />
+                </span>
 
                 {/* Name + rank */}
                 <div className="min-w-0 flex-1">

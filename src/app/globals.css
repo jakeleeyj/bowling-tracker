@@ -213,6 +213,73 @@ body {
   }
 }
 
+/* Page transitions (View Transitions API) */
+::view-transition-group(*) {
+  animation-duration: 0.5s;
+  animation-timing-function: var(--ease-spring-soft);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+}
+
+html[data-nav="forward"]::view-transition-old(root) {
+  animation: 0.4s var(--ease-spring-soft) both vt-out-left;
+}
+html[data-nav="forward"]::view-transition-new(root) {
+  animation: 0.45s var(--ease-spring-soft) both vt-in-right;
+}
+html[data-nav="back"]::view-transition-old(root) {
+  animation: 0.4s var(--ease-spring-soft) both vt-out-right;
+}
+html[data-nav="back"]::view-transition-new(root) {
+  animation: 0.45s var(--ease-spring-soft) both vt-in-left;
+}
+
+/* Nav bars stay live so their own active-state transitions play */
+::view-transition-old(app-nav) {
+  display: none;
+}
+::view-transition-new(app-nav) {
+  animation: none;
+}
+
+@keyframes vt-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(28%);
+  }
+}
+@keyframes vt-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-10%);
+  }
+}
+@keyframes vt-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-10%);
+  }
+}
+@keyframes vt-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(28%);
+  }
+}
+
+/* Browsers with view transitions animate pages there instead */
+.animate-page-enter {
+  animation: fade-in 0.15s ease-out;
+}
+@supports (view-transition-name: none) {
+  .animate-page-enter {
+    animation: none;
+  }
+}
+
 @keyframes mark-flash {
   0% {
     opacity: 0;
