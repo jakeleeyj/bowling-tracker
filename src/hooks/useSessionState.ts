@@ -13,7 +13,7 @@ import {
   countStrikes,
   countSpares,
 } from "@/lib/bowling";
-import { sgtToday } from "@/lib/seasons";
+import { offlinePlayedAt, sgtToday } from "@/lib/seasons";
 import { useToast } from "@/components/Toast";
 import { useUnsavedGuard } from "@/components/UnsavedGuard";
 import {
@@ -79,6 +79,7 @@ export interface PendingSyncData {
   eventLabel: string;
   games: GameData[];
   idempotencyKey: string;
+  playedAt?: string;
   gameScores: number[];
   sessionAvg: number;
   sessionHigh: number;
@@ -316,6 +317,7 @@ export function useSessionState() {
     userId: string,
   ): Promise<boolean> {
     const totalPins = syncData.totalPins;
+    const playedAt = offlinePlayedAt(syncData.playedAt);
 
     let session: Database["public"]["Tables"]["sessions"]["Row"] | null = null;
     if (syncData.idempotencyKey) {
@@ -329,7 +331,8 @@ export function useSessionState() {
         const { data: updated } = await supabase
           .from("sessions")
           .update({
-            session_date: sgtToday(),
+            session_date: sgtToday(playedAt),
+            created_at: playedAt.toISOString(),
             venue: syncData.venue || null,
             event_label: syncData.eventLabel || null,
             game_count: syncData.games.length,
@@ -347,7 +350,8 @@ export function useSessionState() {
         .from("sessions")
         .insert({
           user_id: userId,
-          session_date: sgtToday(),
+          session_date: sgtToday(playedAt),
+          created_at: playedAt.toISOString(),
           venue: syncData.venue || null,
           event_label: syncData.eventLabel || null,
           game_count: syncData.games.length,
@@ -364,6 +368,7 @@ export function useSessionState() {
       session_id: session!.id,
       user_id: userId,
       game_number: i + 1,
+      created_at: playedAt.toISOString(),
       total_score: game.totalScore,
       entry_type: game.entryType,
       is_clean:
@@ -490,12 +495,19 @@ export function useSessionState() {
         const { data: allGames } = await supabase
           .from("games")
           .select(
-            "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label)",
+            "id, total_score, is_clean, strike_count, spare_count, session_id, sessions(event_label, idempotency_key)",
           )
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
         const existingGames = allGames ?? [];
+        // Synced games are backdated to when they were bowled, so pick them
+        // out by session key rather than assuming they are the newest
+        const syncedKeys = new Set(queue.map((q) => q.idempotencyKey));
+        const priorGames = existingGames.filter(
+          (g) => !syncedKeys.has(g.sessions?.idempotency_key ?? ""),
+        );
+        const priorGameIds = priorGames.map((g) => g.id);
         const existingGameIds = existingGames.map((g) => g.id);
         const { data: existingFrames } = await supabase
           .from("frames")
@@ -515,8 +527,7 @@ export function useSessionState() {
         const newLp = ((postLpData ?? {}) as { lp?: number }).lp ?? oldLp;
         const newRank = getRank(newLp);
 
-        const totalSyncedGames = queue.reduce((s, q) => s + q.games.length, 0);
-        const scoresWithout = scores.slice(totalSyncedGames);
+        const scoresWithout = priorGames.map((g) => g.total_score);
         const oldRank = getRank(oldLp);
 
         const rankChanged =
@@ -533,14 +544,11 @@ export function useSessionState() {
         const isNewPB = sessionHigh > previousHigh && previousHigh > 0;
 
         const oldAchievementStats = computeAchievementStats(
-          existingGames.slice(totalSyncedGames),
-          (existingFrames ?? []).filter((f) => {
-            const idx = existingGameIds.indexOf(
-              (f as { game_id: string }).game_id,
-            );
-            return idx >= totalSyncedGames;
-          }),
-          existingGameIds.slice(totalSyncedGames),
+          priorGames,
+          (existingFrames ?? []).filter((f) =>
+            priorGameIds.includes((f as { game_id: string }).game_id),
+          ),
+          priorGameIds,
         );
         const newAchievementStats = computeAchievementStats(
           existingGames,
@@ -566,7 +574,7 @@ export function useSessionState() {
           isRankDown: rankChanged && newLp < oldLp,
           unlockedAchievements,
           totalGamesAfter: scores.length,
-          gamesBefore: scores.length - totalSyncedGames,
+          gamesBefore: priorGames.length,
           isNewPB,
         });
         setStep("results");
@@ -1275,6 +1283,7 @@ export function useSessionState() {
           frames: g.frames.map((f) => ({ ...f })),
         })),
         idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
+        playedAt: new Date().toISOString(),
         gameScores,
         sessionAvg: Math.floor(
           gameScores.reduce((s, v) => s + v, 0) / gameScores.length,

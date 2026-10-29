@@ -78,6 +78,19 @@ export function getCurrentSeason(): Season {
   return generateSeason(half, year, num);
 }
 
+/**
+ * When an offline-saved session was bowled, for games.created_at on sync.
+ * Clamped to the current season (a closed season's results are final) and
+ * never in the future.
+ */
+export function offlinePlayedAt(playedAt: string | undefined): Date {
+  const now = new Date();
+  const played = playedAt ? new Date(playedAt) : now;
+  if (Number.isNaN(played.getTime()) || played > now) return now;
+  const seasonStart = getCurrentSeason().start;
+  return played < seasonStart ? seasonStart : played;
+}
+
 export function getSeasonByNumber(num: number): Season | null {
   if (num < 1) return null;
   const hardcoded = SEASONS.find((s) => s.number === num);

@@ -13,6 +13,7 @@ import {
   getPreviousSeason,
   getSeasonByNumber,
   sgtToday,
+  offlinePlayedAt,
 } from "./seasons";
 
 describe("season rollover", () => {
@@ -146,5 +147,48 @@ describe("sgtToday", () => {
     expect(sgtToday(new Date("2026-10-28T23:30:00Z"))).toBe("2026-10-29");
     // 2026-10-29 15:59 UTC = 2026-10-29 23:59 SGT
     expect(sgtToday(new Date("2026-10-29T15:59:00Z"))).toBe("2026-10-29");
+  });
+});
+
+describe("offlinePlayedAt", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("keeps the time a session was bowled offline, not the sync time", () => {
+    // Bowled 28 Oct 22:00 SGT, synced next morning
+    vi.setSystemTime(new Date("2026-10-29T09:00:00+08:00"));
+    const played = offlinePlayedAt("2026-10-28T14:00:00.000Z");
+    expect(played.toISOString()).toBe("2026-10-28T14:00:00.000Z");
+    expect(sgtToday(played)).toBe("2026-10-28");
+  });
+
+  it("clamps to the current season start when bowled last season", () => {
+    // Bowled 31 Dec 2026 22:00 SGT, synced after S2 rolled over to S3
+    vi.setSystemTime(new Date("2027-01-01T10:00:00+08:00"));
+    const played = offlinePlayedAt("2026-12-31T14:00:00.000Z");
+    expect(played.toISOString()).toBe(
+      new Date("2027-01-01T00:00:00+08:00").toISOString(),
+    );
+  });
+
+  it("never returns a time in the future", () => {
+    vi.setSystemTime(new Date("2026-10-29T09:00:00+08:00"));
+    const played = offlinePlayedAt("2026-11-05T00:00:00.000Z");
+    expect(played.toISOString()).toBe(new Date().toISOString());
+  });
+
+  it("falls back to now for old queue items without a played time", () => {
+    vi.setSystemTime(new Date("2026-10-29T09:00:00+08:00"));
+    expect(offlinePlayedAt(undefined).toISOString()).toBe(
+      new Date().toISOString(),
+    );
+    expect(offlinePlayedAt("garbage").toISOString()).toBe(
+      new Date().toISOString(),
+    );
   });
 });
