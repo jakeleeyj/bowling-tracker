@@ -280,6 +280,21 @@ html[data-nav="back"]::view-transition-new(root) {
   }
 }
 
+/* Rank card glint: one slow pass, then rest */
+@keyframes sheen {
+  0% {
+    background-position: 130% 0;
+  }
+  22%,
+  100% {
+    background-position: -30% 0;
+  }
+}
+
+.animate-sheen {
+  animation: sheen 7s cubic-bezier(0.4, 0, 0.2, 1) 1.2s infinite both;
+}
+
 @keyframes mark-flash {
   0% {
     opacity: 0;
