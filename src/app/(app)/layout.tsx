@@ -5,6 +5,7 @@ import { UnsavedGuardProvider } from "@/components/UnsavedGuard";
 import PullToRefresh from "@/components/PullToRefresh";
 import { ConfirmProvider } from "@/components/ConfirmSheet";
 import { ViewTransitions } from "@/components/ViewTransitions";
+import SessionPill from "@/components/SessionPill";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -18,6 +19,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <PullToRefresh>{children}</PullToRefresh>
             </main>
           </div>
+          <SessionPill />
           <BottomNav />
         </ConfirmProvider>
       </ToastProvider>

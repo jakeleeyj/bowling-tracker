@@ -48,7 +48,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <div
         role="status"
         aria-live="polite"
-        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 right-4 z-[100] mx-auto flex max-w-[400px] flex-col gap-2"
+        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 [body:has([data-session-pill])_&]:bottom-[calc(8.5rem+env(safe-area-inset-bottom))] right-4 z-[100] mx-auto flex max-w-[400px] flex-col gap-2"
       >
         {toasts.map((t) => (
           <div

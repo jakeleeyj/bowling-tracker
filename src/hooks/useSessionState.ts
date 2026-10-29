@@ -201,6 +201,11 @@ export function useSessionState() {
       const data = JSON.parse(saved);
       if (data.step !== "game") return; // Only restore active sessions
 
+      // The session pill links here with ?resume=1 to skip the prompt
+      if (searchParams.get("resume")) {
+        resumeSession();
+        return;
+      }
       // Show resume prompt — actual state restore happens in resumeSession()
       setStep("resume");
     } catch {
