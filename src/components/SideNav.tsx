@@ -67,8 +67,8 @@ export default function SideNav() {
         aria-label={hasSavedSession ? "Continue session" : "Log a session"}
         className={`flex items-center gap-3 w-full rounded-xl px-4 py-3 mb-6 font-semibold text-sm text-white transition-all duration-150 active:scale-[0.98] ${
           hasSavedSession
-            ? "bg-gradient-to-r from-blue to-emerald-600 shadow-[0_4px_20px_rgba(59,130,246,0.25),0_0_40px_rgba(16,185,129,0.1)]"
-            : "bg-gradient-to-r from-blue to-blue-dark shadow-[0_4px_20px_rgba(59,130,246,0.3)]"
+            ? "bg-gradient-to-r from-blue to-emerald-600 shadow-[0_4px_20px_color-mix(in_srgb,var(--color-blue)_25%,transparent),0_0_40px_rgba(16,185,129,0.1)]"
+            : "bg-gradient-to-r from-blue to-blue-dark shadow-[0_4px_20px_color-mix(in_srgb,var(--color-blue)_30%,transparent)]"
         } ${isLogActive ? "ring-2 ring-white/20" : ""}`}
       >
         {hasSavedSession ? (

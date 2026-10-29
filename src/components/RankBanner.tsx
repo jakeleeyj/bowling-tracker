@@ -34,7 +34,13 @@ export default function RankBanner({
 
   const content = (
     <>
-      <div className="flex items-center gap-3 p-3">
+      {calibrated && (
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute inset-0 ${rank.color} bg-[radial-gradient(90%_120%_at_0%_0%,color-mix(in_srgb,currentColor_16%,transparent),transparent_60%)]`}
+        />
+      )}
+      <div className="relative flex items-center gap-3 p-3">
         {calibrated ? (
           <RankEmblem tierName={rank.name} size={40} />
         ) : (
@@ -104,10 +110,10 @@ export default function RankBanner({
       </div>
 
       {calibrated ? (
-        <div className="px-3 pb-3">
+        <div className="relative px-3 pb-3">
           <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-blue to-green"
+              className={`h-full rounded-full bg-current shadow-[0_0_10px_color-mix(in_srgb,currentColor_60%,transparent)] ${rank.color}`}
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -119,7 +125,7 @@ export default function RankBanner({
           </div>
         </div>
       ) : (
-        <div className="px-3 pb-3">
+        <div className="relative px-3 pb-3">
           <div className="flex gap-1.5">
             {Array.from({ length: CALIBRATION_GAMES }, (_, i) => (
               <div
@@ -135,7 +141,7 @@ export default function RankBanner({
     </>
   );
 
-  const className = `glass mb-5 block overflow-hidden border ${calibrated ? rank.borderColor : "border-border/30"}`;
+  const className = `glass relative mb-5 block overflow-hidden border ${calibrated ? rank.borderColor : "border-border/30"}`;
 
   if (href) {
     return (
