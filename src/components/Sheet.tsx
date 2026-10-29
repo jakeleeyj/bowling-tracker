@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 const DISMISS_DISTANCE = 90;
 
@@ -57,7 +58,8 @@ export default function Sheet({
     else setDrag(null);
   }
 
-  return (
+  // Portal out of <main>, whose z-index would put the sheet under BottomNav
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end justify-center lg:items-center lg:p-4">
       <div
         className={`absolute inset-0 bg-base/70 backdrop-blur-sm ${leaving ? "animate-fade-out" : "animate-fade-in"}`}
@@ -98,6 +100,7 @@ export default function Sheet({
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
