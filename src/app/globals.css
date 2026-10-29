@@ -251,6 +251,24 @@ body {
   animation: results-fade 0.5s ease-out 0.6s both;
 }
 
+@keyframes rank-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.6);
+  }
+}
+
+.animate-rank-burst {
+  animation: rank-burst 1.1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
 .animate-results-flash {
   animation: results-flash 0.4s ease-out both;
 }
