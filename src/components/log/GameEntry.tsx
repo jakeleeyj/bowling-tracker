@@ -28,6 +28,7 @@ interface GameEntryProps {
   currentFrame: number;
   currentRoll: 1 | 2 | 3;
   standingPins: number[];
+  lastMark: { type: "strike" | "spare"; id: number } | null;
   saving: boolean;
   history: Array<{
     frames: FrameData[];
@@ -71,6 +72,8 @@ interface GameEntryProps {
 
 export default function GameEntry(props: GameEntryProps) {
   const router = useRouter();
+  // Only flash marks made after this screen mounted, not one left over from before
+  const [mountMarkId] = useState(() => props.lastMark?.id ?? 0);
   // The user's pick is tied to the (game, frame, roll) it was made in so any
   // advance or game switch implicitly returns the view to the live shot.
   const [viewOverride, setViewOverride] = useState<{
@@ -120,10 +123,21 @@ export default function GameEntry(props: GameEntryProps) {
     updateExistingGame,
     saveHistory,
     setHasUnsaved,
+    lastMark,
   } = props;
 
+  const fillScreen =
+    entryMode === "detailed" &&
+    !(currentGameComplete && games[currentGameIndex]);
+
   return (
-    <div>
+    <div
+      className={
+        fillScreen
+          ? "grid min-h-[calc(100dvh-1.5rem-max(8rem,7rem+env(safe-area-inset-bottom)))] grid-rows-[auto_auto_1fr] lg:block lg:min-h-0"
+          : undefined
+      }
+    >
       {/* Header */}
       <div className="mb-2 flex items-center gap-2">
         <button
@@ -393,7 +407,7 @@ export default function GameEntry(props: GameEntryProps) {
               </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="grid grid-rows-[auto_auto_1fr_auto] gap-2 lg:flex lg:flex-col">
               {/* Scorecard */}
               <FrameScorecard
                 frames={sortedFrames}
@@ -476,6 +490,27 @@ export default function GameEntry(props: GameEntryProps) {
                       availablePins={pastShotData ? undefined : availablePins}
                       onPinToggle={handlePinToggle}
                       disabled={!!pastShotData}
+                      fill
+                      overlay={
+                        lastMark && lastMark.id > mountMarkId ? (
+                          <div
+                            key={lastMark.id}
+                            aria-hidden
+                            className="animate-mark-flash pointer-events-none absolute inset-0 flex flex-col items-center justify-center bg-base/60"
+                          >
+                            <span
+                              className={`text-8xl leading-none font-black ${lastMark.type === "strike" ? "text-green" : "text-gold"}`}
+                            >
+                              {lastMark.type === "strike" ? "X" : "/"}
+                            </span>
+                            <span
+                              className={`mt-1 text-xs font-extrabold tracking-[0.2em] ${lastMark.type === "strike" ? "text-green" : "text-gold"}`}
+                            >
+                              {lastMark.type === "strike" ? "STRIKE" : "SPARE"}
+                            </span>
+                          </div>
+                        ) : undefined
+                      }
                       toolbar={
                         showToggle ? (
                           <div className="relative flex w-[156px] shrink-0 rounded-lg bg-surface-light p-[3px]">
@@ -547,8 +582,8 @@ export default function GameEntry(props: GameEntryProps) {
                 );
               })()}
 
-              {/* Action buttons: pinned above the bottom nav on short screens */}
-              <div className="sticky bottom-[calc(7rem+max(0.75rem,env(safe-area-inset-bottom)))] z-20 -mx-4 flex gap-2 bg-base/80 px-4 py-1.5 backdrop-blur-md lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+              {/* Action buttons: bottom of the screen, pinned above the nav when the page scrolls */}
+              <div className="sticky bottom-[calc(7rem+max(0.75rem,env(safe-area-inset-bottom)))] z-20 -mx-4 flex gap-2 bg-base px-4 py-1.5 lg:static lg:mx-0 lg:bg-transparent lg:p-0">
                 <button
                   onClick={handleUndo}
                   disabled={history.length === 0}

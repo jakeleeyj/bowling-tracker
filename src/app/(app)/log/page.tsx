@@ -123,6 +123,7 @@ function LogStep({ session }: { session: ReturnType<typeof useSessionState> }) {
       frames={session.frames}
       currentFrame={session.currentFrame}
       currentRoll={session.currentRoll}
+      lastMark={session.lastMark}
       standingPins={session.standingPins}
       saving={session.saving}
       history={session.history}

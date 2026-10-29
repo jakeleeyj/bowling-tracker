@@ -137,6 +137,10 @@ export function useSessionState() {
   const [currentFrame, setCurrentFrame] = useState(1);
   const [currentRoll, setCurrentRoll] = useState<1 | 2 | 3>(1);
   const [standingPins, setStandingPins] = useState<number[]>([]);
+  const [lastMark, setLastMark] = useState<{
+    type: "strike" | "spare";
+    id: number;
+  } | null>(null);
   const [saving, setSaving] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
 
@@ -850,9 +854,14 @@ export function useSessionState() {
     }
   }
 
+  function flashMark(type: "strike" | "spare") {
+    setLastMark((prev) => ({ type, id: (prev?.id ?? 0) + 1 }));
+  }
+
   function handleStrike() {
     haptic([15, 50, 15]);
     if (currentFrame <= 9) {
+      flashMark("strike");
       const frame: FrameData = {
         frameNumber: currentFrame,
         roll1: 10,
@@ -878,6 +887,7 @@ export function useSessionState() {
     if (currentFrame <= 9) {
       const existingFrame = frames.find((f) => f.frameNumber === currentFrame);
       if (!existingFrame) return;
+      flashMark("spare");
 
       const remaining =
         existingFrame.pinsRemaining?.length ?? 10 - existingFrame.roll1;
@@ -944,6 +954,7 @@ export function useSessionState() {
   }
 
   function handlePinToggle(pin: number) {
+    haptic(3);
     setStandingPins((prev) =>
       prev.includes(pin) ? prev.filter((p) => p !== pin) : [...prev, pin],
     );
@@ -984,6 +995,7 @@ export function useSessionState() {
           existingFrame.pinsRemaining?.length ?? 10 - existingFrame.roll1;
         const roll2Pins = previousRemaining - standingPins.length;
         const isSpare = standingPins.length === 0;
+        if (isSpare) flashMark("spare");
 
         const updatedFrame: FrameData = {
           ...existingFrame,
@@ -1032,6 +1044,7 @@ export function useSessionState() {
     if (!existing || isReedit) {
       // Roll 1 of 10th frame (fresh entry OR re-edit overwrite)
       const isStrike = pins === 10;
+      if (isStrike) flashMark("strike");
       const frame: FrameData = {
         frameNumber: 10,
         roll1: pins,
@@ -1057,6 +1070,8 @@ export function useSessionState() {
     } else if (existing.roll2 === null) {
       // Roll 2 of 10th frame
       const isSpare = !existing.isStrike && existing.roll1 + pins === 10;
+      if (existing.isStrike && pins === 10) flashMark("strike");
+      else if (isSpare) flashMark("spare");
       // Store remaining pins after roll 2
       const roll2Pins =
         standingPins.length > 0
@@ -1758,6 +1773,7 @@ export function useSessionState() {
     deleteCurrentGame,
     switchToGame,
     haptic,
+    lastMark,
     handleStrike,
     handleSpare,
     handleGutter,
