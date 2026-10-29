@@ -32,6 +32,13 @@ export default function Sheet({
     onCloseRef.current = onClose;
   });
 
+  // Unmount even if animationend never fires (e.g. backgrounded tab)
+  useEffect(() => {
+    if (!leaving) return;
+    const timer = setTimeout(() => setPresent(false), 400);
+    return () => clearTimeout(timer);
+  }, [leaving]);
+
   useEffect(() => {
     if (!open) return;
     const returnFocus = document.activeElement as HTMLElement | null;
