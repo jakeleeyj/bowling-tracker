@@ -113,8 +113,7 @@ export default function BottomNav() {
         >
           <path
             d="M0 14 L200 14 C212 14,216 13,220 4 A30 30 0 0 1 260 4 C264 13,268 14,280 14 L480 14 L480 80 L0 80 Z"
-            fill="rgba(15,23,41,0.92)"
-            stroke="rgba(255,255,255,0.06)"
+            className="fill-surface/92 stroke-border"
             strokeWidth="1"
           />
         </svg>
