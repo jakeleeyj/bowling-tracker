@@ -142,6 +142,11 @@ html[data-theme="telemetry"] .bg-gold.text-white {
   color: var(--color-base);
 }
 
+/* Segmented controls: active label sits on a separate sliding orange layer */
+html[data-theme="telemetry"] :has(> .bg-blue.shadow-sm) .text-white {
+  color: var(--color-base);
+}
+
 html[data-theme="telemetry"] main h2.text-sm {
   font-family: var(--font-jetbrains), ui-monospace, monospace;
   font-size: 12px;
