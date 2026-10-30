@@ -44,13 +44,13 @@ export default function SessionReview({
       <div className="mb-4 flex gap-3">
         <div className="glass flex-1 p-4 text-center">
           <div className="text-xs text-text-muted">Total</div>
-          <div className="text-2xl font-extrabold text-text-primary">
+          <div className="text-2xl font-extrabold tabular-nums text-text-primary">
             {totalPins}
           </div>
         </div>
         <div className="glass flex-1 p-4 text-center">
           <div className="text-xs text-text-muted">Average</div>
-          <div className="text-2xl font-extrabold text-text-primary">{avg}</div>
+          <div className="text-2xl font-extrabold tabular-nums text-text-primary">{avg}</div>
         </div>
       </div>
 

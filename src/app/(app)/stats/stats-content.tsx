@@ -141,7 +141,10 @@ function TrendChart({
     (values.length <= 1 || chartW / (values.length - 1) > 25);
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full">
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="w-full telemetry:font-mono"
+    >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity={0.25} />
@@ -181,7 +184,13 @@ function TrendChart({
         {suffix}
       </text>
 
-      {areaPath && <path d={areaPath} fill={`url(#${gradientId})`} />}
+      {areaPath && (
+        <path
+          d={areaPath}
+          fill={`url(#${gradientId})`}
+          className="telemetry:hidden"
+        />
+      )}
 
       <path
         d={linePath}

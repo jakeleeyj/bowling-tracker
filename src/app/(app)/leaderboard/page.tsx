@@ -1,5 +1,6 @@
 export const revalidate = 300;
 
+import GaugeTicks from "@/components/GaugeTicks";
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { Swords, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
@@ -137,7 +138,7 @@ export default async function LeaderboardPage() {
       {/* Current user's rank card */}
       {currentUserEntry && (
         <div
-          className={`glass mb-5 overflow-hidden border ${currentUserEntry.isCalibrating ? "border-border/30" : currentUserEntry.rank.borderColor}`}
+          className={`glass mb-5 overflow-hidden border ${currentUserEntry.isCalibrating ? "border-border/30" : currentUserEntry.rank.borderColor} telemetry:border-border-light`}
         >
           <div className="flex items-center gap-3 p-4">
             {currentUserEntry.isCalibrating ? (
@@ -203,7 +204,13 @@ export default async function LeaderboardPage() {
           {/* Division progress bar */}
           {!currentUserEntry.isCalibrating && (
             <div className="px-4 pb-3">
-              <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
+              <div className="hidden telemetry:block">
+                <GaugeTicks
+                  total={20}
+                  filled={Math.round(currentUserEntry.progress / 5)}
+                />
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-white/5 telemetry:hidden">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-blue to-green transition-all"
                   style={{ width: `${currentUserEntry.progress}%` }}
@@ -220,7 +227,13 @@ export default async function LeaderboardPage() {
           )}
           {currentUserEntry.isCalibrating && (
             <div className="px-4 pb-3">
-              <div className="flex gap-1.5">
+              <div className="hidden telemetry:block">
+                <GaugeTicks
+                  total={CALIBRATION_GAMES}
+                  filled={currentUserEntry.games}
+                />
+              </div>
+              <div className="flex gap-1.5 telemetry:hidden">
                 {Array.from({ length: CALIBRATION_GAMES }, (_, i) => (
                   <div
                     key={i}
@@ -249,7 +262,7 @@ export default async function LeaderboardPage() {
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 telemetry:gap-0 telemetry:overflow-hidden telemetry:rounded-[14px] telemetry:border telemetry:border-border-light">
           {rankings.map((entry, index) => {
             if (!entry) return null;
             const position = index + 1;
@@ -262,9 +275,9 @@ export default async function LeaderboardPage() {
               <Link
                 key={entry.id}
                 href={href}
-                className={`glass flex items-center gap-2.5 p-2.5 transition-colors duration-150 active:bg-white/[0.03] ${
+                className={`glass flex items-center gap-2.5 p-2.5 transition-colors duration-150 active:bg-white/[0.03] telemetry:rounded-none telemetry:border-0 telemetry:border-b telemetry:border-border-light telemetry:p-3 telemetry:last:border-b-0 ${
                   entry.isCurrentUser && !entry.isCalibrating
-                    ? `border ${entry.rank.borderColor}`
+                    ? `border ${entry.rank.borderColor} telemetry:bg-blue/5`
                     : ""
                 }`}
               >

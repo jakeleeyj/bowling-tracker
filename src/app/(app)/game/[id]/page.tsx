@@ -99,7 +99,7 @@ export default async function GameDetailPage({
           <div className="text-[11px] font-semibold text-text-muted">
             Clean
           </div>
-          <div className="mt-1.5 text-2xl leading-none font-extrabold">
+          <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
             {game.is_clean ? "Yes" : "No"}
           </div>
         </div>

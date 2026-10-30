@@ -64,7 +64,7 @@ export default function FrameScorecard({
 
   return (
     <div className="glass overflow-hidden rounded-lg">
-      <table className="w-full table-fixed border-collapse text-center text-[11px]">
+      <table className="w-full table-fixed border-collapse text-center text-[11px] tabular-nums">
         {/* Frame numbers */}
         <thead>
           <tr>
