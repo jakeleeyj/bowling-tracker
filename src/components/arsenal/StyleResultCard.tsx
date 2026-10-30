@@ -23,7 +23,7 @@ export default function StyleResultCard({
   const meterPos = Math.min(1, Math.max(0, analysis.ratio - 0.5));
 
   return (
-    <div className="glass-strong animate-slide-up p-5">
+    <div className="glass animate-slide-up p-5">
       <h2 className="mb-1 text-sm font-bold">Your style</h2>
       <p className="mb-1 text-2xl font-extrabold capitalize text-text-primary">
         {analysis.style}
