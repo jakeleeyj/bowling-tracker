@@ -282,7 +282,7 @@ function Frame10MicroPin({ frame }: { frame: FrameInfo }) {
       className="flex flex-col items-center gap-[2px] py-[2px]"
     >
       <span
-        className={`rounded-md border px-[2px] py-[0.5px] text-[11px] font-semibold leading-none tracking-tight ${
+        className={`rounded-md border px-[2px] py-[0.5px] text-[11px] font-semibold leading-none tracking-tight telemetry:font-sans ${
           canCycle
             ? "border-blue/40 bg-blue/20 text-blue"
             : "border-text-muted/30 bg-surface-light/50 text-text-muted"
@@ -347,7 +347,7 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
   const sorted = [...frames].sort((a, b) => a.frame_number - b.frame_number);
 
   return (
-    <div className="overflow-hidden rounded-md border border-border/50">
+    <div className="overflow-hidden rounded-md border border-border/50 tabular-nums">
       {/* Pin diagrams row */}
       <div className="flex">
         {Array.from({ length: 10 }, (_, i) => {

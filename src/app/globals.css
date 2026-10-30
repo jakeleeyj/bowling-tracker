@@ -93,14 +93,37 @@ html[data-theme="telemetry"] {
   --color-red: #ff5b5b;
 }
 
-html[data-theme="telemetry"] .glass {
-  background: transparent;
-  border-color: var(--color-border-light);
-  border-radius: 14px;
+/* Layered so utilities (telemetry:*) can still override panel shape */
+@layer components {
+  html[data-theme="telemetry"] .glass {
+    background: transparent;
+    border-color: var(--color-border-light);
+    border-radius: 14px;
+  }
+
+  html[data-theme="telemetry"] .glass-strong {
+    background: var(--color-surface);
+  }
 }
 
-html[data-theme="telemetry"] .glass-strong {
-  background: var(--color-surface);
+/* Tighter, squarer component shapes */
+@layer utilities {
+  html[data-theme="telemetry"] .rounded-xl {
+    border-radius: 10px;
+  }
+
+  html[data-theme="telemetry"] .rounded-2xl {
+    border-radius: 12px;
+  }
+
+  html[data-theme="telemetry"] .rounded-t-3xl {
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+  }
+
+  html[data-theme="telemetry"] .rounded-full:is(.h-1, .h-1\.5, .h-2) {
+    border-radius: 1px;
+  }
 }
 
 html[data-theme="telemetry"] .tabular-nums {
@@ -113,8 +136,17 @@ html[data-theme="telemetry"] .text-\[11px\].text-text-muted {
   letter-spacing: -0.01em;
 }
 
-html[data-theme="telemetry"] .bg-blue.text-white {
+html[data-theme="telemetry"] .bg-blue.text-white,
+html[data-theme="telemetry"] .bg-green.text-white,
+html[data-theme="telemetry"] .bg-gold.text-white {
   color: var(--color-base);
+}
+
+html[data-theme="telemetry"] main h2.text-sm {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
 }
 
 html[data-theme="telemetry"] .glow-blue::before,

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import RankEmblem from "@/components/RankEmblem";
+import GaugeTicks from "@/components/GaugeTicks";
 import {
   getRank,
   getDivisionProgress,
@@ -165,7 +166,11 @@ export default function RankBanner({
                   LP
                 </span>
               </div>
-              <GaugeTicks total={20} filled={Math.round(progress / 5)} />
+              <GaugeTicks
+                className="mt-4"
+                total={20}
+                filled={Math.round(progress / 5)}
+              />
               <div className="mt-1.5 flex justify-between text-[11px] text-text-muted">
                 <span>
                   {seasonGames > 0
@@ -186,7 +191,11 @@ export default function RankBanner({
                   / {CALIBRATION_GAMES}
                 </span>
               </div>
-              <GaugeTicks total={CALIBRATION_GAMES} filled={totalGames} />
+              <GaugeTicks
+                className="mt-4"
+                total={CALIBRATION_GAMES}
+                filled={totalGames}
+              />
               <p className="mt-1.5 text-[11px] text-text-muted">
                 {formatCalibrationGamesLeft(totalGames)}
               </p>
@@ -197,7 +206,7 @@ export default function RankBanner({
     </>
   );
 
-  const className = `glass relative mb-5 block telemetry:mb-2.5 overflow-hidden border ${calibrated ? rank.borderColor : "border-border/30"}`;
+  const className = `glass relative mb-5 block telemetry:mb-2.5 overflow-hidden border ${calibrated ? rank.borderColor : "border-border/30"} telemetry:border-border-light`;
 
   if (href) {
     return (
@@ -210,17 +219,4 @@ export default function RankBanner({
     );
   }
   return <div className={className}>{content}</div>;
-}
-
-function GaugeTicks({ total, filled }: { total: number; filled: number }) {
-  return (
-    <div className="mt-4 flex gap-0.5" aria-hidden>
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className={`h-3.5 flex-1 rounded-[1px] ${i < filled ? "bg-text-primary" : "bg-border-light"}`}
-        />
-      ))}
-    </div>
-  );
 }
