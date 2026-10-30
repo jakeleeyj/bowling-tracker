@@ -179,7 +179,7 @@ export default function BallPage() {
             : undefined;
         return (
           <div className="glass relative mb-5 p-4">
-            <h2 className="mb-2 text-sm font-bold">Layout diagram</h2>
+            <h2 className="mb-2 text-sm font-semibold">Layout diagram</h2>
             {draft.image_url && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -216,7 +216,7 @@ export default function BallPage() {
       })()}
 
       <div className="glass mb-5 p-4">
-        <h2 className="mb-2 text-sm font-bold">Grip chart</h2>
+        <h2 className="mb-2 text-sm font-semibold">Grip chart</h2>
         <GripChart draft={draft} />
       </div>
 
@@ -226,7 +226,7 @@ export default function BallPage() {
         <button
           onClick={save}
           disabled={saving}
-          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
+          className="flex items-center justify-center gap-2 rounded-xl bg-blue py-4 text-base font-semibold text-white inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
         >
           {saving ? (
             <>
@@ -243,7 +243,7 @@ export default function BallPage() {
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6">
           <div className="glass-strong animate-scale-in w-full max-w-sm p-5">
-            <p className="mb-1 text-sm font-bold text-text-primary">
+            <p className="mb-1 text-sm font-semibold text-text-primary">
               Delete {ball.name}?
             </p>
             <p className="mb-4 text-xs text-text-muted">
@@ -259,7 +259,7 @@ export default function BallPage() {
               </button>
               <button
                 onClick={remove}
-                className="h-11 flex-1 rounded-lg bg-red text-sm font-bold text-white transition-transform duration-150 active:scale-[0.97]"
+                className="h-11 flex-1 rounded-lg bg-red text-sm font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
               >
                 Delete
               </button>

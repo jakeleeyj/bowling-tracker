@@ -44,7 +44,7 @@ export default function LargeTitle({
             : "pointer-events-none -translate-y-2 opacity-0"
         }`}
       >
-        <p className="truncate px-12 py-3 text-center text-[15px] font-bold text-text-primary">
+        <p className="truncate px-12 py-3 text-center text-base font-semibold text-text-primary">
           {title}
         </p>
       </div>

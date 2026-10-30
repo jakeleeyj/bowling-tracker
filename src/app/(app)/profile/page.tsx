@@ -466,7 +466,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
+                className="flex items-center justify-center gap-2 rounded-xl bg-blue py-3 text-sm font-semibold text-white inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
               >
                 {saved ? (
                   <>
@@ -570,7 +570,7 @@ export default function ProfilePage() {
             { label: "Games", value: statsTotalGames },
           ].map((stat) => (
             <div key={stat.label} className="glass px-3 py-3.5 text-center">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              <div className="text-[11px] font-semibold text-text-muted">
                 {stat.label}
               </div>
               <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
@@ -590,7 +590,7 @@ export default function ProfilePage() {
           <CircleDot size={20} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-text-primary">My arsenal</p>
+          <p className="text-sm font-semibold text-text-primary">My arsenal</p>
           <p className="truncate text-xs text-text-muted">
             Ball flight analysis, layouts and drilling specs
           </p>
@@ -604,7 +604,7 @@ export default function ProfilePage() {
 
       {/* Season Medals */}
       <div className="mb-5">
-        <h2 className="mb-2 text-sm font-bold">Rank history</h2>
+        <h2 className="mb-2 text-sm font-semibold">Rank history</h2>
         <div className="flex flex-wrap gap-1.5">
           {/* Current season — in progress */}
           {rank && statsTotalGames > 0 && (
@@ -615,11 +615,11 @@ export default function ProfilePage() {
                   : "border-border/30"
               }`}
             >
-              <span className="rounded bg-blue/15 px-1.5 py-0.5 text-[9px] font-bold text-blue">
+              <span className="rounded-md bg-blue/15 px-1.5 py-0.5 text-[11px] font-semibold text-blue">
                 {getCurrentSeason().shortName}
               </span>
               <span
-                className={`text-xs font-bold ${
+                className={`text-xs font-semibold ${
                   statsTotalGames >= CALIBRATION_GAMES
                     ? rank.color
                     : "text-text-muted"
@@ -629,7 +629,7 @@ export default function ProfilePage() {
                   ? `${rank.name}${rank.division ? ` ${rank.division}` : ""}`
                   : "Calibrating"}
               </span>
-              <span className="text-[9px] text-text-muted">now</span>
+              <span className="text-[11px] text-text-muted">now</span>
             </div>
           )}
           {/* Past seasons */}
@@ -640,10 +640,10 @@ export default function ProfilePage() {
                 key={sr.season_number}
                 className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 ${srRank.borderColor}`}
               >
-                <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-bold tabular-nums text-text-muted">
+                <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-text-muted">
                   S{sr.season_number}
                 </span>
-                <span className={`text-xs font-bold ${srRank.color}`}>
+                <span className={`text-xs font-semibold ${srRank.color}`}>
                   {sr.final_rank}
                   {sr.final_division ? ` ${sr.final_division}` : ""}
                 </span>
@@ -668,10 +668,10 @@ export default function ProfilePage() {
           aria-expanded={showAchievements}
           className="-mt-2.5 -mb-0.5 flex h-10 w-full items-center justify-between transition-opacity active:opacity-60"
         >
-          <h2 className="text-sm font-bold">Achievements</h2>
+          <h2 className="text-sm font-semibold">Achievements</h2>
           <div className="flex items-center gap-1.5">
             {achievementStats && (
-              <span className="text-[10px] tabular-nums text-text-muted">
+              <span className="text-[11px] tabular-nums text-text-muted">
                 {earned.length}/{ACHIEVEMENTS.length}
               </span>
             )}
@@ -693,7 +693,7 @@ export default function ProfilePage() {
                 title={a.description}
               >
                 <span className={a.color}>{ACHIEVEMENT_ICONS[a.iconName]}</span>
-                <span className="text-[10px] font-semibold">{a.name}</span>
+                <span className="text-[11px] font-semibold">{a.name}</span>
               </div>
             ))}
             {locked.map((a) => (
@@ -705,7 +705,7 @@ export default function ProfilePage() {
                 <span className="text-text-muted">
                   {ACHIEVEMENT_ICONS[a.iconName]}
                 </span>
-                <span className="text-[10px] font-semibold">{a.name}</span>
+                <span className="text-[11px] font-semibold">{a.name}</span>
               </div>
             ))}
           </div>
@@ -714,7 +714,7 @@ export default function ProfilePage() {
 
       {/* Game History */}
       <div>
-        <h2 className="mb-3 text-sm font-bold">Game history</h2>
+        <h2 className="mb-3 text-sm font-semibold">Game history</h2>
 
         {/* Filter */}
         <div className="relative mb-3 flex h-11 w-[240px] rounded-lg bg-surface-light p-[3px]">

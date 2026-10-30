@@ -93,7 +93,7 @@ export default function SeasonBanner() {
     >
       <Icon size={16} className="mt-[1px] shrink-0" />
       <div className="flex-1">
-        <div className="text-[13px] font-semibold leading-tight">{title}</div>
+        <div className="text-sm font-semibold leading-tight">{title}</div>
         <p className="mt-0.5 text-[11px] leading-snug opacity-80">{body}</p>
       </div>
       <button

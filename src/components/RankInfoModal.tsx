@@ -5,12 +5,12 @@ import { Info, X } from "lucide-react";
 import Sheet from "@/components/Sheet";
 
 const RANK_TABLE = [
-  { name: "Iron", lp: "0–1,000", color: "text-gray-400" },
-  { name: "Bronze", lp: "1,000–1,200", color: "text-amber-600" },
-  { name: "Silver", lp: "1,200–1,400", color: "text-gray-300" },
+  { name: "Iron", lp: "0–1,000", color: "text-iron" },
+  { name: "Bronze", lp: "1,000–1,200", color: "text-bronze" },
+  { name: "Silver", lp: "1,200–1,400", color: "text-silver" },
   { name: "Gold", lp: "1,400–1,600", color: "text-gold" },
   { name: "Platinum", lp: "1,600–1,800", color: "text-cyan-400" },
-  { name: "Emerald", lp: "1,800–2,000", color: "text-emerald-400" },
+  { name: "Emerald", lp: "1,800–2,000", color: "text-emerald" },
   { name: "Diamond", lp: "2,000–2,200", color: "text-blue" },
   { name: "Master", lp: "2,200–2,400", color: "text-purple" },
   { name: "Grandmaster", lp: "2,400–2,600", color: "text-red" },
@@ -38,7 +38,7 @@ export default function RankInfoModal() {
         <div className="mb-4 flex items-center justify-between">
           <h2
             id="rank-info-title"
-            className="text-base font-extrabold text-text-primary"
+            className="text-base font-semibold text-text-primary"
           >
             How ranking works
           </h2>
@@ -51,16 +51,16 @@ export default function RankInfoModal() {
           </button>
         </div>
 
-        <div className="mb-4 space-y-2.5 text-[12px] leading-relaxed text-text-secondary">
+        <div className="mb-4 space-y-2.5 text-xs leading-relaxed text-text-secondary">
           <p>
-            You earn <span className="font-bold text-text-primary">LP</span>{" "}
+            You earn <span className="font-semibold text-text-primary">LP</span>{" "}
             (League Points) each game based on your score. Games above 185
             earn LP, games below 185 lose LP. Recent games count more: each
             older game counts 1.25% less, down to a 25% floor.
           </p>
           <p>
             Your first{" "}
-            <span className="font-bold text-text-primary">4 games</span>{" "}
+            <span className="font-semibold text-text-primary">4 games</span>{" "}
             ever are calibration matches worth 5x LP to set your starting
             rank.
           </p>
@@ -78,7 +78,7 @@ export default function RankInfoModal() {
           </p>
         </div>
 
-        <h3 className="mb-2 text-[11px] font-bold uppercase tracking-wide text-text-muted">
+        <h3 className="mb-2 text-[11px] font-semibold text-text-muted">
           Rank tiers
         </h3>
         <div className="space-y-1">
@@ -87,7 +87,7 @@ export default function RankInfoModal() {
               key={r.name}
               className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2"
             >
-              <span className={`text-[12px] font-bold ${r.color}`}>
+              <span className={`text-xs font-semibold ${r.color}`}>
                 {r.name}
               </span>
               <span className="text-[11px] tabular-nums text-text-muted">
@@ -97,7 +97,7 @@ export default function RankInfoModal() {
           ))}
         </div>
 
-        <p className="mt-3 text-[10px] text-text-muted">
+        <p className="mt-3 text-[11px] text-text-muted">
           Iron through Diamond have 4 divisions (IV to I). Master,
           Grandmaster, and Challenger have no divisions.
         </p>

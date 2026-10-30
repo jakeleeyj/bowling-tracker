@@ -16,6 +16,10 @@
   --color-gold: #f59e0b;
   --color-green: #22c55e;
   --color-red: #ef4444;
+  --color-iron: #9ca3af;
+  --color-bronze: #d97706;
+  --color-silver: #d1d5db;
+  --color-emerald: #34d399;
   --font-sans: var(--font-inter);
   /* Springs: snappy (~4% overshoot) and soft (settles without bounce) */
   --ease-spring: linear(0, 0.051, 0.171, 0.323, 0.48, 0.626, 0.751, 0.851, 0.927, 0.98, 1.015, 1.035, 1.044, 1.046, 1.042, 1.036, 1.029, 1.022, 1.016, 1.01, 1.006, 1.003, 1, 0.999, 1);

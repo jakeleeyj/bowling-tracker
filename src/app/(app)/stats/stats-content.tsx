@@ -300,15 +300,15 @@ function LeaveItem({
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-semibold">{label} leave</span>
           {isSplitLeave && (
-            <span className="text-[10px] font-semibold text-red">Split</span>
+            <span className="text-[11px] font-semibold text-red">Split</span>
           )}
         </div>
-        <p className="text-[10px] text-text-muted tabular-nums">
+        <p className="text-[11px] text-text-muted tabular-nums">
           {converted}/{attempts} converted
         </p>
       </div>
       <span
-        className={`text-sm font-bold tabular-nums ${rate === 100 ? "text-green" : rate >= 50 ? "text-gold" : "text-text-secondary"}`}
+        className={`text-sm font-semibold tabular-nums ${rate === 100 ? "text-green" : rate >= 50 ? "text-gold" : "text-text-secondary"}`}
       >
         {rate}%
       </span>
@@ -384,7 +384,7 @@ export default function StatsContent({ overview, leaves }: Props) {
         <button
           onClick={() => setTab("overview")}
           aria-pressed={tab === "overview"}
-          className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+          className={`relative flex-1 rounded-md text-sm font-semibold transition-colors duration-200 ${
             tab === "overview" ? "text-white" : "text-text-muted"
           }`}
         >
@@ -393,7 +393,7 @@ export default function StatsContent({ overview, leaves }: Props) {
         <button
           onClick={() => setTab("spares")}
           aria-pressed={tab === "spares"}
-          className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+          className={`relative flex-1 rounded-md text-sm font-semibold transition-colors duration-200 ${
             tab === "spares" ? "text-white" : "text-text-muted"
           }`}
         >
@@ -413,7 +413,7 @@ export default function StatsContent({ overview, leaves }: Props) {
           {/* Overview stats */}
           <div className="mb-5 grid grid-cols-2 gap-2">
             <div className="glass px-3 py-3.5 text-center">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              <div className="text-[11px] font-semibold text-text-muted">
                 Average
               </div>
               <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
@@ -422,7 +422,7 @@ export default function StatsContent({ overview, leaves }: Props) {
               <Sparkline values={scores} />
             </div>
             <div className="glass px-3 py-3.5 text-center">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              <div className="text-[11px] font-semibold text-text-muted">
                 High game
               </div>
               <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-gold">
@@ -430,7 +430,7 @@ export default function StatsContent({ overview, leaves }: Props) {
               </div>
             </div>
             <div className="glass px-3 py-3.5 text-center">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              <div className="text-[11px] font-semibold text-text-muted">
                 Low game
               </div>
               <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
@@ -438,7 +438,7 @@ export default function StatsContent({ overview, leaves }: Props) {
               </div>
             </div>
             <div className="glass px-3 py-3.5 text-center">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              <div className="text-[11px] font-semibold text-text-muted">
                 Clean games
               </div>
               <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
@@ -449,7 +449,7 @@ export default function StatsContent({ overview, leaves }: Props) {
 
           {/* Score trend */}
           <div className="glass mb-5 p-4">
-            <h2 className="mb-2 text-sm font-bold text-text-secondary">
+            <h2 className="mb-2 text-sm font-semibold text-text-secondary">
               Score trend
             </h2>
             <TrendChart values={scores} avg={avg} highlights={clean_flags} />
@@ -458,46 +458,46 @@ export default function StatsContent({ overview, leaves }: Props) {
           {/* Strike & Spare rates */}
           <div className="mb-5 grid grid-cols-2 gap-2">
             <div className="glass px-3 py-3.5">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              <div className="text-[11px] font-semibold text-text-muted">
                 Strike %
               </div>
               <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
                 {strike_rate}%
               </div>
-              <div className="mt-1.5 text-[10px] text-text-muted tabular-nums">
+              <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
                 {strikes}/{total_frames_played}
               </div>
             </div>
             <div className="glass px-3 py-3.5">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              <div className="text-[11px] font-semibold text-text-muted">
                 Spare %
               </div>
               <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-gold">
                 {spare_rate}%
               </div>
-              <div className="mt-1.5 text-[10px] text-text-muted tabular-nums">
+              <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
                 {spares_converted}/{spare_opportunities}
               </div>
             </div>
             <div className="glass px-3 py-3.5">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              <div className="text-[11px] font-semibold text-text-muted">
                 Double %
               </div>
               <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
                 {double_rate}%
               </div>
-              <div className="mt-1.5 text-[10px] text-text-muted tabular-nums">
+              <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
                 {doubles}/{double_opportunities} back-to-back
               </div>
             </div>
             <div className="glass px-3 py-3.5">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+              <div className="text-[11px] font-semibold text-text-muted">
                 Pocket %
               </div>
               <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-blue">
                 {pocket_rate}%
               </div>
-              <div className="mt-1.5 text-[10px] text-text-muted tabular-nums">
+              <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
                 {pocket_hits}/{first_ball_frames} first balls
               </div>
             </div>
@@ -505,13 +505,13 @@ export default function StatsContent({ overview, leaves }: Props) {
 
           {/* Clean Rate */}
           <div className="glass px-3 py-3.5">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+            <div className="text-[11px] font-semibold text-text-muted">
               Clean rate
             </div>
             <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
               {clean_rate}%
             </div>
-            <div className="mt-1.5 text-[10px] text-text-muted tabular-nums">
+            <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
               {clean_games}/{detailed_games} games
             </div>
           </div>
@@ -528,7 +528,7 @@ export default function StatsContent({ overview, leaves }: Props) {
         <>
           {/* Spare Conversion Rate */}
           <div className="glass mb-4 px-3 py-3.5">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+            <div className="text-[11px] font-semibold text-text-muted">
               Spare conversion
             </div>
             <div
@@ -536,7 +536,7 @@ export default function StatsContent({ overview, leaves }: Props) {
             >
               {spare_rate}%
             </div>
-            <div className="mt-1.5 text-[10px] text-text-muted tabular-nums">
+            <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
               {leaves.total_spares_converted}/{total_spare_opportunities}{" "}
               attempts
             </div>
@@ -545,10 +545,10 @@ export default function StatsContent({ overview, leaves }: Props) {
           {/* Practice these */}
           {most_missed.length > 0 && (
             <div className="glass mb-4 border border-gold/20 p-4">
-              <h2 className="mb-2 text-sm font-bold text-gold">
+              <h2 className="mb-2 text-sm font-semibold text-gold">
                 Practice these
               </h2>
-              <p className="mb-3 text-[10px] text-text-muted">
+              <p className="mb-3 text-[11px] text-text-muted">
                 Your most missed leaves
               </p>
               <div className="flex flex-col gap-1.5">
@@ -568,7 +568,7 @@ export default function StatsContent({ overview, leaves }: Props) {
           {/* Spare conversion trend */}
           {spare_conv_trend.length > 1 && (
             <div className="glass mb-4 p-4">
-              <h2 className="mb-2 text-sm font-bold text-text-secondary">
+              <h2 className="mb-2 text-sm font-semibold text-text-secondary">
                 Spare conversion trend
               </h2>
               <TrendChart
@@ -583,7 +583,7 @@ export default function StatsContent({ overview, leaves }: Props) {
           {/* Spare breakdown Summary */}
           {total_spare_opportunities > 0 && (
             <div className="glass mb-4 p-4">
-              <h2 className="mb-3 text-sm font-bold text-text-secondary">
+              <h2 className="mb-3 text-sm font-semibold text-text-secondary">
                 Spare breakdown
               </h2>
               <div className="flex flex-col gap-2.5">
@@ -625,7 +625,7 @@ export default function StatsContent({ overview, leaves }: Props) {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-semibold">{label}</p>
-                          <p className="text-[10px] text-text-muted tabular-nums">
+                          <p className="text-[11px] text-text-muted tabular-nums">
                             {converted}/{attempts} converted
                           </p>
                         </div>
@@ -651,10 +651,10 @@ export default function StatsContent({ overview, leaves }: Props) {
           {/* Leave Log — grouped by category */}
           {single_pin_leaves.length > 0 && (
             <div className="glass mb-4 p-4">
-              <h2 className="mb-2 text-sm font-bold text-green">
+              <h2 className="mb-2 text-sm font-semibold text-green">
                 Single pin leaves
               </h2>
-              <p className="mb-3 text-[10px] text-text-muted tabular-nums">
+              <p className="mb-3 text-[11px] text-text-muted tabular-nums">
                 {single_pin.converted}/{single_pin.attempts} converted (
                 {single_pin.rate}%)
               </p>
@@ -674,10 +674,10 @@ export default function StatsContent({ overview, leaves }: Props) {
 
           {multi_pin_leaves.length > 0 && (
             <div className="glass mb-4 p-4">
-              <h2 className="mb-2 text-sm font-bold text-gold">
+              <h2 className="mb-2 text-sm font-semibold text-gold">
                 Multi pin leaves
               </h2>
-              <p className="mb-3 text-[10px] text-text-muted tabular-nums">
+              <p className="mb-3 text-[11px] text-text-muted tabular-nums">
                 {multi_pin.converted}/{multi_pin.attempts} converted (
                 {multi_pin.rate}%)
               </p>
@@ -697,8 +697,8 @@ export default function StatsContent({ overview, leaves }: Props) {
 
           {split_leaves.length > 0 && (
             <div className="glass p-4">
-              <h2 className="mb-2 text-sm font-bold text-red">Split leaves</h2>
-              <p className="mb-3 text-[10px] text-text-muted tabular-nums">
+              <h2 className="mb-2 text-sm font-semibold text-red">Split leaves</h2>
+              <p className="mb-3 text-[11px] text-text-muted tabular-nums">
                 {splits.converted}/{splits.attempts} converted ({splits.rate}%)
               </p>
               <div className="flex flex-col gap-1.5">

@@ -76,7 +76,7 @@ export default function SessionSetup({
                 key={n}
                 onClick={() => onGameCountChange(n)}
                 aria-pressed={gameCount === n}
-                className={`h-11 flex-1 rounded-lg text-sm font-bold tabular-nums transition-[color,background-color,transform] duration-150 active:scale-[0.94] ${
+                className={`h-11 flex-1 rounded-lg text-sm font-semibold tabular-nums transition-[color,background-color,transform] duration-150 active:scale-[0.94] ${
                   gameCount === n
                     ? "bg-blue text-white"
                     : "bg-surface-light text-text-secondary"
@@ -90,7 +90,7 @@ export default function SessionSetup({
 
         <button
           onClick={onStart}
-          className="mt-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+          className="mt-2 rounded-xl bg-blue py-4 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
         >
           Start bowling
         </button>

@@ -99,7 +99,7 @@ export default function NotificationToggle() {
               : "Enable notifications"}
         </span>
         {denied && (
-          <p className="text-[10px] text-text-muted">
+          <p className="text-[11px] text-text-muted">
             Enable in browser settings
           </p>
         )}

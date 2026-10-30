@@ -55,7 +55,7 @@ export default function BallCard({
         </div>
       )}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold text-text-primary">
+        <p className="truncate text-sm font-semibold text-text-primary">
           {ball.name}
         </p>
         <p className="truncate text-xs tabular-nums text-text-muted">

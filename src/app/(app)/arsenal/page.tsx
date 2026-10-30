@@ -94,7 +94,7 @@ export default function ArsenalPage() {
                   {action.icon}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-text-primary">
+                  <p className="text-sm font-semibold text-text-primary">
                     {action.title}
                   </p>
                   <p className="truncate text-xs text-text-muted">

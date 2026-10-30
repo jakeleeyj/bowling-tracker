@@ -71,7 +71,7 @@ export default function BallPicker({
           <div className="h-14 w-14 shrink-0 rounded-full bg-surface-light" />
         )}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-text-primary">
+          <p className="truncate text-sm font-semibold text-text-primary">
             {picked.name}
           </p>
           <p className="truncate text-xs text-text-secondary">

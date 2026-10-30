@@ -38,7 +38,7 @@ function LogStep({ session }: { session: ReturnType<typeof useSessionState> }) {
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gold/10">
           <Loader size={32} className="text-gold" />
         </div>
-        <h2 className="mb-2 text-lg font-extrabold">Pending sync to server</h2>
+        <h2 className="mb-2 text-lg font-semibold">Pending sync to server</h2>
         <p className="mb-1 text-sm text-text-muted">
           {session.pendingSyncCount} session
           {session.pendingSyncCount !== 1 ? "s" : ""} saved to device
@@ -54,7 +54,7 @@ function LogStep({ session }: { session: ReturnType<typeof useSessionState> }) {
         ) : (
           <button
             onClick={() => session.startNewWhilePending()}
-            className="rounded-xl bg-gradient-to-r from-blue to-blue-dark px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+            className="rounded-xl bg-blue px-8 py-3 text-sm font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
           >
             Log another session
           </button>
@@ -76,7 +76,7 @@ function LogStep({ session }: { session: ReturnType<typeof useSessionState> }) {
         <div className="flex flex-col gap-3">
           <button
             onClick={session.resumeSession}
-            className="rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+            className="rounded-xl bg-blue py-4 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
           >
             Resume session
           </button>

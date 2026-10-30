@@ -204,7 +204,7 @@ export default function AnalyzeForm({
   return (
     <div className="flex flex-col gap-5">
       <div className="glass p-4">
-        <h2 className="mb-3 text-sm font-bold">Your numbers</h2>
+        <h2 className="mb-3 text-sm font-semibold">Your numbers</h2>
         <div className="mb-3 flex items-center justify-between">
           <span className="text-xs text-text-muted">Grip</span>
           <div className="relative flex h-11 w-[200px] rounded-lg bg-surface-light p-[3px]">
@@ -219,7 +219,7 @@ export default function AnalyzeForm({
                 key={label}
                 onClick={() => switchGrip(two)}
                 aria-pressed={twoHanded === two}
-                className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+                className={`relative flex-1 rounded-md text-sm font-semibold transition-colors duration-200 ${
                   twoHanded === two ? "text-white" : "text-text-muted"
                 }`}
               >
@@ -237,7 +237,7 @@ export default function AnalyzeForm({
                 key={h}
                 onClick={() => switchHand(h)}
                 aria-pressed={hand === h}
-                className={`relative flex-1 rounded-md text-[13px] font-semibold capitalize transition-colors duration-200 ${
+                className={`relative flex-1 rounded-md text-sm font-semibold capitalize transition-colors duration-200 ${
                   hand === h ? "text-white" : "text-text-muted"
                 }`}
               >
@@ -285,7 +285,7 @@ export default function AnalyzeForm({
                     : "border-border bg-surface-light"
                 }`}
               >
-                <p className="text-sm font-bold capitalize text-text-primary">
+                <p className="text-sm font-semibold capitalize text-text-primary">
                   {key}
                 </p>
                 <p className="text-xs text-text-muted">{PRESET_LABELS[key]}</p>
@@ -390,7 +390,7 @@ export default function AnalyzeForm({
 
       <button
         onClick={submit}
-        className="rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97]"
+        className="rounded-xl bg-blue py-4 text-base font-semibold text-white inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97]"
       >
         Analyze
       </button>

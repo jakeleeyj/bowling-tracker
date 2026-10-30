@@ -152,7 +152,7 @@ function MicroPinDiagram({
   if (isStrike) {
     return (
       <div className="flex h-[22px] items-center justify-center">
-        <span className="text-[10px] font-extrabold text-green">X</span>
+        <span className="text-[11px] font-semibold text-green">X</span>
       </div>
     );
   }
@@ -282,7 +282,7 @@ function Frame10MicroPin({ frame }: { frame: FrameInfo }) {
       className="flex flex-col items-center gap-[2px] py-[2px]"
     >
       <span
-        className={`rounded-sm border px-[3px] py-[0.5px] text-[7px] font-bold leading-none ${
+        className={`rounded-md border px-[2px] py-[0.5px] text-[11px] font-semibold leading-none tracking-tight ${
           canCycle
             ? "border-blue/40 bg-blue/20 text-blue"
             : "border-text-muted/30 bg-surface-light/50 text-text-muted"
@@ -295,7 +295,7 @@ function Frame10MicroPin({ frame }: { frame: FrameInfo }) {
       </span>
       <div className="flex h-[19px] flex-col items-center justify-center gap-[1px]">
         {isStrikeShot ? (
-          <span className="text-[10px] font-extrabold leading-none text-green">
+          <span className="text-[11px] font-semibold leading-none text-green">
             X
           </span>
         ) : (
@@ -347,7 +347,7 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
   const sorted = [...frames].sort((a, b) => a.frame_number - b.frame_number);
 
   return (
-    <div className="overflow-hidden rounded border border-border/50">
+    <div className="overflow-hidden rounded-md border border-border/50">
       {/* Pin diagrams row */}
       <div className="flex">
         {Array.from({ length: 10 }, (_, i) => {
@@ -369,7 +369,7 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
                   />
                 )
               ) : (
-                <span className="py-[2px] text-[8px] text-text-muted/30">
+                <span className="py-[2px] text-[11px] text-text-muted/30">
                   &mdash;
                 </span>
               )}
@@ -392,39 +392,39 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
                 isTenth ? (
                   <>
                     <span
-                      className={`text-[8px] font-bold ${frame.roll_1 === 10 ? "text-green" : "text-text-secondary"}`}
+                      className={`text-[11px] font-semibold ${frame.roll_1 === 10 ? "text-green" : "text-text-secondary"}`}
                     >
                       {formatFrameRoll(frame, 1)}
                     </span>
                     <span
-                      className={`text-[8px] font-bold ${formatFrameRoll(frame, 2) === "X" ? "text-green" : formatFrameRoll(frame, 2) === "/" ? "text-gold" : "text-text-secondary"}`}
+                      className={`text-[11px] font-semibold ${formatFrameRoll(frame, 2) === "X" ? "text-green" : formatFrameRoll(frame, 2) === "/" ? "text-gold" : "text-text-secondary"}`}
                     >
                       {formatFrameRoll(frame, 2)}
                     </span>
                     {frame.roll_3 !== null && (
                       <span
-                        className={`text-[8px] font-bold ${formatFrameRoll(frame, 3) === "X" ? "text-green" : formatFrameRoll(frame, 3) === "/" ? "text-gold" : "text-text-secondary"}`}
+                        className={`text-[11px] font-semibold ${formatFrameRoll(frame, 3) === "X" ? "text-green" : formatFrameRoll(frame, 3) === "/" ? "text-gold" : "text-text-secondary"}`}
                       >
                         {formatFrameRoll(frame, 3)}
                       </span>
                     )}
                   </>
                 ) : frame.is_strike ? (
-                  <span className="text-[8px] font-bold text-green">X</span>
+                  <span className="text-[11px] font-semibold text-green">X</span>
                 ) : (
                   <>
-                    <span className="text-[8px] text-text-secondary">
+                    <span className="text-[11px] text-text-secondary">
                       {formatFrameRoll(frame, 1)}
                     </span>
                     <span
-                      className={`text-[8px] font-bold ${frame.is_spare ? "text-gold" : "text-text-secondary"}`}
+                      className={`text-[11px] font-semibold ${frame.is_spare ? "text-gold" : "text-text-secondary"}`}
                     >
                       {formatFrameRoll(frame, 2)}
                     </span>
                   </>
                 )
               ) : (
-                <span className="text-[8px] text-text-muted/30">&mdash;</span>
+                <span className="text-[11px] text-text-muted/30">&mdash;</span>
               )}
             </div>
           );
@@ -437,7 +437,7 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
           return (
             <div
               key={i}
-              className="flex-1 border-r border-border/30 py-[1px] text-center text-[8px] font-bold last:border-r-0"
+              className="flex-1 border-r border-border/30 py-[1px] text-center text-[11px] font-semibold last:border-r-0"
             >
               {frame ? (
                 <span
@@ -479,7 +479,7 @@ function SessionStats({
     return (
       <div className="mt-2">
         <div className="rounded-lg bg-surface-light/50 py-3 text-center">
-          <p className="text-[10px] text-text-muted">
+          <p className="text-[11px] text-text-muted">
             Log with detailed entry to see stats
           </p>
         </div>
@@ -560,33 +560,33 @@ function SessionStats({
           {/* Rate cards */}
           <div className="mb-2 grid grid-cols-4 gap-1.5">
             <div className="rounded-lg bg-black/20 p-2 text-center">
-              <div className="text-sm font-extrabold text-green">
+              <div className="text-sm font-semibold text-green">
                 {strikeRate}%
               </div>
-              <div className="text-[9px] text-text-muted">Strike</div>
+              <div className="text-[11px] text-text-muted">Strike</div>
             </div>
             <div className="rounded-lg bg-black/20 p-2 text-center">
-              <div className="text-sm font-extrabold text-gold">
+              <div className="text-sm font-semibold text-gold">
                 {spareRate}%
               </div>
-              <div className="text-[9px] text-text-muted">Spare</div>
+              <div className="text-[11px] text-text-muted">Spare</div>
             </div>
             <div className="rounded-lg bg-black/20 p-2 text-center">
-              <div className="text-sm font-extrabold text-blue">
+              <div className="text-sm font-semibold text-blue">
                 {spareConversionRate}%
               </div>
-              <div className="text-[9px] text-text-muted">Conv.</div>
+              <div className="text-[11px] text-text-muted">Conv.</div>
             </div>
             <div className="rounded-lg bg-black/20 p-2 text-center">
-              <div className="text-sm font-extrabold text-red">{openRate}%</div>
-              <div className="text-[9px] text-text-muted">Open</div>
+              <div className="text-sm font-semibold text-red">{openRate}%</div>
+              <div className="text-[11px] text-text-muted">Open</div>
             </div>
           </div>
 
           {/* Leaves */}
           {sortedLeaves.length > 0 && (
             <div className="rounded-lg bg-black/20 p-2">
-              <p className="mb-1.5 text-[10px] font-semibold text-text-muted">
+              <p className="mb-1.5 text-[11px] font-semibold text-text-muted">
                 Leaves
               </p>
               {singlePinLeaves.length > 0 && (
@@ -655,21 +655,21 @@ function LeaveGroup({
 }) {
   return (
     <div className="mb-1.5 last:mb-0">
-      <p className={`mb-0.5 text-[9px] font-semibold ${color}`}>{label}</p>
+      <p className={`mb-0.5 text-[11px] font-semibold ${color}`}>{label}</p>
       <div className="flex flex-wrap gap-1">
         {leaves.map((l) => {
           const rate = Math.round((l.converted / l.total) * 100);
           return (
             <div
               key={l.pins.join("-")}
-              className="flex items-center gap-1 rounded bg-white/[0.04] px-1.5 py-0.5"
+              className="flex items-center gap-1 rounded-md bg-white/[0.04] px-1.5 py-0.5"
             >
               <MiniLeavePin pins={l.pins} color={dotColor} />
-              <span className="text-[10px] font-semibold">
+              <span className="text-[11px] font-semibold">
                 {l.pins.join("-")}
               </span>
               <span
-                className={`text-[9px] font-semibold ${rate >= 50 ? "text-green" : "text-red"}`}
+                className={`text-[11px] font-semibold ${rate >= 50 ? "text-green" : "text-red"}`}
               >
                 {l.converted}/{l.total}
               </span>
@@ -802,20 +802,20 @@ export default function SessionCard({
         <div className="flex min-w-0 items-center gap-2.5">
           <Avatar name={realName} avatarUrl={avatarUrl} size="sm" />
           <div className="min-w-0">
-            <span className="flex items-center text-[13px] font-semibold">
+            <span className="flex items-center text-sm font-semibold">
               {name}
               {rankTierName && (
                 <span className="ml-1.5 inline-flex items-center gap-1">
                   <RankEmblem tierName={rankTierName} size={14} />
                   <span
-                    className={`text-[10px] font-semibold ${rankColor ?? "text-text-muted"}`}
+                    className={`text-[11px] font-semibold ${rankColor ?? "text-text-muted"}`}
                   >
                     {rankLabel}
                   </span>
                 </span>
               )}
             </span>
-            <p className="text-[10px] text-text-muted">
+            <p className="text-[11px] text-text-muted">
               {dateLabel} &bull;{" "}
               {isCalibrationSession ? (
                 <span className="font-semibold text-blue">Calibration</span>
@@ -837,14 +837,14 @@ export default function SessionCard({
             {(venue || eventLabel) && (
               <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
                 {venue && (
-                  <span className="flex items-center gap-1 text-[10px] text-text-secondary">
+                  <span className="flex items-center gap-1 text-[11px] text-text-secondary">
                     <PinIcon />
                     {venue}
                   </span>
                 )}
                 {eventLabel && (
                   <span
-                    className={`rounded px-1.5 py-0.5 text-[9px] font-semibold ${EVENT_COLORS[eventLabel] ?? "bg-surface-light text-text-muted"}`}
+                    className={`rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${EVENT_COLORS[eventLabel] ?? "bg-surface-light text-text-muted"}`}
                   >
                     {eventLabel}
                   </span>
@@ -855,10 +855,10 @@ export default function SessionCard({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <div className="text-right">
-            <div className="text-lg font-extrabold leading-tight">
+            <div className="text-lg font-semibold leading-tight">
               {totalPins}
             </div>
-            <div className="text-[10px] leading-tight text-text-muted">
+            <div className="text-[11px] leading-tight text-text-muted">
               avg {avg}
             </div>
           </div>
@@ -881,7 +881,7 @@ export default function SessionCard({
               className={`w-14 rounded-md bg-black/30 py-[5px] text-center tabular-nums ${isHigh ? "border border-gold/35" : isClean ? "border border-green/35" : "border border-transparent"}`}
             >
               <span
-                className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : ""}`}
+                className={`text-sm font-semibold ${isHigh ? "text-gold" : isClean ? "text-green" : ""}`}
               >
                 {game.total_score}
               </span>
@@ -915,12 +915,12 @@ export default function SessionCard({
                         </span>
                         <div className="flex items-center gap-2">
                           {isClean && (
-                            <span className="text-[9px] font-semibold text-green">
-                              CLEAN
+                            <span className="text-[11px] font-semibold text-green">
+                              Clean
                             </span>
                           )}
                           <span
-                            className={`text-sm font-bold ${isHigh ? "text-gold" : isClean ? "text-green" : "text-text-primary"}`}
+                            className={`text-sm font-semibold ${isHigh ? "text-gold" : isClean ? "text-green" : "text-text-primary"}`}
                           >
                             {game.total_score}
                           </span>
@@ -957,7 +957,7 @@ export default function SessionCard({
                           <button
                             key={v}
                             onClick={() => setEditVenue(editVenue === v ? "" : v)}
-                            className={`rounded-md px-2 py-1 text-[10px] font-medium transition-colors ${
+                            className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
                               editVenue === v
                                 ? "bg-blue text-white"
                                 : "bg-surface-light text-text-muted"
@@ -981,7 +981,7 @@ export default function SessionCard({
                             onClick={() =>
                               setEditEvent(editEvent === label ? "" : label)
                             }
-                            className={`rounded-md px-2.5 py-1 text-[10px] font-semibold transition-colors ${
+                            className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
                               editEvent === label
                                 ? "bg-blue text-white"
                                 : "bg-surface-light text-text-muted"
@@ -1124,7 +1124,7 @@ export default function SessionCard({
               <button
                 onClick={handleCaptureAndShare}
                 disabled={sharing}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue to-blue-dark py-3 text-sm font-bold text-white transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue py-3 text-sm font-semibold text-white transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
               >
                 {sharing && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
                 {sharing ? "Generating" : "Share"}

@@ -59,7 +59,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
           <div className="pt-1 text-center">
             <h2
               id="confirm-title"
-              className="text-base font-extrabold text-text-primary"
+              className="text-base font-semibold text-text-primary"
             >
               {options.title}
             </h2>
@@ -71,10 +71,10 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
             <div className="mt-5 flex flex-col gap-2">
               <button
                 onClick={() => settle(true)}
-                className={`h-12 rounded-xl text-sm font-bold transition-transform duration-150 active:scale-[0.97] ${
+                className={`h-12 rounded-xl text-sm font-semibold transition-transform duration-150 active:scale-[0.97] ${
                   options.destructive
                     ? "bg-red/15 text-red"
-                    : "bg-gradient-to-r from-blue to-blue-dark text-white"
+                    : "bg-blue text-white"
                 }`}
               >
                 {options.confirmLabel}

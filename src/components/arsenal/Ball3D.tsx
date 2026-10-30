@@ -443,7 +443,7 @@ export default function Ball3D({
   return (
     <div>
       <div ref={containerRef} className="mx-auto w-full max-w-[300px]" />
-      <div className="mt-1 flex items-center justify-center gap-3 text-[10px] text-text-muted">
+      <div className="mt-1 flex items-center justify-center gap-3 text-[11px] text-text-muted">
         <span className="flex items-center gap-1">
           <span className="h-2 w-2 rounded-full bg-red" /> pin
         </span>

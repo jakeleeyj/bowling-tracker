@@ -32,7 +32,7 @@ function getGradient(name: string): string {
 }
 
 const SIZES = {
-  sm: { container: "h-7 w-7", text: "text-[10px]" },
+  sm: { container: "h-7 w-7", text: "text-[11px]" },
   md: { container: "h-10 w-10", text: "text-base" },
   lg: { container: "h-14 w-14", text: "text-xl" },
 };
@@ -64,7 +64,7 @@ export default function Avatar({
 
   return (
     <div
-      className={`flex ${s.container} shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${chosen !== null ? AVATAR_GRADIENTS[chosen] : getGradient(name)} ${s.text} font-bold`}
+      className={`flex ${s.container} shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${chosen !== null ? AVATAR_GRADIENTS[chosen] : getGradient(name)} ${s.text} font-semibold`}
     >
       {name.charAt(0).toUpperCase()}
     </div>

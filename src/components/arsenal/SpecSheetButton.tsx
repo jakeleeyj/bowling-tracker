@@ -40,7 +40,7 @@ export default function SpecSheetButton({
       <button
         onClick={share}
         disabled={sharing}
-        className="flex items-center justify-center gap-2 rounded-xl border border-border-light bg-surface-light py-4 text-base font-bold text-text-primary transition-[transform,background-color] duration-150 active:scale-[0.97] active:bg-white/5 disabled:opacity-60"
+        className="flex items-center justify-center gap-2 rounded-xl border border-border-light bg-surface-light py-4 text-base font-semibold text-text-primary transition-[transform,background-color] duration-150 active:scale-[0.97] active:bg-white/5 disabled:opacity-60"
       >
         {sharing ? (
           <>

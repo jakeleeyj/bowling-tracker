@@ -270,7 +270,7 @@ export default function LayoutPage() {
             key={value}
             onClick={() => setMode(value)}
             aria-pressed={mode === value}
-            className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+            className={`relative flex-1 rounded-md text-sm font-semibold transition-colors duration-200 ${
               mode === value ? "text-white" : "text-text-muted"
             }`}
           >
@@ -290,7 +290,7 @@ export default function LayoutPage() {
           </p>
           <button
             onClick={() => router.push("/arsenal/analyze")}
-            className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark px-6 py-4 text-base font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97]"
+            className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-blue px-6 py-4 text-base font-semibold text-white inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97]"
           >
             <Sparkles size={16} />
             Analyze my style
@@ -303,7 +303,7 @@ export default function LayoutPage() {
           <div className="glass mb-4 flex items-center justify-between p-4">
             <div>
               <p className="text-xs text-text-muted">Based on your style</p>
-              <p className="text-sm font-bold capitalize text-text-primary">
+              <p className="text-sm font-semibold capitalize text-text-primary">
                 {latest.style} · {latest.speed_rev_match.replace("-", " ")}
               </p>
             </div>
@@ -316,7 +316,7 @@ export default function LayoutPage() {
           </div>
 
           <div className="glass mb-4 p-4">
-            <h2 className="mb-3 text-sm font-bold">Lane condition</h2>
+            <h2 className="mb-3 text-sm font-semibold">Lane condition</h2>
             <div className="grid grid-cols-3 gap-2">
               {LANES.map(([value, label]) => (
                 <button
@@ -339,7 +339,7 @@ export default function LayoutPage() {
 
       {mode === "custom" && (
         <div className="glass mb-4 p-4">
-          <h2 className="mb-3 text-sm font-bold">Your layout</h2>
+          <h2 className="mb-3 text-sm font-semibold">Your layout</h2>
           <div className="mb-3 flex items-center justify-between">
             <span className="text-xs text-text-muted">Grip</span>
             <div className="relative flex h-11 w-[200px] rounded-lg bg-surface-light p-[3px]">
@@ -354,7 +354,7 @@ export default function LayoutPage() {
                   key={value}
                   onClick={() => setCustomGrip(value)}
                   aria-pressed={customGrip === value}
-                  className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+                  className={`relative flex-1 rounded-md text-sm font-semibold transition-colors duration-200 ${
                     customGrip === value ? "text-white" : "text-text-muted"
                   }`}
                 >
@@ -380,7 +380,7 @@ export default function LayoutPage() {
                   key={value}
                   onClick={() => setCustomSystem(value)}
                   aria-pressed={effectiveSystem === value}
-                  className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+                  className={`relative flex-1 rounded-md text-sm font-semibold transition-colors duration-200 ${
                     effectiveSystem === value ? "text-white" : "text-text-muted"
                   }`}
                 >
@@ -432,7 +432,7 @@ export default function LayoutPage() {
               },
               customPap,
             ) && (
-              <p className="mt-2 rounded-lg bg-red/10 p-3 text-[10px] leading-relaxed text-red">
+              <p className="mt-2 rounded-lg bg-red/10 p-3 text-[11px] leading-relaxed text-red">
                 These distances can&apos;t meet on the ball with your PAP.
                 Storm&apos;s Lightning Arc for a {customPap.over}&quot; ×{" "}
                 {Math.abs(customPap.up)}&quot; PAP is {lightningArc(customPap)}
@@ -440,7 +440,7 @@ export default function LayoutPage() {
                 that. The preview shows the nearest drillable layout.
               </p>
             )}
-          <p className="mt-2 text-[10px] leading-relaxed text-text-muted">
+          <p className="mt-2 text-[11px] leading-relaxed text-text-muted">
             Enter the numbers you know. The tabs below convert between all
             three systems automatically.
           </p>
@@ -482,7 +482,7 @@ export default function LayoutPage() {
               <button
                 onClick={saveToBall}
                 disabled={!ballName.trim() || saving}
-                className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark px-5 text-sm font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
+                className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-blue px-5 text-sm font-semibold text-white inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
               >
                 {saving ? (
                   <>

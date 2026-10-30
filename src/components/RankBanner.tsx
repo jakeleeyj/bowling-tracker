@@ -62,10 +62,10 @@ export default function RankBanner({
           {calibrated ? (
             <>
               <div className="flex items-center gap-1.5">
-                <span className="rounded bg-blue/15 px-1.5 py-0.5 text-[9px] font-bold text-blue">
+                <span className="rounded-md bg-blue/15 px-1.5 py-0.5 text-[11px] font-semibold text-blue">
                   {getCurrentSeason().shortName}
                 </span>
-                <span className={`text-lg font-extrabold ${rank.color}`}>
+                <span className={`text-lg font-semibold ${rank.color}`}>
                   {rank.name}
                   {rank.division ? ` ${rank.division}` : ""}
                 </span>
@@ -91,10 +91,10 @@ export default function RankBanner({
           ) : (
             <>
               <div className="flex items-center gap-1.5">
-                <span className="rounded bg-blue/15 px-1.5 py-0.5 text-[9px] font-bold text-blue">
+                <span className="rounded-md bg-blue/15 px-1.5 py-0.5 text-[11px] font-semibold text-blue">
                   {getCurrentSeason().shortName}
                 </span>
-                <span className="text-lg font-extrabold text-text-muted">
+                <span className="text-lg font-semibold text-text-muted">
                   Calibrating
                 </span>
               </div>
@@ -117,7 +117,7 @@ export default function RankBanner({
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="mt-1 flex justify-between text-[9px] text-text-muted">
+          <div className="mt-1 flex justify-between text-[11px] text-text-muted">
             <span>
               {rank.name} {rank.division ?? ""}
             </span>
