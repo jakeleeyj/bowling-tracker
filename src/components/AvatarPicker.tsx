@@ -113,7 +113,7 @@ export default function AvatarPicker({
 
       {showPicker && (
         <div className="animate-slide-down mt-3 glass p-3">
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+          <p className="mb-2 text-[11px] font-semibold text-text-muted">
             Choose a colour
           </p>
           <div className="mb-3 flex justify-between">
@@ -132,7 +132,7 @@ export default function AvatarPicker({
               />
             ))}
           </div>
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+          <p className="mb-2 text-[11px] font-semibold text-text-muted">
             Or an avatar
           </p>
           <div className="mb-3 grid grid-cols-4 gap-2">

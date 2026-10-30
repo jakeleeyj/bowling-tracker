@@ -55,10 +55,10 @@ export default async function GameDetailPage({
       <div className="mb-4 flex items-center gap-3">
         <BackButton />
         <div className="flex-1">
-          <h1 className="text-lg font-bold tabular-nums">
+          <h1 className="text-lg font-semibold tabular-nums">
             Game {game.game_number}: {game.total_score}
           </h1>
-          <p className="text-[10px] text-text-muted">
+          <p className="text-[11px] text-text-muted">
             {new Date(session.session_date).toLocaleDateString("en-SG", {
               weekday: "short",
               month: "short",
@@ -80,7 +80,7 @@ export default async function GameDetailPage({
       {/* Stats */}
       <div className="mb-5 flex gap-2">
         <div className="glass flex-1 px-3 py-3.5 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+          <div className="text-[11px] font-semibold text-text-muted">
             Strikes
           </div>
           <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
@@ -88,7 +88,7 @@ export default async function GameDetailPage({
           </div>
         </div>
         <div className="glass flex-1 px-3 py-3.5 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+          <div className="text-[11px] font-semibold text-text-muted">
             Spares
           </div>
           <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-gold">
@@ -96,7 +96,7 @@ export default async function GameDetailPage({
           </div>
         </div>
         <div className="glass flex-1 px-3 py-3.5 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+          <div className="text-[11px] font-semibold text-text-muted">
             Clean
           </div>
           <div className="mt-1.5 text-2xl leading-none font-extrabold">
@@ -109,7 +109,7 @@ export default async function GameDetailPage({
       {frames && frames.length > 0 ? (
         <>
           <div className="glass overflow-hidden rounded-lg">
-            <table className="w-full border-collapse text-center text-[10px] tabular-nums">
+            <table className="w-full border-collapse text-center text-[11px] tabular-nums">
               <thead>
                 <tr>
                   {frames.map((f) => (
@@ -130,7 +130,7 @@ export default async function GameDetailPage({
                         <span
                           className={
                             f.is_strike
-                              ? "font-bold text-green"
+                              ? "font-semibold text-green"
                               : "text-text-secondary"
                           }
                         >
@@ -145,7 +145,7 @@ export default async function GameDetailPage({
                             <span
                               className={
                                 f.is_spare
-                                  ? "font-bold text-gold"
+                                  ? "font-semibold text-gold"
                                   : "text-text-secondary"
                               }
                             >
@@ -161,9 +161,9 @@ export default async function GameDetailPage({
                             <span
                               className={
                                 f.roll_1 === 10 && f.roll_2 === 10
-                                  ? "font-bold text-green"
+                                  ? "font-semibold text-green"
                                   : f.is_spare && f.roll_1 !== 10
-                                    ? "font-bold text-gold"
+                                    ? "font-semibold text-gold"
                                     : "text-text-secondary"
                               }
                             >
@@ -179,19 +179,19 @@ export default async function GameDetailPage({
                               <span
                                 className={
                                   f.roll_3 === 10
-                                    ? "font-bold text-green"
+                                    ? "font-semibold text-green"
                                     : f.roll_1 === 10 &&
                                         f.roll_2 !== null &&
                                         f.roll_2 !== 10 &&
                                         f.roll_2 + f.roll_3 === 10 &&
                                         f.pins_remaining !== null &&
                                         isSplit(f.pins_remaining)
-                                      ? "font-bold text-red"
+                                      ? "font-semibold text-red"
                                       : f.roll_1 === 10 &&
                                           f.roll_2 !== null &&
                                           f.roll_2 !== 10 &&
                                           f.roll_2 + f.roll_3 === 10
-                                        ? "font-bold text-gold"
+                                        ? "font-semibold text-gold"
                                         : "text-text-secondary"
                                 }
                               >
@@ -217,7 +217,7 @@ export default async function GameDetailPage({
                   {frames.map((f) => (
                     <td
                       key={f.frame_number}
-                      className="border border-border text-[12px] font-bold"
+                      className="border border-border text-xs font-semibold"
                     >
                       {f.frame_score}
                     </td>

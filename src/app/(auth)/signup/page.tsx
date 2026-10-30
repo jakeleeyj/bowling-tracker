@@ -114,7 +114,7 @@ export default function SignupPage() {
       {/* Brand */}
       <div className="relative z-10 mb-8 flex flex-col items-center">
         <Logo />
-        <h1 className="mt-4 text-3xl font-extrabold tracking-tight">
+        <h1 className="mt-4 text-[28px] font-extrabold tracking-tight">
           Join Spare Me<span className="text-gold">?</span>
         </h1>
         <p className="mt-1 text-sm text-text-muted">
@@ -169,7 +169,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
+            className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-blue py-4 font-semibold text-white inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] disabled:opacity-60"
           >
             {loading ? (
               <>

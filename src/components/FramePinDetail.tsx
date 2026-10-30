@@ -70,7 +70,7 @@ export default function FramePinDetail({ frames }: FramePinDetailProps) {
                 setSelectedFrame(isSelected ? null : f.frame_number)
               }
               disabled={!hasPins}
-              className={`flex-1 rounded py-1 text-[10px] font-semibold transition-colors ${
+              className={`flex-1 rounded-md py-1 text-[11px] font-semibold transition-colors ${
                 isSelected
                   ? "bg-blue text-white"
                   : hasPins
@@ -144,7 +144,7 @@ export default function FramePinDetail({ frames }: FramePinDetailProps) {
                             shot,
                           })
                         }
-                        className={`flex-1 rounded-md py-[5px] text-[12px] transition-colors ${
+                        className={`flex-1 rounded-md py-[5px] text-xs transition-colors ${
                           active
                             ? "bg-blue font-semibold text-white"
                             : "text-text-muted"
@@ -185,7 +185,7 @@ export default function FramePinDetail({ frames }: FramePinDetailProps) {
                       return (
                         <div
                           key={pin}
-                          className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold ${
+                          className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold ${
                             isLeft
                               ? split
                                 ? "bg-red/20 text-red"
@@ -201,7 +201,7 @@ export default function FramePinDetail({ frames }: FramePinDetailProps) {
                 ))}
               </div>
 
-              <p className="mt-2 text-center text-[10px] text-text-muted">
+              <p className="mt-2 text-center text-[11px] text-text-muted">
                 {isFrame10
                   ? shotData.knocked === 10
                     ? "Strike, all 10"

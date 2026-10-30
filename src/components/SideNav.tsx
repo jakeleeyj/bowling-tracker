@@ -57,7 +57,7 @@ export default function SideNav() {
     <nav className="hidden [view-transition-name:app-nav] lg:flex lg:shrink-0 lg:flex-col lg:sticky lg:top-0 lg:h-dvh w-[240px] z-50 bg-surface border-r border-border px-3 py-6">
       {/* App name */}
       <div className="px-3 mb-8">
-        <span className="text-lg font-bold text-text-primary tracking-tight">
+        <span className="text-lg font-semibold text-text-primary tracking-tight">
           Spare Me?
         </span>
       </div>
@@ -68,8 +68,8 @@ export default function SideNav() {
         aria-label={hasSavedSession ? "Continue session" : "Log a session"}
         className={`flex items-center gap-3 w-full rounded-xl px-4 py-3 mb-6 font-semibold text-sm text-white transition-all duration-150 active:scale-[0.98] ${
           hasSavedSession
-            ? "bg-gradient-to-r from-blue to-emerald-600 shadow-[0_4px_20px_color-mix(in_srgb,var(--color-blue)_25%,transparent),0_0_40px_rgba(16,185,129,0.1)]"
-            : "bg-gradient-to-r from-blue to-blue-dark shadow-[0_4px_20px_color-mix(in_srgb,var(--color-blue)_30%,transparent)]"
+            ? "bg-green"
+            : "bg-blue"
         } ${isLogActive ? "ring-2 ring-white/20" : ""}`}
       >
         {hasSavedSession ? (
@@ -82,9 +82,9 @@ export default function SideNav() {
             style={{ animationDuration: "3s" }}
           >
             <circle cx="12" cy="12" r="10" fill="white" />
-            <circle cx="10" cy="8" r="1.5" fill="#10b981" />
-            <circle cx="14" cy="8" r="1.5" fill="#10b981" />
-            <circle cx="12" cy="11.5" r="1.5" fill="#10b981" />
+            <circle cx="10" cy="8" r="1.5" fill="currentColor" className="text-green" />
+            <circle cx="14" cy="8" r="1.5" fill="currentColor" className="text-green" />
+            <circle cx="12" cy="11.5" r="1.5" fill="currentColor" className="text-green" />
           </svg>
         ) : (
           <Plus size={18} strokeWidth={2.5} className="shrink-0" />

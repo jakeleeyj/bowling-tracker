@@ -64,7 +64,7 @@ export default function FrameScorecard({
 
   return (
     <div className="glass overflow-hidden rounded-lg">
-      <table className="w-full table-fixed border-collapse text-center text-[10px]">
+      <table className="w-full table-fixed border-collapse text-center text-[11px]">
         {/* Frame numbers */}
         <thead>
           <tr>
@@ -74,7 +74,7 @@ export default function FrameScorecard({
                 style={{ width: "10%" }}
                 className={`border border-border px-0 py-[3px] transition-colors duration-200 ${
                   i + 1 === currentFrame
-                    ? "bg-blue/15 font-bold text-blue"
+                    ? "bg-blue/15 font-semibold text-blue"
                     : "font-normal text-text-muted"
                 }`}
               >
@@ -105,14 +105,14 @@ export default function FrameScorecard({
                       {i < 9 ? (
                         <>
                           {frame.isStrike ? (
-                            <span className="font-bold text-green">X</span>
+                            <span className="font-semibold text-green">X</span>
                           ) : (
                             <>
                               <span
                                 className={
                                   frame.pinsRemaining &&
                                   isSplit(frame.pinsRemaining)
-                                    ? "font-bold text-red"
+                                    ? "font-semibold text-red"
                                     : "text-text-secondary"
                                 }
                               >
@@ -123,9 +123,9 @@ export default function FrameScorecard({
                                   frame.isSpare &&
                                   frame.pinsRemaining &&
                                   isSplit(frame.pinsRemaining)
-                                    ? "font-bold text-red"
+                                    ? "font-semibold text-red"
                                     : frame.isSpare
-                                      ? "font-bold text-gold"
+                                      ? "font-semibold text-gold"
                                       : "text-text-muted/50"
                                 }
                               >
@@ -139,7 +139,7 @@ export default function FrameScorecard({
                           <span
                             className={
                               frame.roll1 === 10
-                                ? "font-bold text-green"
+                                ? "font-semibold text-green"
                                 : "text-text-secondary"
                             }
                           >
@@ -148,14 +148,14 @@ export default function FrameScorecard({
                           <span
                             className={
                               frame.roll2 === 10
-                                ? "font-bold text-green"
+                                ? "font-semibold text-green"
                                 : frame.isSpare &&
                                     frame.roll1 !== 10 &&
                                     frame.pinsRemaining &&
                                     isSplit(frame.pinsRemaining)
-                                  ? "font-bold text-red"
+                                  ? "font-semibold text-red"
                                   : frame.isSpare && frame.roll1 !== 10
-                                    ? "font-bold text-gold"
+                                    ? "font-semibold text-gold"
                                     : "text-text-secondary"
                             }
                           >
@@ -164,7 +164,7 @@ export default function FrameScorecard({
                           <span
                             className={
                               frame.roll3 === 10
-                                ? "font-bold text-green"
+                                ? "font-semibold text-green"
                                 : frame.roll1 === 10 &&
                                     frame.roll2 !== null &&
                                     frame.roll2 !== 10 &&
@@ -172,13 +172,13 @@ export default function FrameScorecard({
                                     frame.roll2 + frame.roll3 === 10 &&
                                     frame.pinsRemaining &&
                                     isSplit(frame.pinsRemaining)
-                                  ? "font-bold text-red"
+                                  ? "font-semibold text-red"
                                   : frame.roll1 === 10 &&
                                       frame.roll2 !== null &&
                                       frame.roll2 !== 10 &&
                                       frame.roll3 !== null &&
                                       frame.roll2 + frame.roll3 === 10
-                                    ? "font-bold text-gold"
+                                    ? "font-semibold text-gold"
                                     : "text-text-secondary"
                             }
                           >
@@ -207,7 +207,7 @@ export default function FrameScorecard({
               return (
                 <td
                   key={i}
-                  className="overflow-hidden border border-border text-[12px] font-bold tabular-nums text-text-primary"
+                  className="overflow-hidden border border-border text-xs font-semibold tabular-nums text-text-primary"
                 >
                   {canDisplay ? (
                     <span key={score} className="animate-fade-in">

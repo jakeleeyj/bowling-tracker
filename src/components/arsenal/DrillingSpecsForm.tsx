@@ -294,7 +294,7 @@ export default function DrillingSpecsForm({
   return (
     <div className="flex flex-col gap-5">
       <div className="glass p-4">
-        <h2 className="mb-3 text-sm font-bold">Ball</h2>
+        <h2 className="mb-3 text-sm font-semibold">Ball</h2>
         <div className="mb-3">
           <BallPicker
             picked={
@@ -383,7 +383,7 @@ export default function DrillingSpecsForm({
       </div>
 
       <div className="glass p-4">
-        <h2 className="mb-3 text-sm font-bold">Layout</h2>
+        <h2 className="mb-3 text-sm font-semibold">Layout</h2>
         <div className="relative mb-3 flex h-11 rounded-lg bg-surface-light p-[3px]">
           <span
             aria-hidden
@@ -398,7 +398,7 @@ export default function DrillingSpecsForm({
               key={value}
               onClick={() => setLayoutTab(value)}
               aria-pressed={layoutTab === value}
-              className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+              className={`relative flex-1 rounded-md text-sm font-semibold transition-colors duration-200 ${
                 layoutTab === value ? "text-white" : "text-text-muted"
               }`}
             >
@@ -429,14 +429,14 @@ export default function DrillingSpecsForm({
             </>
           )}
         </div>
-        <p className="mt-2 text-[10px] leading-relaxed text-text-muted">
+        <p className="mt-2 text-[11px] leading-relaxed text-text-muted">
           The other systems fill in automatically.
         </p>
       </div>
 
       <div className="glass p-4">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold">Drilling specs</h2>
+          <h2 className="text-sm font-semibold">Drilling specs</h2>
           <label className="-my-2 flex min-h-10 items-center gap-2 text-xs text-text-muted">
             <input
               type="checkbox"

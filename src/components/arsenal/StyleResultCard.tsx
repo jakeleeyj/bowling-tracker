@@ -23,8 +23,8 @@ export default function StyleResultCard({
   const meterPos = Math.min(1, Math.max(0, analysis.ratio - 0.5));
 
   return (
-    <div className="glass-strong animate-slide-up p-5">
-      <h2 className="mb-1 text-sm font-bold">Your style</h2>
+    <div className="glass animate-slide-up p-5">
+      <h2 className="mb-1 text-sm font-semibold">Your style</h2>
       <p className="mb-1 text-2xl font-extrabold capitalize text-text-primary">
         {analysis.style}
       </p>
@@ -34,7 +34,7 @@ export default function StyleResultCard({
         {Math.round(analysis.specs.revRate)} rpm
       </p>
 
-      <div className="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-text-muted">
+      <div className="mb-1 flex justify-between text-[11px] text-text-muted">
         <span>Speed</span>
         <span>Balanced</span>
         <span>Revs</span>
@@ -42,7 +42,7 @@ export default function StyleResultCard({
       <div className="relative mb-4 h-2 rounded-full bg-surface-light">
         <div className="absolute inset-y-0 left-[35%] right-[35%] rounded-full bg-green/20" />
         <div
-          className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-blue shadow-lg shadow-blue/40"
+          className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-blue"
           style={{ left: `${meterPos * 100}%` }}
         />
       </div>

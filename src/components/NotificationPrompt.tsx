@@ -63,7 +63,7 @@ export default function NotificationPrompt() {
         <Bell size={18} className="text-blue" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold">Stay in the loop</p>
+        <p className="text-sm font-semibold">Stay in the loop</p>
         <p className="text-[11px] text-text-muted">
           Get notified when friends log games
         </p>
@@ -71,7 +71,7 @@ export default function NotificationPrompt() {
       <button
         onClick={handleEnable}
         disabled={loading}
-        className="flex h-9 shrink-0 items-center justify-center rounded-lg bg-blue px-3 text-[11px] font-bold text-white transition-transform duration-150 ease-out active:scale-[0.95] disabled:opacity-60"
+        className="flex h-9 shrink-0 items-center justify-center rounded-lg bg-blue px-3 text-[11px] font-semibold text-white transition-transform duration-150 ease-out active:scale-[0.95] disabled:opacity-60"
       >
         {loading ? (
           <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />

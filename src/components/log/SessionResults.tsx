@@ -155,7 +155,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
       ) : justCalibrated ? (
         <>
           <div className="animate-results-fade mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">
+            <span className="text-[11px] font-semibold text-text-muted">
               Calibration complete
             </span>
           </div>
@@ -172,7 +172,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
                 style={{ width: `${barProgress}%` }}
               />
             </div>
-            <div className="mt-1 flex justify-between text-[9px] text-text-muted">
+            <div className="mt-1 flex justify-between text-[11px] text-text-muted">
               <span>{data.newRank.division ?? data.newRank.name}</span>
               <span className="tabular-nums">{progress}%</span>
             </div>
@@ -196,7 +196,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
           {data.rankChanged && showRankChange && (
             <div className="animate-results-flash mb-2">
               <span
-                className={`text-xs font-extrabold uppercase tracking-[0.2em] ${data.isRankUp ? data.newRank.color : "text-red"}`}
+                className={`text-sm font-semibold ${data.isRankUp ? data.newRank.color : "text-red"}`}
               >
                 {data.isRankUp
                   ? data.newRank.name !== data.oldRank.name
@@ -216,7 +216,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
                 style={{ width: `${barProgress}%` }}
               />
             </div>
-            <div className="mt-1 flex justify-between text-[9px] text-text-muted">
+            <div className="mt-1 flex justify-between text-[11px] text-text-muted">
               <span>{displayRank.division ?? displayRank.name}</span>
               <span className="tabular-nums">{progress}%</span>
             </div>
@@ -238,7 +238,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
 
       {showAchievements && data.unlockedAchievements.length > 0 && (
         <div className="animate-results-fade mb-6 w-full max-w-[300px]">
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gold">
+          <p className="mb-2 text-[11px] font-semibold text-gold">
             Achievement unlocked
           </p>
           <div className="flex flex-col gap-2">
@@ -249,8 +249,8 @@ export default function SessionResults({ data }: { data: ResultsData }) {
               >
                 <span className={a.color}>{RESULTS_ICON_MAP[a.iconName]}</span>
                 <div className="text-left">
-                  <p className="text-sm font-bold">{a.name}</p>
-                  <p className="text-[10px] text-text-muted">{a.description}</p>
+                  <p className="text-sm font-semibold">{a.name}</p>
+                  <p className="text-[11px] text-text-muted">{a.description}</p>
                 </div>
               </div>
             ))}
@@ -260,8 +260,8 @@ export default function SessionResults({ data }: { data: ResultsData }) {
 
       {data.isNewPB && (
         <div className="animate-results-flash mb-4 rounded-xl bg-gold/10 px-5 py-3">
-          <p className="text-sm font-extrabold text-gold">New personal best</p>
-          <p className="text-[10px] text-text-muted">
+          <p className="text-sm font-semibold text-gold">New personal best</p>
+          <p className="text-[11px] text-text-muted">
             {data.sessionHigh} pins, your new high game
           </p>
         </div>
@@ -269,15 +269,15 @@ export default function SessionResults({ data }: { data: ResultsData }) {
 
       <div className="mb-6 flex w-full max-w-[300px] gap-2">
         <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">Avg</div>
+          <div className="text-[11px] font-semibold text-text-muted">Avg</div>
           <div className="text-lg font-extrabold tabular-nums">{data.sessionAvg}</div>
         </div>
         <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">High</div>
+          <div className="text-[11px] font-semibold text-text-muted">High</div>
           <div className="text-lg font-extrabold tabular-nums">{data.sessionHigh}</div>
         </div>
         <div className="glass flex-1 p-3 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">Total</div>
+          <div className="text-[11px] font-semibold text-text-muted">Total</div>
           <div className="text-lg font-extrabold tabular-nums">{data.totalPins}</div>
         </div>
       </div>
@@ -289,8 +289,8 @@ export default function SessionResults({ data }: { data: ResultsData }) {
             className="glass animate-results-fade min-w-[48px] flex-1 p-2 text-center"
             style={{ animationDelay: `${0.8 + i * 0.08}s` }}
           >
-            <div className="text-[9px] text-text-muted">G{i + 1}</div>
-            <div className="text-sm font-bold tabular-nums text-text-primary">{score}</div>
+            <div className="text-[11px] text-text-muted">G{i + 1}</div>
+            <div className="text-sm font-semibold tabular-nums text-text-primary">{score}</div>
           </div>
         ))}
       </div>
@@ -300,7 +300,7 @@ export default function SessionResults({ data }: { data: ResultsData }) {
           e.stopPropagation();
           window.location.href = "/dashboard";
         }}
-        className="w-full max-w-[300px] rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+        className="w-full max-w-[300px] rounded-xl bg-blue py-4 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
       >
         Continue
       </button>

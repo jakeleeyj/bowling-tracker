@@ -30,7 +30,7 @@ export default function SessionReview({
         <button onClick={onBack} className="text-text-muted">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-base font-bold text-text-primary">
+        <h1 className="text-base font-semibold text-text-primary">
           Session Complete
         </h1>
         <div className="w-5" />
@@ -65,9 +65,9 @@ export default function SessionReview({
               key={i}
               className={`glass flex-1 p-3 text-center ${isHigh ? "border-gold/35" : ""} ${clean ? "border-green/35" : ""}`}
             >
-              <div className="text-[9px] text-text-muted">G{i + 1}</div>
+              <div className="text-[11px] text-text-muted">G{i + 1}</div>
               <div
-                className={`text-base font-bold ${isHigh ? "text-gold" : clean ? "text-green" : "text-text-primary"}`}
+                className={`text-base font-semibold ${isHigh ? "text-gold" : clean ? "text-green" : "text-text-primary"}`}
               >
                 {g.totalScore}
               </div>
@@ -79,7 +79,7 @@ export default function SessionReview({
       <button
         onClick={onSave}
         disabled={saving}
-        className="w-full rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 disabled:opacity-50"
+        className="w-full rounded-xl bg-green py-4 text-base font-semibold text-white disabled:opacity-50"
       >
         {saving ? "Saving..." : "Save Session"}
       </button>

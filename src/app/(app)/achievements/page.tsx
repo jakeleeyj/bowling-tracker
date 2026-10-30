@@ -55,7 +55,7 @@ export default async function AchievementsPage() {
 
       {earned.length > 0 && (
         <div className="mb-6">
-          <h2 className="mb-3 text-sm font-bold">Earned</h2>
+          <h2 className="mb-3 text-sm font-semibold">Earned</h2>
           <ul className="flex flex-col gap-2">
             {earned.map((a) => (
               <li key={a.id} className="glass flex items-center gap-4 p-4">
@@ -63,7 +63,7 @@ export default async function AchievementsPage() {
                   {ACHIEVEMENT_ICONS[a.iconName]}
                 </div>
                 <div>
-                  <p className="text-sm font-bold">{a.name}</p>
+                  <p className="text-sm font-semibold">{a.name}</p>
                   <p className="text-[11px] text-text-muted">{a.description}</p>
                 </div>
               </li>
@@ -74,7 +74,7 @@ export default async function AchievementsPage() {
 
       {locked.length > 0 && (
         <>
-          <h2 className="mb-3 text-sm font-bold">Locked</h2>
+          <h2 className="mb-3 text-sm font-semibold">Locked</h2>
           <ul className="flex flex-col gap-2">
             {locked.map((a) => (
               <li
@@ -85,7 +85,7 @@ export default async function AchievementsPage() {
                   {ACHIEVEMENT_ICONS[a.iconName]}
                 </div>
                 <div>
-                  <p className="text-sm font-bold">{a.name}</p>
+                  <p className="text-sm font-semibold">{a.name}</p>
                   <p className="text-[11px] text-text-muted">{a.description}</p>
                 </div>
               </li>

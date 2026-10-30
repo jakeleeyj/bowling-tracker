@@ -173,7 +173,7 @@ export default function GameEntry(props: GameEntryProps) {
         >
           <Trash2 size={18} />
         </button>
-        <h1 className="mr-auto text-base font-bold text-text-primary">
+        <h1 className="mr-auto text-base font-semibold text-text-primary">
           {editMode
             ? "Edit game"
             : `Game ${currentGameIndex + 1} of ${gameCount}`}
@@ -189,7 +189,7 @@ export default function GameEntry(props: GameEntryProps) {
             <button
               onClick={() => setEntryMode("quick")}
               aria-pressed={entryMode === "quick"}
-              className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+              className={`relative flex-1 rounded-md text-sm font-semibold transition-colors duration-200 ${
                 entryMode === "quick" ? "text-white" : "text-text-muted"
               }`}
             >
@@ -198,7 +198,7 @@ export default function GameEntry(props: GameEntryProps) {
             <button
               onClick={() => setEntryMode("detailed")}
               aria-pressed={entryMode === "detailed"}
-              className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+              className={`relative flex-1 rounded-md text-sm font-semibold transition-colors duration-200 ${
                 entryMode === "detailed" ? "text-white" : "text-text-muted"
               }`}
             >
@@ -219,7 +219,7 @@ export default function GameEntry(props: GameEntryProps) {
               <button
                 key={i}
                 onClick={() => switchToGame(i)}
-                className={`h-10 flex-1 rounded-lg text-xs font-bold tabular-nums transition-[color,background-color,transform] duration-150 active:scale-[0.96] ${
+                className={`h-10 flex-1 rounded-lg text-xs font-semibold tabular-nums transition-[color,background-color,transform] duration-150 active:scale-[0.96] ${
                   isActive
                     ? "bg-blue text-white"
                     : isDone
@@ -231,7 +231,7 @@ export default function GameEntry(props: GameEntryProps) {
               >
                 G{i + 1}
                 {!isActive && tab.score > 0 && (
-                  <span className="ml-1 text-[10px]">
+                  <span className="ml-1 text-[11px]">
                     {tab.score}
                     {tab.inProgress && "*"}
                   </span>
@@ -248,7 +248,7 @@ export default function GameEntry(props: GameEntryProps) {
                 }
               }}
               aria-label="Remove game"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-light text-sm font-bold text-text-muted transition-transform duration-150 active:scale-90"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-light text-sm font-semibold text-text-muted transition-transform duration-150 active:scale-90"
             >
               &minus;
             </button>
@@ -257,7 +257,7 @@ export default function GameEntry(props: GameEntryProps) {
             <button
               onClick={() => setGameCount((c: number) => c + 1)}
               aria-label="Add game"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-light text-sm font-bold text-text-muted transition-transform duration-150 active:scale-90"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-light text-sm font-semibold text-text-muted transition-transform duration-150 active:scale-90"
             >
               +
             </button>
@@ -298,13 +298,13 @@ export default function GameEntry(props: GameEntryProps) {
 
               <div className="glass p-4 text-center">
                 <div className="text-xs text-text-muted">Final score</div>
-                <div className="animate-scale-in text-3xl font-extrabold tabular-nums text-text-primary">
+                <div className="animate-scale-in text-[28px] font-extrabold tabular-nums text-text-primary">
                   {completedGame.totalScore}
                 </div>
                 {completedGame.entryType === "detailed" &&
                   isCleanGame(completedGame.frames) && (
                     <div className="mt-1 text-[11px] font-semibold text-green">
-                      CLEAN
+                      Clean
                     </div>
                   )}
               </div>
@@ -312,7 +312,7 @@ export default function GameEntry(props: GameEntryProps) {
               <div className="flex gap-2">
                 <button
                   onClick={editCurrentGame}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-surface-light py-3.5 text-sm font-bold text-text-secondary transition-transform duration-150 active:scale-[0.97]"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-surface-light py-3.5 text-sm font-semibold text-text-secondary transition-transform duration-150 active:scale-[0.97]"
                 >
                   <Pencil size={16} />
                   Edit
@@ -327,7 +327,7 @@ export default function GameEntry(props: GameEntryProps) {
                     });
                     if (ok) deleteCurrentGame();
                   }}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red/10 py-3.5 text-sm font-bold text-red transition-[background-color,transform] duration-150 active:scale-[0.97] active:bg-red/20"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red/10 py-3.5 text-sm font-semibold text-red transition-[background-color,transform] duration-150 active:scale-[0.97] active:bg-red/20"
                 >
                   <Trash2 size={16} />
                   Delete
@@ -338,7 +338,7 @@ export default function GameEntry(props: GameEntryProps) {
                 <button
                   onClick={updateExistingGame}
                   disabled={saving}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-green py-4 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97] disabled:opacity-60"
                 >
                   {saving ? (
                     <>
@@ -359,7 +359,7 @@ export default function GameEntry(props: GameEntryProps) {
                     return (
                       <button
                         onClick={() => switchToGame(nextIncomplete)}
-                        className="w-full rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+                        className="w-full rounded-xl bg-blue py-4 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
                       >
                         Next Game (G{nextIncomplete + 1})
                       </button>
@@ -370,7 +370,7 @@ export default function GameEntry(props: GameEntryProps) {
                       <button
                         onClick={saveSession}
                         disabled={saving}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-60"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-green py-4 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97] disabled:opacity-60"
                       >
                         {saving ? (
                           <>
@@ -418,7 +418,7 @@ export default function GameEntry(props: GameEntryProps) {
                   parseInt(quickScore) < 0 ||
                   parseInt(quickScore) > 300
                 }
-                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 transition-[transform,opacity] duration-150 active:scale-[0.97] disabled:opacity-40 disabled:shadow-none disabled:active:scale-100"
+                className="flex items-center justify-center gap-2 rounded-xl bg-blue py-4 text-base font-semibold text-white transition-[transform,opacity] duration-150 active:scale-[0.97] disabled:opacity-40 disabled:shadow-none disabled:active:scale-100"
               >
                 <Check size={18} />
                 Done
@@ -449,14 +449,14 @@ export default function GameEntry(props: GameEntryProps) {
                     Score{" "}
                     <RollingNumber
                       value={currentScore}
-                      className="text-lg leading-none font-extrabold text-text-primary"
+                      className="text-lg leading-none font-semibold text-text-primary"
                     />
                   </span>
                   <span>
                     Max{" "}
                     <RollingNumber
                       value={maxPossible}
-                      className="text-lg leading-none font-extrabold text-green"
+                      className="text-lg leading-none font-semibold text-green"
                     />
                   </span>
                 </p>
@@ -518,7 +518,7 @@ export default function GameEntry(props: GameEntryProps) {
                               {lastMark.type === "strike" ? "X" : "/"}
                             </span>
                             <span
-                              className={`mt-1 text-xs font-extrabold tracking-[0.2em] ${lastMark.type === "strike" ? "text-green" : "text-gold"}`}
+                              className={`mt-1 text-xs font-semibold tracking-[0.2em] ${lastMark.type === "strike" ? "text-green" : "text-gold"}`}
                             >
                               {lastMark.type === "strike" ? "STRIKE" : "SPARE"}
                             </span>
@@ -567,7 +567,7 @@ export default function GameEntry(props: GameEntryProps) {
                                     )
                                   }
                                   aria-pressed={active}
-                                  className={`relative h-8 flex-1 rounded-md text-[12px] font-semibold transition-colors duration-200 ${
+                                  className={`relative h-8 flex-1 rounded-md text-xs font-semibold transition-colors duration-200 ${
                                     active ? "text-white" : "text-text-muted"
                                   }`}
                                 >
@@ -608,9 +608,9 @@ export default function GameEntry(props: GameEntryProps) {
                 </button>
                 <button
                   onClick={handleGutter}
-                  className="rounded-xl bg-surface-light px-3 py-3 text-xs font-bold tracking-wider text-text-muted transition-transform duration-150 active:scale-[0.94]"
+                  className="rounded-xl bg-surface-light px-3 py-3 text-xs font-semibold text-text-muted transition-transform duration-150 active:scale-[0.94]"
                 >
-                  GUTTER
+                  Gutter
                 </button>
                 {showStrikeButton ? (
                   <button
@@ -618,9 +618,9 @@ export default function GameEntry(props: GameEntryProps) {
                       saveHistory();
                       handleStrike();
                     }}
-                    className="flex-1 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-3 text-base font-extrabold tracking-wider text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97]"
+                    className="flex-1 rounded-xl bg-green py-3 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
                   >
-                    STRIKE
+                    Strike
                   </button>
                 ) : (
                   <button
@@ -628,16 +628,16 @@ export default function GameEntry(props: GameEntryProps) {
                       saveHistory();
                       handleSpare();
                     }}
-                    className="flex-1 rounded-xl bg-gradient-to-r from-gold to-amber-600 py-3 text-base font-extrabold tracking-wider text-white shadow-lg shadow-gold/25 transition-transform duration-150 active:scale-[0.97]"
+                    className="flex-1 rounded-xl bg-gold py-3 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
                   >
-                    SPARE
+                    Spare
                   </button>
                 )}
                 <button
                   onClick={confirmPinSelection}
-                  className="flex-1 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-3 text-base font-extrabold tracking-wider text-white shadow-lg shadow-blue/25 transition-transform duration-150 active:scale-[0.97]"
+                  className="flex-1 rounded-xl bg-blue py-3 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
                 >
-                  NEXT
+                  Next
                 </button>
               </div>
 
@@ -654,11 +654,11 @@ export default function GameEntry(props: GameEntryProps) {
                           {editOriginalScore}
                         </span>
                         <span className="text-text-muted">&rarr;</span>
-                        <span className="text-sm font-bold text-text-primary">
+                        <span className="text-sm font-semibold text-text-primary">
                           {currentScore}
                         </span>
                         <span
-                          className={`text-xs font-bold ${
+                          className={`text-xs font-semibold ${
                             currentScore > editOriginalScore
                               ? "text-green"
                               : currentScore < editOriginalScore
@@ -706,7 +706,7 @@ export default function GameEntry(props: GameEntryProps) {
 
                       return (
                         <div className="glass p-3">
-                          <p className="mb-2 text-[10px] font-semibold text-text-muted">
+                          <p className="mb-2 text-[11px] font-semibold text-text-muted">
                             Changed frames
                           </p>
                           <div className="flex flex-wrap gap-1.5">
@@ -715,18 +715,18 @@ export default function GameEntry(props: GameEntryProps) {
                                 key={frame.frameNumber}
                                 className="flex items-center gap-1.5 rounded-lg bg-black/20 px-2.5 py-1.5"
                               >
-                                <span className="text-[10px] font-bold text-blue">
+                                <span className="text-[11px] font-semibold text-blue">
                                   F{frame.frameNumber}
                                 </span>
                                 {orig && (
-                                  <span className="text-[10px] text-text-muted">
+                                  <span className="text-[11px] text-text-muted">
                                     {rollLabel(orig)}
                                   </span>
                                 )}
-                                <span className="text-[10px] text-text-muted">
+                                <span className="text-[11px] text-text-muted">
                                   &rarr;
                                 </span>
-                                <span className="text-[10px] font-bold text-text-primary">
+                                <span className="text-[11px] font-semibold text-text-primary">
                                   {rollLabel(frame)}
                                 </span>
                               </div>
@@ -750,7 +750,7 @@ export default function GameEntry(props: GameEntryProps) {
                       updateExistingGame();
                     }}
                     disabled={saving}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-green/25 transition-transform duration-150 active:scale-[0.97] disabled:opacity-60"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-green py-4 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97] disabled:opacity-60"
                   >
                     {saving ? (
                       <>

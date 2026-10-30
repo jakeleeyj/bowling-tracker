@@ -61,8 +61,8 @@ export default function BottomNav() {
         <div
           className={`flex h-[52px] w-[52px] items-center justify-center rounded-full transition-transform duration-150 active:scale-95 ${
             hasSavedSession
-              ? "bg-gradient-to-br from-blue to-emerald-600 shadow-[0_4px_20px_color-mix(in_srgb,var(--color-blue)_30%,transparent),0_0_40px_rgba(16,185,129,0.1)]"
-              : "bg-gradient-to-br from-blue to-blue-dark shadow-[0_4px_20px_color-mix(in_srgb,var(--color-blue)_40%,transparent),0_0_40px_color-mix(in_srgb,var(--color-blue)_15%,transparent)]"
+              ? "bg-green shadow-lg shadow-black/40"
+              : "bg-blue shadow-lg shadow-black/40"
           } ${isLogActive ? "ring-2 ring-white/20" : ""}`}
         >
           {hasSavedSession ? (
@@ -144,7 +144,7 @@ export default function BottomNav() {
                 />
               </div>
               <span
-                className={`text-[10px] transition-colors duration-200 ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
+                className={`text-[11px] transition-colors duration-200 ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
               >
                 {item.label}
               </span>
@@ -160,7 +160,7 @@ export default function BottomNav() {
           {/* Invisible spacer matching the icon area height */}
           <div className="h-8" />
           <span
-            className={`text-[10px] transition-colors duration-200 ${hasSavedSession ? "font-semibold bg-gradient-to-r from-blue to-emerald-600 bg-clip-text text-transparent" : isLogActive ? "font-semibold text-blue" : "text-text-muted"}`}
+            className={`text-[11px] transition-colors duration-200 ${hasSavedSession ? "font-semibold text-green" : isLogActive ? "font-semibold text-blue" : "text-text-muted"}`}
           >
             {hasSavedSession ? "Ongoing" : "Log"}
           </span>
@@ -188,7 +188,7 @@ export default function BottomNav() {
                 />
               </div>
               <span
-                className={`text-[10px] transition-colors duration-200 ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
+                className={`text-[11px] transition-colors duration-200 ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
               >
                 {item.label}
               </span>

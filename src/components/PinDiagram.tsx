@@ -65,7 +65,7 @@ export default function PinDiagram({
                   return (
                     <div
                       key={pin}
-                      className="flex size-(--pin) items-center justify-center rounded-full bg-surface-light/30 text-[length:calc(var(--pin)*0.34)] font-bold text-text-muted/20"
+                      className="flex size-(--pin) items-center justify-center rounded-full bg-surface-light/30 text-[length:calc(var(--pin)*0.34)] font-semibold text-text-muted/20"
                     >
                       {pin}
                     </div>
@@ -79,7 +79,7 @@ export default function PinDiagram({
                     disabled={disabled}
                     aria-label={`Pin ${pin}`}
                     aria-pressed={isStanding}
-                    className={`flex size-(--pin) items-center justify-center rounded-full text-[length:calc(var(--pin)*0.34)] font-bold transition-transform duration-100 ease-out ${
+                    className={`flex size-(--pin) items-center justify-center rounded-full text-[length:calc(var(--pin)*0.34)] font-semibold transition-transform duration-100 ease-out ${
                       isStanding
                         ? "scale-100 bg-blue text-white shadow-md shadow-blue/30 inset-shadow-2xs inset-shadow-white/30"
                         : "scale-90 bg-surface-light text-text-muted"

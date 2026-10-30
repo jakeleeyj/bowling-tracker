@@ -5,7 +5,7 @@ export default function LeaderboardLoading() {
     <div aria-busy="true" aria-label="Loading leaderboard">
       <div className="mb-5">
         <div className="flex items-center gap-2">
-          <Skeleton className="h-6 w-6 rounded" />
+          <Skeleton className="h-6 w-6 rounded-md" />
           <Skeleton className="h-[34px] w-32 flex-1" />
           <Skeleton className="h-10 w-10 rounded-full" />
         </div>

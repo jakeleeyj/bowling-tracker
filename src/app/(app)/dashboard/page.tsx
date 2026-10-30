@@ -89,7 +89,7 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <p className="text-[13px] text-text-muted">Welcome back</p>
+          <p className="text-sm text-text-muted">Welcome back</p>
           <LargeTitle title={displayName} />
         </div>
         <Avatar name={displayName} avatarUrl={profile?.avatar_url} size="md" />
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
           { label: "Games", value: totalGames },
         ].map((stat) => (
           <div key={stat.label} className="glass px-3 py-3.5 text-center">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+            <div className="text-[11px] font-semibold text-text-muted">
               {stat.label}
             </div>
             <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
@@ -133,7 +133,7 @@ export default async function DashboardPage() {
       {/* CTA */}
       <Link
         href="/log"
-        className="mb-6 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue to-blue-dark py-4 text-base font-bold text-white shadow-lg shadow-blue/25 inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97]"
+        className="mb-6 flex items-center justify-center gap-2 rounded-xl bg-blue py-4 text-base font-semibold text-white inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97]"
       >
         <Plus size={18} strokeWidth={2.75} />
         Log a session
@@ -141,7 +141,7 @@ export default async function DashboardPage() {
 
       {/* Activity Feed */}
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-bold">Recent activity</h2>
+        <h2 className="text-sm font-semibold">Recent activity</h2>
         <Link
           href="/profile"
           className="-mr-2 rounded-lg px-2 py-2.5 text-xs font-semibold text-blue transition-opacity active:opacity-60"

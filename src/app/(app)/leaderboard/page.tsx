@@ -120,12 +120,12 @@ export default async function LeaderboardPage() {
             <div className="mt-2 flex items-center gap-2">
               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-blue to-blue-dark"
+                  className="h-full rounded-full bg-blue"
                   style={{ width: `${progress}%` }}
                 />
               </div>
               <span
-                className={`text-[10px] font-semibold tabular-nums ${urgency}`}
+                className={`text-[11px] font-semibold tabular-nums ${urgency}`}
               >
                 {formatDaysLeft(daysLeft)}
               </span>
@@ -159,7 +159,7 @@ export default async function LeaderboardPage() {
             <div className="flex-1">
               {currentUserEntry.isCalibrating ? (
                 <>
-                  <span className="text-lg font-extrabold text-text-muted">
+                  <span className="text-lg font-semibold text-text-muted">
                     Calibrating
                   </span>
                   <p className="text-[11px] tabular-nums text-text-muted">
@@ -170,7 +170,7 @@ export default async function LeaderboardPage() {
                 <>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-lg font-extrabold ${currentUserEntry.rank.color}`}
+                      className={`text-lg font-semibold ${currentUserEntry.rank.color}`}
                     >
                       {currentUserEntry.rank.name}
                       {currentUserEntry.rank.division &&
@@ -209,7 +209,7 @@ export default async function LeaderboardPage() {
                   style={{ width: `${currentUserEntry.progress}%` }}
                 />
               </div>
-              <div className="mt-1 flex justify-between text-[9px] tabular-nums text-text-muted">
+              <div className="mt-1 flex justify-between text-[11px] tabular-nums text-text-muted">
                 <span>
                   {currentUserEntry.rank.name}{" "}
                   {currentUserEntry.rank.division ?? ""}
@@ -269,7 +269,7 @@ export default async function LeaderboardPage() {
                 }`}
               >
                 {/* Position */}
-                <span className="w-5 text-center text-xs font-bold tabular-nums text-text-muted">
+                <span className="w-5 text-center text-xs font-semibold tabular-nums text-text-muted">
                   {entry.isCalibrating ? "-" : position}
                 </span>
 
@@ -305,10 +305,10 @@ export default async function LeaderboardPage() {
 
                 {/* Name + rank */}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-semibold text-text-primary">
+                  <p className="truncate text-sm font-semibold text-text-primary">
                     {entry.isCurrentUser ? "You" : entry.name}
                   </p>
-                  <p className="text-[10px] tabular-nums text-text-muted">
+                  <p className="text-[11px] tabular-nums text-text-muted">
                     {entry.isCalibrating ? (
                       <span className="text-text-muted">
                         {entry.isUnranked
@@ -338,7 +338,7 @@ export default async function LeaderboardPage() {
                 </div>
 
                 {/* LP + trend */}
-                <span className="shrink-0 text-xs font-bold tabular-nums text-text-muted">
+                <span className="shrink-0 text-xs font-semibold tabular-nums text-text-muted">
                   {entry.isCalibrating ? "--" : `${formatLP(entry.mmr)} LP`}
                 </span>
 

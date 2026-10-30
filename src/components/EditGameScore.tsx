@@ -78,7 +78,7 @@ export default function EditGameScore({
           if (v === "" || (parseInt(v) >= 0 && parseInt(v) <= 300)) setScore(v);
         }}
         aria-label="Game score"
-        className="h-10 w-16 rounded-lg border border-border bg-surface-light px-2 text-center text-base font-bold tabular-nums text-text-primary outline-none focus:border-blue"
+        className="h-10 w-16 rounded-lg border border-border bg-surface-light px-2 text-center text-base font-semibold tabular-nums text-text-primary outline-none focus:border-blue"
         autoFocus
       />
       <button

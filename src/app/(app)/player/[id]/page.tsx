@@ -121,7 +121,7 @@ export default async function PlayerPage({
       {/* Stats */}
       <div className="mb-5 flex gap-2">
         <div className="glass flex-1 px-3 py-3.5 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+          <div className="text-[11px] font-semibold text-text-muted">
             Avg
           </div>
           <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
@@ -129,7 +129,7 @@ export default async function PlayerPage({
           </div>
         </div>
         <div className="glass flex-1 px-3 py-3.5 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+          <div className="text-[11px] font-semibold text-text-muted">
             High
           </div>
           <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-gold">
@@ -137,7 +137,7 @@ export default async function PlayerPage({
           </div>
         </div>
         <div className="glass flex-1 px-3 py-3.5 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+          <div className="text-[11px] font-semibold text-text-muted">
             Games
           </div>
           <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
@@ -147,7 +147,7 @@ export default async function PlayerPage({
       </div>
 
       {/* Recent sessions */}
-      <h2 className="mb-3 text-sm font-bold">Recent sessions</h2>
+      <h2 className="mb-3 text-sm font-semibold">Recent sessions</h2>
       <PlayerSessions
         playerId={id}
         playerName={profile.display_name}

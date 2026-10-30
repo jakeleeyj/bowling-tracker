@@ -77,7 +77,7 @@ export default function LayoutResultCard({
   return (
     <div className="animate-slide-up flex flex-col gap-4">
       <div className="glass p-5">
-        <h2 className="mb-3 text-sm font-bold">Layout</h2>
+        <h2 className="mb-3 text-sm font-semibold">Layout</h2>
         {availableSystems.length > 1 && (
           <div className="relative mb-3 flex h-11 rounded-lg bg-surface-light p-[3px]">
             <span
@@ -93,7 +93,7 @@ export default function LayoutResultCard({
                 key={key}
                 onClick={() => pick(key)}
                 aria-pressed={activeSystem === key}
-                className={`relative flex-1 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
+                className={`relative flex-1 rounded-md text-sm font-semibold transition-colors duration-200 ${
                   activeSystem === key ? "text-white" : "text-text-muted"
                 }`}
               >
@@ -109,10 +109,10 @@ export default function LayoutResultCard({
           <p className="text-2xl font-extrabold tabular-nums text-text-primary">
             {systemViews[activeSystem].value}
           </p>
-          <p className="mt-1 text-[10px] text-text-muted">
+          <p className="mt-1 text-[11px] text-text-muted">
             {systemViews[activeSystem].legend}
           </p>
-          <p className="mt-1 text-[10px] text-text-secondary">
+          <p className="mt-1 text-[11px] text-text-secondary">
             {systemViews[activeSystem].note}
           </p>
         </div>
@@ -128,7 +128,7 @@ export default function LayoutResultCard({
 
       {layout.reasons.length > 0 && (
         <div className="glass p-5">
-          <h2 className="mb-3 text-sm font-bold">Why this layout</h2>
+          <h2 className="mb-3 text-sm font-semibold">Why this layout</h2>
           <ul className="flex flex-col gap-2.5">
             {layout.reasons.map((reason, i) => (
               <li
