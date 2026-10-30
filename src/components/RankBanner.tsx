@@ -38,10 +38,10 @@ export default function RankBanner({
       {calibrated && (
         <div
           aria-hidden
-          className={`pointer-events-none absolute inset-0 ${rank.color} bg-[radial-gradient(90%_120%_at_0%_0%,color-mix(in_srgb,currentColor_16%,transparent),transparent_60%)]`}
+          className={`pointer-events-none absolute inset-0 telemetry:hidden ${rank.color} bg-[radial-gradient(90%_120%_at_0%_0%,color-mix(in_srgb,currentColor_16%,transparent),transparent_60%)]`}
         />
       )}
-      <div className="relative flex items-center gap-3 p-3">
+      <div className="relative flex items-center gap-3 p-3 telemetry:hidden">
         {calibrated ? (
           <RankEmblem tierName={rank.name} size={40} />
         ) : (
@@ -110,7 +110,7 @@ export default function RankBanner({
       </div>
 
       {calibrated ? (
-        <div className="relative px-3 pb-3">
+        <div className="relative px-3 pb-3 telemetry:hidden">
           <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
             <div
               className={`h-full rounded-full bg-current shadow-[0_0_10px_color-mix(in_srgb,currentColor_60%,transparent)] ${rank.color}`}
@@ -125,7 +125,7 @@ export default function RankBanner({
           </div>
         </div>
       ) : (
-        <div className="relative px-3 pb-3">
+        <div className="relative px-3 pb-3 telemetry:hidden">
           <div className="flex gap-1.5">
             {Array.from({ length: CALIBRATION_GAMES }, (_, i) => (
               <div
@@ -138,17 +138,89 @@ export default function RankBanner({
           </div>
         </div>
       )}
+
+      <div className="relative hidden telemetry:block">
+        <div className="flex justify-between border-b border-border-light px-3.5 py-2.5 text-[11px] text-text-muted">
+          <span>Rank</span>
+          <span>{getCurrentSeason().shortName}</span>
+        </div>
+        <div className="p-3.5">
+          {calibrated ? (
+            <>
+              <div className="flex items-center gap-1">
+                <span className={`text-sm font-semibold ${rank.color}`}>
+                  {rank.name}
+                  {rank.division ? ` ${rank.division}` : ""}
+                </span>
+                {trend === "up" && (
+                  <ChevronUp size={14} className="text-green" />
+                )}
+                {trend === "down" && (
+                  <ChevronDown size={14} className="text-red" />
+                )}
+              </div>
+              <div className="mt-2 text-5xl leading-none tracking-tight tabular-nums">
+                {formatLP(lp)}
+                <span className="ml-1.5 text-sm tracking-normal text-text-muted">
+                  LP
+                </span>
+              </div>
+              <GaugeTicks total={20} filled={Math.round(progress / 5)} />
+              <div className="mt-1.5 flex justify-between text-[11px] text-text-muted">
+                <span>
+                  {seasonGames > 0
+                    ? `Avg ${seasonAvg} · ${seasonGames} game${seasonGames !== 1 ? "s" : ""}`
+                    : "No games this season"}
+                </span>
+                <span>{progress}%</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="text-sm font-semibold text-text-muted">
+                Calibrating
+              </span>
+              <div className="mt-2 text-5xl leading-none tracking-tight tabular-nums">
+                {totalGames}
+                <span className="ml-1.5 text-sm tracking-normal text-text-muted">
+                  / {CALIBRATION_GAMES}
+                </span>
+              </div>
+              <GaugeTicks total={CALIBRATION_GAMES} filled={totalGames} />
+              <p className="mt-1.5 text-[11px] text-text-muted">
+                {formatCalibrationGamesLeft(totalGames)}
+              </p>
+            </>
+          )}
+        </div>
+      </div>
     </>
   );
 
-  const className = `glass relative mb-5 block overflow-hidden border ${calibrated ? rank.borderColor : "border-border/30"}`;
+  const className = `glass relative mb-5 block telemetry:mb-2.5 overflow-hidden border ${calibrated ? rank.borderColor : "border-border/30"}`;
 
   if (href) {
     return (
-      <Link href={href} className={`${className} transition-transform duration-150 ease-out active:scale-[0.98]`}>
+      <Link
+        href={href}
+        className={`${className} transition-transform duration-150 ease-out active:scale-[0.98]`}
+      >
         {content}
       </Link>
     );
   }
   return <div className={className}>{content}</div>;
+}
+
+function GaugeTicks({ total, filled }: { total: number; filled: number }) {
+  return (
+    <div className="mt-4 flex gap-0.5" aria-hidden>
+      {Array.from({ length: total }, (_, i) => (
+        <div
+          key={i}
+          className={`h-3.5 flex-1 rounded-[1px] ${i < filled ? "bg-text-primary" : "bg-border-light"}`}
+        />
+      ))}
+    </div>
+  );
 }
