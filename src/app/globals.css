@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme inline {
+@theme {
   --color-base: #070a13;
   --color-surface: #0f1729;
   --color-surface-light: #1e293b;
@@ -20,7 +20,11 @@
   --color-bronze: #d97706;
   --color-silver: #d1d5db;
   --color-emerald: #34d399;
+}
+
+@theme inline {
   --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
   /* Springs: snappy (~4% overshoot) and soft (settles without bounce) */
   --ease-spring: linear(0, 0.051, 0.171, 0.323, 0.48, 0.626, 0.751, 0.851, 0.927, 0.98, 1.015, 1.035, 1.044, 1.046, 1.042, 1.036, 1.029, 1.022, 1.016, 1.01, 1.006, 1.003, 1, 0.999, 1);
   --ease-spring-soft: linear(0, 0.032, 0.11, 0.211, 0.32, 0.428, 0.528, 0.618, 0.696, 0.763, 0.818, 0.863, 0.898, 0.926, 0.948, 0.965, 0.977, 0.986, 0.992, 0.997, 0.999, 1.001, 1.002, 1.003, 1);
@@ -69,6 +73,47 @@ body {
     border-radius: 12px;
     box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.7);
   }
+}
+
+/* Telemetry theme: graphite, hairline panels, orange signal, mono numbers */
+html[data-theme="telemetry"] {
+  --color-base: #08090a;
+  --color-surface: #111214;
+  --color-surface-light: #1c1d20;
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-light: rgba(255, 255, 255, 0.11);
+  --color-text-primary: #ededed;
+  --color-text-secondary: #a0a3a8;
+  --color-text-muted: #7c8088;
+  --color-blue: #ff5b1f;
+  --color-blue-dark: #e64a12;
+  --color-green: #3ddc84;
+  --color-red: #ff5b5b;
+}
+
+html[data-theme="telemetry"] .glass {
+  background: transparent;
+  border-color: var(--color-border-light);
+  border-radius: 14px;
+}
+
+html[data-theme="telemetry"] .glass-strong {
+  background: var(--color-surface);
+}
+
+html[data-theme="telemetry"] .tabular-nums {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-weight: 500;
+}
+
+html[data-theme="telemetry"] .bg-blue.text-white {
+  color: var(--color-base);
+}
+
+html[data-theme="telemetry"] .glow-blue::before,
+html[data-theme="telemetry"] .glow-purple::before,
+html[data-theme="telemetry"] .glow-purple::after {
+  display: none;
 }
 
 /* Ambient glows */
