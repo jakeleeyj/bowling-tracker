@@ -15,8 +15,7 @@ import NotificationPrompt from "@/components/NotificationPrompt";
 import SeasonBanner from "@/components/SeasonBanner";
 import RankBanner from "@/components/RankBanner";
 import { getRank } from "@/lib/ranking";
-import SessionOrb from "@/components/SessionOrb";
-import { type FrameKind, frameKinds } from "@/lib/ribbon";
+import LifetimeRibbon from "@/components/LifetimeRibbon";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -53,11 +52,10 @@ export default async function DashboardPage() {
       .maybeSingle(),
     supabase
       .from("games")
-      .select("frames(frame_number, roll_1, roll_2, is_strike, is_spare)")
+      .select("total_score")
       .eq("user_id", uid)
-      .eq("entry_type", "detailed")
-      .order("created_at", { ascending: false })
-      .limit(300),
+      .order("created_at", { ascending: true })
+      .limit(1000),
   ]);
 
   const profile = profileResult.data as ProfileRow | null;
@@ -106,11 +104,9 @@ export default async function DashboardPage() {
 
   const displayName = profile?.display_name ?? "Bowler";
 
-  // Lifetime games as ribbons, oldest first so the newest draws brightest
-  const ribbons = (lifetimeResult.data ?? [])
-    .map((g) => frameKinds(g.frames))
-    .filter((k): k is FrameKind[] => k !== null)
-    .reverse();
+  // Every game's score, oldest first, drawn as one ribbon round the ring
+  const lifetimeScores = (lifetimeResult.data ?? []).map((g) => g.total_score);
+  const showRibbon = lifetimeScores.length >= 3;
   const lastScores = (lastSessionResult.data?.games ?? []).map(
     (g) => g.total_score,
   );
@@ -148,8 +144,8 @@ export default async function DashboardPage() {
         />
       )}
 
-      {ribbons.length > 0 && (
-        <SessionOrb games={ribbons}>
+      {showRibbon && (
+        <LifetimeRibbon scores={lifetimeScores} avg={avgScore}>
           <span className="text-xs font-semibold text-text-secondary">
             Average
           </span>
@@ -159,10 +155,10 @@ export default async function DashboardPage() {
           <span className="text-xs font-semibold text-text-secondary">
             {totalGames} {totalGames === 1 ? "game" : "games"}
           </span>
-        </SessionOrb>
+        </LifetimeRibbon>
       )}
 
-      {ribbons.length > 0 && (
+      {showRibbon && (
         <p className="mb-6 flex justify-center gap-2 text-sm text-text-secondary">
           <span>
             High{" "}
@@ -186,7 +182,7 @@ export default async function DashboardPage() {
 
       {/* Quick Stats */}
       <div
-        className={`mb-5 grid grid-cols-3 gap-2 ${ribbons.length > 0 ? "hidden" : ""}`}
+        className={`mb-5 grid grid-cols-3 gap-2 ${showRibbon ? "hidden" : ""}`}
       >
         {[
           { label: "Avg", value: avgScore },

@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { frameKind, frameKinds, parseColor } from "./ribbon";
+import {
+  type RibbonPalette,
+  frameKind,
+  frameKinds,
+  parseColor,
+  scoreBand,
+  scorePoints,
+  scoreTone,
+  bucketScores,
+} from "./ribbon";
 
 function f(
   frame_number: number,
@@ -67,5 +76,56 @@ describe("parseColor", () => {
     expect(parseColor(" #ffd60a")).toEqual([255, 214, 10]);
     expect(parseColor("#fff")).toEqual([255, 255, 255]);
     expect(parseColor("rgb(100, 210, 255)")).toEqual([100, 210, 255]);
+  });
+});
+
+describe("score ribbon", () => {
+  const palette: RibbonPalette = {
+    X: [100, 210, 255],
+    "/": [255, 214, 10],
+    O: [110, 110, 118],
+  };
+
+  it("bands games against the average", () => {
+    expect(scoreBand(215, 200)).toBe("above");
+    expect(scoreBand(205, 200)).toBe("near");
+    expect(scoreBand(190, 200)).toBe("below");
+  });
+
+  it("tones grey well below, spare at the average, strike well above", () => {
+    expect(scoreTone(150, 200, palette)).toEqual([110, 110, 118]);
+    expect(scoreTone(200, 200, palette)).toEqual([255, 214, 10]);
+    expect(scoreTone(260, 200, palette)).toEqual([100, 210, 255]);
+  });
+
+  it("places one point per game from the top and closes the loop", () => {
+    const pts = scorePoints([150, 300, 225], {
+      base: 50,
+      amp: 20,
+      w0: 1,
+      w1: 3,
+      rot: 0,
+      per: 1,
+    });
+    // One point per game plus the closing point back at the first game
+    expect(pts).toHaveLength(4);
+    expect(pts[0].r).toBe(50);
+    expect(pts[1].r).toBe(70);
+    expect(pts[0].sin).toBeCloseTo(-1);
+    expect(pts[3].r).toBe(pts[0].r);
+    expect(pts[3].sin).toBeCloseTo(-1);
+  });
+});
+
+describe("bucketScores", () => {
+  it("averages consecutive runs of games into the requested number of points", () => {
+    expect(bucketScores([100, 200, 300, 400], 2)).toEqual([150, 350]);
+    expect(bucketScores([100, 200, 300, 400, 500, 600], 3)).toEqual([
+      150, 350, 550,
+    ]);
+  });
+
+  it("keeps every game when there are fewer games than points", () => {
+    expect(bucketScores([180, 220], 24)).toEqual([180, 220]);
   });
 });

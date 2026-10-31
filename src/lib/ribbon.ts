@@ -180,7 +180,7 @@ export function drawBand(
       else ctx.lineTo(x, y);
     }
     ctx.closePath();
-    ctx.fill("evenodd");
+    ctx.fill();
     return;
   }
   for (let i = pts.length - 1; i >= 0; i--) {
@@ -223,4 +223,93 @@ export function parseColor(value: string): RGB {
   }
   const nums = v.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0];
   return [nums[0], nums[1], nums[2]];
+}
+
+// Lifetime ribbon: one closed band round the ring, one point per game, first game at the top going clockwise
+const NEAR_AVG = 10;
+const TONE_RANGE = 25;
+
+export type ScoreBand = "above" | "near" | "below";
+
+export function scoreBand(score: number, avg: number): ScoreBand {
+  if (score >= avg + NEAR_AVG) return "above";
+  if (score <= avg - NEAR_AVG) return "below";
+  return "near";
+}
+
+// Grey below the average, spare colour around it, strike colour above it
+// `range` is how far from the average counts as fully above or fully below
+export function scoreTone(
+  score: number,
+  avg: number,
+  palette: RibbonPalette,
+  range = { above: TONE_RANGE, below: TONE_RANGE },
+): RGB {
+  const d = score - avg;
+  if (d < 0)
+    return mix(
+      palette.O,
+      palette["/"],
+      Math.max(0, (d + range.below) / range.below),
+    );
+  return mix(palette["/"], palette.X, Math.min(1, d / range.above));
+}
+
+// Points for game i sit at i / n of the way round; the band closes from the latest game back to the first
+export function scorePoints(
+  scores: number[],
+  o: {
+    base: number;
+    amp: number;
+    w0: number;
+    w1: number;
+    rot: number;
+    per: number;
+  },
+): RibbonPoint[] {
+  const lo = Math.min(...scores);
+  const hi = Math.max(...scores);
+  const vals = scores.map((s) => (hi === lo ? 0.5 : (s - lo) / (hi - lo)));
+  const n = vals.length;
+  return sample(vals, true, o.per).map((p) => {
+    const v = Math.max(0, Math.min(1, p.v));
+    const a = ((o.rot - 90 + (p.t / n) * 360) * Math.PI) / 180;
+    return {
+      t: p.t,
+      r: o.base + o.amp * v,
+      w: lerp(o.w0, o.w1, v),
+      cos: Math.cos(a),
+      sin: Math.sin(a),
+    };
+  });
+}
+
+export function scoreFill(
+  ctx: CanvasRenderingContext2D,
+  c: number,
+  scores: number[],
+  avg: number,
+  palette: RibbonPalette,
+  rot: number,
+  range = { above: TONE_RANGE, below: TONE_RANGE },
+): CanvasGradient | string {
+  const cols = scores.map((s) => scoreTone(s, avg, palette, range));
+  if (typeof ctx.createConicGradient !== "function")
+    return css(scoreTone(avg, avg, palette));
+  const g = ctx.createConicGradient(((rot - 90) * Math.PI) / 180, c, c);
+  const n = cols.length;
+  cols.forEach((col, i) => g.addColorStop(i / n, css(col)));
+  g.addColorStop(1, css(cols[0]));
+  return g;
+}
+
+// Averages consecutive runs of games into at most `count` points, so the closed ribbon shows form instead of every swing
+export function bucketScores(scores: number[], count: number): number[] {
+  const k = Math.min(count, scores.length);
+  return Array.from({ length: k }, (_, b) => {
+    const from = Math.floor((b * scores.length) / k);
+    const to = Math.floor(((b + 1) * scores.length) / k);
+    const run = scores.slice(from, to);
+    return run.reduce((a, v) => a + v, 0) / run.length;
+  });
 }
