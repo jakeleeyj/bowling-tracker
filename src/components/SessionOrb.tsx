@@ -58,12 +58,14 @@ export default function SessionOrb({
     const list = key.split("|").map((g) => [...g] as FrameKind[]);
     const n = list.length;
     const c = SIZE / 2;
-    const spread = n > 1 ? Math.min(11, 34 / n) : 0;
-    const wScale = n <= 3 ? 1 : Math.max(0.5, Math.sqrt(3 / n));
+    // Many games: thin strands fanned wider apart, each still faintly visible
+    const spread = n > 1 ? Math.min(11, (n > 12 ? 56 : 34) / n) : 0;
+    const wScale =
+      n <= 3 ? 1 : n > 12 ? 0.35 : Math.max(0.5, Math.sqrt(3 / n));
     const start = performance.now();
     // Past a dozen games, draw once and let CSS sway the whole orb: cheap enough for a lifetime of games
     const still = reduce || n > 12;
-    const fade = Math.min(1, 12 / n);
+    const fade = Math.min(1, Math.sqrt(12 / n));
 
     function draw(now: number) {
       layers.forEach((ctx, layer) => {
