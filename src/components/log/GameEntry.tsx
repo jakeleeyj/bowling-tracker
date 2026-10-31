@@ -524,7 +524,7 @@ export default function GameEntry(props: GameEntryProps) {
                             className="animate-mark-flash pointer-events-none absolute inset-0 flex flex-col items-center justify-center bg-base/60"
                           >
                             <span
-                              className={`text-8xl leading-none font-black telemetry:font-mono telemetry:font-medium ${lastMark.type === "strike" ? "text-strike" : "text-spare"}`}
+                              className={`text-8xl leading-none font-black ${lastMark.type === "strike" ? "text-strike" : "text-spare"}`}
                             >
                               {lastMark.type === "strike" ? "X" : "/"}
                             </span>

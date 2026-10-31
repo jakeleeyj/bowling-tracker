@@ -57,14 +57,14 @@ export default function Avatar({
         alt={name}
         width={dim}
         height={dim}
-        className={`${s.container} shrink-0 rounded-full object-cover telemetry:rounded-[28%]`}
+        className={`${s.container} shrink-0 rounded-full object-cover`}
       />
     );
   }
 
   return (
     <div
-      className={`flex ${s.container} shrink-0 items-center justify-center rounded-full telemetry:rounded-[28%] bg-gradient-to-br ${chosen !== null ? AVATAR_GRADIENTS[chosen] : getGradient(name)} ${s.text} font-semibold`}
+      className={`flex ${s.container} shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${chosen !== null ? AVATAR_GRADIENTS[chosen] : getGradient(name)} ${s.text} font-semibold`}
     >
       {name.charAt(0).toUpperCase()}
     </div>

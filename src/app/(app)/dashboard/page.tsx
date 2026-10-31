@@ -2,7 +2,7 @@ export const revalidate = 300; // revalidate every 5 minutes
 
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
-import { ArrowRight, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import type {
   ProfileRow,
   SessionWithGamesFramesAndProfile,
@@ -15,8 +15,6 @@ import NotificationPrompt from "@/components/NotificationPrompt";
 import SeasonBanner from "@/components/SeasonBanner";
 import RankBanner from "@/components/RankBanner";
 import { getRank } from "@/lib/ranking";
-import { getCurrentSeason } from "@/lib/seasons";
-import ScoreSparkline from "@/components/ScoreSparkline";
 import SessionOrb from "@/components/SessionOrb";
 import { type FrameKind, frameKinds } from "@/lib/ribbon";
 
@@ -35,7 +33,6 @@ export default async function DashboardPage() {
     userLpResult,
     sessionsResult,
     allRankingsResult,
-    recentGamesResult,
     lastSessionResult,
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", uid).single(),
@@ -46,12 +43,6 @@ export default async function DashboardPage() {
       .order("created_at", { ascending: false })
       .limit(10),
     supabase.rpc("get_all_rankings"),
-    supabase
-      .from("games")
-      .select("total_score")
-      .eq("user_id", uid)
-      .order("created_at", { ascending: false })
-      .limit(10),
     supabase
       .from("sessions")
       .select(
@@ -136,32 +127,13 @@ export default async function DashboardPage() {
           )
         : "";
 
-  const recentScores = (recentGamesResult.data ?? [])
-    .map((g) => g.total_score)
-    .reverse();
-  const season = getCurrentSeason();
-  const now = new Date();
-  const dateLabel = now.toLocaleDateString("en-SG", {
-    timeZone: "Asia/Singapore",
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
-  const seasonWeek = Math.max(
-    1,
-    Math.floor((now.getTime() - season.start.getTime()) / 604_800_000) + 1,
-  );
-
   return (
     <div>
       {/* Header */}
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <p className="text-sm text-text-muted telemetry:hidden">
+          <p className="text-sm text-text-muted">
             Welcome back
-          </p>
-          <p className="hidden text-[11px] text-text-muted telemetry:block">
-            {dateLabel} · {season.shortName} · Week {seasonWeek}
           </p>
           <LargeTitle title={displayName} />
         </div>
@@ -201,7 +173,7 @@ export default async function DashboardPage() {
       )}
 
       {ribbons.length > 0 && (
-        <p className="mb-6 flex justify-center gap-2 text-sm text-text-secondary telemetry:hidden">
+        <p className="mb-6 flex justify-center gap-2 text-sm text-text-secondary">
           <span>
             Avg{" "}
             <b className="font-semibold text-text-primary tabular-nums">
@@ -227,7 +199,7 @@ export default async function DashboardPage() {
 
       {/* Quick Stats */}
       <div
-        className={`mb-5 grid grid-cols-3 gap-2 telemetry:hidden ${ribbons.length > 0 ? "hidden" : ""}`}
+        className={`mb-5 grid grid-cols-3 gap-2 ${ribbons.length > 0 ? "hidden" : ""}`}
       >
         {[
           { label: "Avg", value: avgScore },
@@ -245,35 +217,13 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <div className="glass mb-3 hidden telemetry:block">
-        <div className="grid grid-cols-3">
-          {[
-            { label: "Avg", value: avgScore },
-            { label: "High", value: highScore },
-            { label: "Games", value: totalGames },
-          ].map((stat, i) => (
-            <div
-              key={stat.label}
-              className={`px-3.5 py-3 ${i > 0 ? "border-l border-border-light" : ""}`}
-            >
-              <div className="text-[11px] text-text-muted">{stat.label}</div>
-              <div className="mt-1.5 text-2xl leading-none tabular-nums">
-                {totalGames > 0 ? stat.value : "-"}
-              </div>
-            </div>
-          ))}
-        </div>
-        <ScoreSparkline scores={recentScores} />
-      </div>
-
       {/* CTA */}
       <Link
         href="/log"
-        className="mb-6 flex items-center justify-center gap-2 rounded-xl bg-blue py-4 text-base font-semibold text-white inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97] telemetry:justify-between telemetry:px-4 telemetry:inset-shadow-none"
+        className="mb-6 flex items-center justify-center gap-2 rounded-xl bg-blue py-4 text-base font-semibold text-white inset-shadow-2xs inset-shadow-white/20 transition-transform duration-150 ease-out active:scale-[0.97]"
       >
-        <Plus size={18} strokeWidth={2.75} className="telemetry:hidden" />
+        <Plus size={18} strokeWidth={2.75} />
         Log a session
-        <ArrowRight size={18} className="hidden telemetry:block" />
       </Link>
 
       {/* Activity Feed */}

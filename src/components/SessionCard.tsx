@@ -282,7 +282,7 @@ function Frame10MicroPin({ frame }: { frame: FrameInfo }) {
       className="flex flex-col items-center gap-[2px] py-[2px]"
     >
       <span
-        className={`rounded-md border px-[2px] py-[0.5px] text-[11px] font-semibold leading-none tracking-tight telemetry:font-sans ${
+        className={`rounded-md border px-[2px] py-[0.5px] text-[11px] font-semibold leading-none tracking-tight ${
           canCycle
             ? "border-blue/40 bg-blue/20 text-blue"
             : "border-text-muted/30 bg-surface-light/50 text-text-muted"

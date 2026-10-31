@@ -130,7 +130,7 @@ export default function BottomNav() {
               className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
             >
               <div
-                className={`flex h-8 w-12 items-center justify-center rounded-full telemetry:rounded-md transition-all duration-200 ${
+                className={`flex h-8 w-12 items-center justify-center rounded-full transition-all duration-200 ${
                   isActive
                     ? "bg-blue/15"
                     : "scale-90 active:scale-95 active:bg-white/5"
@@ -143,7 +143,7 @@ export default function BottomNav() {
                 />
               </div>
               <span
-                className={`text-[11px] transition-colors duration-200 telemetry:font-mono ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
+                className={`text-[11px] transition-colors duration-200 ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
               >
                 {item.label}
               </span>
@@ -159,7 +159,7 @@ export default function BottomNav() {
           {/* Invisible spacer matching the icon area height */}
           <div className="h-8" />
           <span
-            className={`text-[11px] transition-colors duration-200 telemetry:font-mono ${hasSavedSession ? "font-semibold text-green" : isLogActive ? "font-semibold text-blue" : "text-text-muted"}`}
+            className={`text-[11px] transition-colors duration-200 ${hasSavedSession ? "font-semibold text-green" : isLogActive ? "font-semibold text-blue" : "text-text-muted"}`}
           >
             {hasSavedSession ? "Ongoing" : "Log"}
           </span>
@@ -174,7 +174,7 @@ export default function BottomNav() {
               className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
             >
               <div
-                className={`flex h-8 w-12 items-center justify-center rounded-full telemetry:rounded-md transition-all duration-200 ${
+                className={`flex h-8 w-12 items-center justify-center rounded-full transition-all duration-200 ${
                   isActive
                     ? "bg-blue/15"
                     : "scale-90 active:scale-95 active:bg-white/5"
@@ -187,7 +187,7 @@ export default function BottomNav() {
                 />
               </div>
               <span
-                className={`text-[11px] transition-colors duration-200 telemetry:font-mono ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
+                className={`text-[11px] transition-colors duration-200 ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
               >
                 {item.label}
               </span>

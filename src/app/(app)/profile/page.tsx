@@ -33,7 +33,6 @@ import type { PlayerLP } from "@/lib/queries";
 import SessionCard from "@/components/SessionCard";
 import RankBanner from "@/components/RankBanner";
 import NotificationToggle from "@/components/NotificationToggle";
-import ThemePicker from "@/components/ThemePicker";
 import AvatarPicker from "@/components/AvatarPicker";
 import Avatar from "@/components/Avatar";
 import { ACHIEVEMENTS, type AchievementStats } from "@/lib/achievements";
@@ -538,8 +537,6 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
-
-          <ThemePicker />
 
           <NotificationToggle />
 

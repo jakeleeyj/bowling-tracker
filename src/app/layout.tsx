@@ -14,8 +14,6 @@ const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-const applySavedTheme = `try{var t=localStorage.getItem("spare-me-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}`;
-
 export const metadata: Metadata = {
   title: "Spare Me?",
   description: "Track bowling scores with friends",
@@ -36,7 +34,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: applySavedTheme }} />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta
           name="viewport"

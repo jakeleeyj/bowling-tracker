@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-@custom-variant telemetry (&:where([data-theme="telemetry"], [data-theme="telemetry"] *));
-
 @theme {
   --color-base: #000000;
   --color-surface: #1c1c1e;
@@ -89,89 +87,6 @@ body {
 
 .glow-blue::before,
 .glow-purple::after {
-  display: none;
-}
-
-/* Telemetry theme: graphite, hairline panels, orange signal, mono numbers */
-html[data-theme="telemetry"] {
-  --color-base: #08090a;
-  --color-surface: #111214;
-  --color-surface-light: #1c1d20;
-  --color-border: rgba(255, 255, 255, 0.07);
-  --color-border-light: rgba(255, 255, 255, 0.11);
-  --color-text-primary: #ededed;
-  --color-text-secondary: #a0a3a8;
-  --color-text-muted: #7c8088;
-  --color-blue: #ff7a3d;
-  --color-blue-dark: #f0652a;
-  --color-green: #3ddc84;
-  --color-red: #ff5b5b;
-}
-
-/* Layered so utilities (telemetry:*) can still override panel shape */
-@layer components {
-  html[data-theme="telemetry"] .glass {
-    background: transparent;
-    border-color: var(--color-border-light);
-    border-radius: 14px;
-  }
-
-  html[data-theme="telemetry"] .glass-strong {
-    background: var(--color-surface);
-  }
-}
-
-/* Tighter, squarer component shapes */
-@layer utilities {
-  html[data-theme="telemetry"] .rounded-xl {
-    border-radius: 10px;
-  }
-
-  html[data-theme="telemetry"] .rounded-2xl {
-    border-radius: 12px;
-  }
-
-  html[data-theme="telemetry"] .rounded-t-3xl {
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-  }
-
-  html[data-theme="telemetry"] .rounded-full:is(.h-1, .h-1\.5, .h-2) {
-    border-radius: 1px;
-  }
-}
-
-html[data-theme="telemetry"] .tabular-nums {
-  font-family: var(--font-jetbrains), ui-monospace, monospace;
-  font-weight: 500;
-}
-
-html[data-theme="telemetry"] .text-\[11px\].text-text-muted {
-  font-family: var(--font-jetbrains), ui-monospace, monospace;
-  letter-spacing: -0.01em;
-}
-
-html[data-theme="telemetry"] .bg-blue.text-white,
-html[data-theme="telemetry"] .bg-green.text-white,
-html[data-theme="telemetry"] .bg-gold.text-white {
-  color: var(--color-base);
-}
-
-/* Segmented controls: active label sits on a separate sliding orange layer */
-html[data-theme="telemetry"] :has(> .bg-blue.shadow-sm) .text-white {
-  color: var(--color-base);
-}
-
-html[data-theme="telemetry"] main h2.text-sm {
-  font-family: var(--font-jetbrains), ui-monospace, monospace;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-}
-
-html[data-theme="telemetry"] .glow-blue::before,
-html[data-theme="telemetry"] .glow-purple::before,
-html[data-theme="telemetry"] .glow-purple::after {
   display: none;
 }
 
