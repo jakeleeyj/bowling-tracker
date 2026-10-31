@@ -32,6 +32,16 @@ export default function SideNav() {
     router.push(href);
   }
 
+  // With a game in progress, go straight back into it instead of the resume prompt
+  function openLog() {
+    if (!hasSavedSession) return handleNav("/log");
+    if (pathname.startsWith("/log")) {
+      window.dispatchEvent(new Event("session-resume"));
+      return;
+    }
+    router.push("/log?resume=1");
+  }
+
   function isNavActive(href: string) {
     if (href === "/leaderboard") {
       return (
@@ -71,7 +81,7 @@ export default function SideNav() {
           />
         )}
         <button
-          onClick={() => handleNav("/log")}
+          onClick={openLog}
           aria-label={hasSavedSession ? "Continue session" : "Log a session"}
           className={`relative flex w-full items-center gap-3 rounded-xl bg-blue px-4 py-3 text-sm font-semibold text-white transition-all duration-150 active:scale-[0.98] ${isLogActive ? "ring-2 ring-white/20" : ""}`}
         >

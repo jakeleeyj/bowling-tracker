@@ -256,6 +256,15 @@ export function useSessionState() {
     }
   }
 
+  // The Ongoing button asks to resume while the prompt is showing
+  useEffect(() => {
+    if (step !== "resume") return;
+    const onResume = () => resumeSession();
+    window.addEventListener("session-resume", onResume);
+    return () => window.removeEventListener("session-resume", onResume);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   // Auto-save session state to localStorage
   useEffect(() => {
     // Only save when actively in a game

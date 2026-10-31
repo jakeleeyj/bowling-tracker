@@ -27,6 +27,16 @@ export default function BottomNav() {
     router.push(href);
   }
 
+  // With a game in progress, go straight back into it instead of the resume prompt
+  function openLog() {
+    if (!hasSavedSession) return handleNav("/log");
+    if (pathname.startsWith("/log")) {
+      window.dispatchEvent(new Event("session-resume"));
+      return;
+    }
+    router.push("/log?resume=1");
+  }
+
   const isLogActive = pathname.startsWith("/log");
 
   // /player/[id] is part of the Ranked section
@@ -54,7 +64,7 @@ export default function BottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 [view-transition-name:app-nav] mx-auto max-w-[480px] overflow-visible lg:hidden [transform:translateZ(0)] [will-change:transform]">
       {/* Floating circle — above the notch */}
       <button
-        onClick={() => handleNav("/log")}
+        onClick={openLog}
         aria-label="Log a session"
         className="absolute left-1/2 -top-3 z-20 -translate-x-1/2"
       >
@@ -144,7 +154,7 @@ export default function BottomNav() {
 
         {/* Center — "Log" label aligned with others, circle floats above */}
         <button
-          onClick={() => handleNav("/log")}
+          onClick={openLog}
           className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
         >
           {/* Invisible spacer matching the icon area height */}
