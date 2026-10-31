@@ -13,7 +13,7 @@ interface FrameScorecardProps {
   onFrameTap?: (frameNumber: number) => void;
 }
 
-function formatRoll(
+export function formatRoll(
   frame: FrameData,
   rollNum: 1 | 2 | 3,
   frameNum: number,
@@ -44,7 +44,7 @@ function formatRoll(
   }
   if (rollNum === 3) {
     if (frame.roll3 === null) return "";
-    if (frame.roll3 === 10) return "X";
+    // After a strike then a non-strike, knocking the rest is a spare, even if all ten were left
     if (
       frame.roll2 !== null &&
       frame.roll1 === 10 &&
@@ -52,6 +52,7 @@ function formatRoll(
       frame.roll2 + frame.roll3 === 10
     )
       return "/";
+    if (frame.roll3 === 10) return "X";
     return frame.roll3 === 0 ? "-" : frame.roll3.toString();
   }
   return "";
@@ -150,7 +151,7 @@ export default function FrameScorecard({
                           </span>
                           <span
                             className={
-                              frame.roll2 === 10
+                              formatRoll(frame, 2, 10) === "X"
                                 ? "font-semibold text-strike"
                                 : frame.isSpare &&
                                     frame.roll1 !== 10 &&
@@ -166,7 +167,7 @@ export default function FrameScorecard({
                           </span>
                           <span
                             className={
-                              frame.roll3 === 10
+                              formatRoll(frame, 3, 10) === "X"
                                 ? "font-semibold text-strike"
                                 : frame.roll1 === 10 &&
                                     frame.roll2 !== null &&

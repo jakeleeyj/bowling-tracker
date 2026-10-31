@@ -12,6 +12,7 @@ import {
   isCleanGame,
   countStrikes,
   countSpares,
+  rackIsFresh,
 } from "@/lib/bowling";
 import { offlinePlayedAt, sgtToday } from "@/lib/seasons";
 import { haptic } from "@/lib/haptics";
@@ -1726,9 +1727,12 @@ export function useSessionState() {
   }
 
   const availablePins = getAvailablePins();
-  const isFreshRack = availablePins.length === 10;
-  const showStrikeButton =
-    isFreshRack && (currentRoll === 1 || currentFrame === 10);
+  const isFreshRack = rackIsFresh(
+    frames.find((f) => f.frameNumber === 10),
+    currentFrame,
+    currentRoll,
+  );
+  const showStrikeButton = isFreshRack;
 
   // Tab info: score or in-progress indicator for each game
   function getGameTabScore(index: number): {

@@ -124,7 +124,7 @@ function formatFrameRoll(frame: FrameInfo, rollNum: 1 | 2 | 3): string {
   }
   if (rollNum === 3) {
     if (frame.roll_3 === null) return "";
-    if (frame.roll_3 === 10) return "X";
+    // After a strike then a non-strike, knocking the rest is a spare, even if all ten were left
     if (
       frame.roll_2 !== null &&
       frame.roll_1 === 10 &&
@@ -132,6 +132,7 @@ function formatFrameRoll(frame: FrameInfo, rollNum: 1 | 2 | 3): string {
       frame.roll_2 + frame.roll_3 === 10
     )
       return "/";
+    if (frame.roll_3 === 10) return "X";
     return frame.roll_3 === 0 ? "-" : frame.roll_3.toString();
   }
   return "";
@@ -154,7 +155,7 @@ function MicroPinDiagram({
   if (isStrike) {
     return (
       <div className="flex h-[22px] items-center justify-center">
-        <span className="text-[11px] font-semibold text-green">X</span>
+        <span className="text-[11px] font-semibold text-strike">X</span>
       </div>
     );
   }
@@ -297,7 +298,7 @@ function Frame10MicroPin({ frame }: { frame: FrameInfo }) {
       </span>
       <div className="flex h-[19px] flex-col items-center justify-center gap-[1px]">
         {isStrikeShot ? (
-          <span className="text-[11px] font-semibold leading-none text-green">
+          <span className="text-[11px] font-semibold leading-none text-strike">
             X
           </span>
         ) : (
@@ -394,32 +395,32 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
                 isTenth ? (
                   <>
                     <span
-                      className={`text-[11px] font-semibold ${frame.roll_1 === 10 ? "text-green" : "text-text-secondary"}`}
+                      className={`text-[11px] font-semibold ${frame.roll_1 === 10 ? "text-strike" : "text-text-secondary"}`}
                     >
                       {formatFrameRoll(frame, 1)}
                     </span>
                     <span
-                      className={`text-[11px] font-semibold ${formatFrameRoll(frame, 2) === "X" ? "text-green" : formatFrameRoll(frame, 2) === "/" ? "text-gold" : "text-text-secondary"}`}
+                      className={`text-[11px] font-semibold ${formatFrameRoll(frame, 2) === "X" ? "text-strike" : formatFrameRoll(frame, 2) === "/" ? "text-spare" : "text-text-secondary"}`}
                     >
                       {formatFrameRoll(frame, 2)}
                     </span>
                     {frame.roll_3 !== null && (
                       <span
-                        className={`text-[11px] font-semibold ${formatFrameRoll(frame, 3) === "X" ? "text-green" : formatFrameRoll(frame, 3) === "/" ? "text-gold" : "text-text-secondary"}`}
+                        className={`text-[11px] font-semibold ${formatFrameRoll(frame, 3) === "X" ? "text-strike" : formatFrameRoll(frame, 3) === "/" ? "text-spare" : "text-text-secondary"}`}
                       >
                         {formatFrameRoll(frame, 3)}
                       </span>
                     )}
                   </>
                 ) : frame.is_strike ? (
-                  <span className="text-[11px] font-semibold text-green">X</span>
+                  <span className="text-[11px] font-semibold text-strike">X</span>
                 ) : (
                   <>
                     <span className="text-[11px] text-text-secondary">
                       {formatFrameRoll(frame, 1)}
                     </span>
                     <span
-                      className={`text-[11px] font-semibold ${frame.is_spare ? "text-gold" : "text-text-secondary"}`}
+                      className={`text-[11px] font-semibold ${frame.is_spare ? "text-spare" : "text-text-secondary"}`}
                     >
                       {formatFrameRoll(frame, 2)}
                     </span>
@@ -445,9 +446,9 @@ function MiniScorecard({ frames }: { frames: FrameInfo[] }) {
                 <span
                   className={
                     frame.is_strike
-                      ? "text-green"
+                      ? "text-strike"
                       : frame.is_spare
-                        ? "text-gold"
+                        ? "text-spare"
                         : "text-text-secondary"
                   }
                 >
@@ -562,13 +563,13 @@ function SessionStats({
           {/* Rate cards */}
           <div className="mb-2 grid grid-cols-4 gap-1.5">
             <div className="rounded-lg bg-black/20 p-2 text-center">
-              <div className="text-sm font-semibold text-green">
+              <div className="text-sm font-semibold text-strike">
                 {strikeRate}%
               </div>
               <div className="text-[11px] text-text-muted">Strike</div>
             </div>
             <div className="rounded-lg bg-black/20 p-2 text-center">
-              <div className="text-sm font-semibold text-gold">
+              <div className="text-sm font-semibold text-spare">
                 {spareRate}%
               </div>
               <div className="text-[11px] text-text-muted">Spare</div>

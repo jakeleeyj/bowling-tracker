@@ -168,10 +168,10 @@ export function countStrikes(frames: FrameData[]): number {
   let count = 0;
   for (const f of frames) {
     if (f.isStrike) count++;
-    // 10th frame can have multiple strikes
+    // 10th frame can have multiple strikes, but only on a freshly reset rack
     if (f.frameNumber === 10) {
-      if (f.roll2 === 10) count++;
-      if (f.roll3 === 10) count++;
+      if (f.roll2 === 10 && rackIsFresh(f, 10, 2)) count++;
+      if (f.roll3 === 10 && rackIsFresh(f, 10, 3)) count++;
     }
   }
   return count;
@@ -298,4 +298,18 @@ export function isSplit(pins: number[]): boolean {
   }
 
   return visited.size < pins.length;
+}
+
+// A full rack only counts as a strike chance after the pins were reset. In the 10th, a gutter
+// (or a strike then a gutter) leaves all ten standing, but the next ball is a spare chance.
+export function rackIsFresh(
+  frame10: FrameData | undefined,
+  frameNumber: number,
+  roll: 1 | 2 | 3,
+): boolean {
+  if (roll === 1) return true;
+  if (frameNumber <= 9 || !frame10) return false;
+  if (roll === 2) return frame10.roll1 === 10;
+  if (frame10.roll1 === 10) return frame10.roll2 === 10;
+  return frame10.roll1 + (frame10.roll2 ?? 0) === 10;
 }

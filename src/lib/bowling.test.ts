@@ -7,6 +7,7 @@ import {
   countStrikes,
   countSpares,
   isSplit,
+  rackIsFresh,
 } from "./bowling";
 
 function frame(
@@ -246,5 +247,51 @@ describe("isSplit", () => {
 
   it("returns false for adjacent pins (2-3)", () => {
     expect(isSplit([2, 3])).toBe(false);
+  });
+});
+
+describe("rackIsFresh", () => {
+  const tenth = (r1: number, r2: number | null = null) =>
+    frame(10, r1, r2);
+
+  it("is fresh only on the first ball in frames 1 to 9", () => {
+    expect(rackIsFresh(undefined, 4, 1)).toBe(true);
+    expect(rackIsFresh(undefined, 4, 2)).toBe(false);
+  });
+
+  it("is not fresh on ball 2 of the 10th after a gutter, so it is a spare chance", () => {
+    expect(rackIsFresh(tenth(0), 10, 2)).toBe(false);
+  });
+
+  it("is fresh on ball 2 of the 10th after a strike", () => {
+    expect(rackIsFresh(tenth(10), 10, 2)).toBe(true);
+  });
+
+  it("is not fresh on ball 3 after a strike then a gutter, so it is a spare chance", () => {
+    expect(rackIsFresh(tenth(10, 0), 10, 3)).toBe(false);
+  });
+
+  it("is fresh on ball 3 after two strikes or a spare", () => {
+    expect(rackIsFresh(tenth(10, 10), 10, 3)).toBe(true);
+    expect(rackIsFresh(tenth(0, 10), 10, 3)).toBe(true);
+    expect(rackIsFresh(tenth(7, 3), 10, 3)).toBe(true);
+  });
+});
+
+describe("countStrikes in the 10th", () => {
+  const nine = Array.from({ length: 9 }, (_, i) => frame(i + 1, 7, 2));
+
+  it("does not count a gutter then all ten as a strike", () => {
+    expect(countStrikes([...nine, frame(10, 0, 10)])).toBe(0);
+  });
+
+  it("does not count a strike, a gutter, then all ten as a second strike", () => {
+    const tenth = { ...frame(10, 10, 0), isStrike: true, roll3: 10 };
+    expect(countStrikes([...nine, tenth])).toBe(1);
+  });
+
+  it("counts three strikes", () => {
+    const tenth = { ...frame(10, 10, 10), isStrike: true, roll3: 10 };
+    expect(countStrikes([...nine, tenth])).toBe(3);
   });
 });
