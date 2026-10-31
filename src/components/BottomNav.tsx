@@ -81,7 +81,7 @@ export default function BottomNav() {
           </>
         )}
         <div
-          className={`relative flex h-[52px] w-[52px] items-center justify-center rounded-full bg-blue shadow-lg shadow-black/40 transition-transform duration-150 active:scale-95 ${isLogActive && !hasSavedSession ? "ring-2 ring-white/20" : ""}`}
+          className={`relative flex h-[52px] w-[52px] items-center justify-center rounded-full shadow-lg shadow-black/40 transition-transform duration-150 active:scale-95 ${hasSavedSession ? "border border-white/20 bg-black/55 backdrop-blur-xl" : `bg-blue ${isLogActive ? "ring-2 ring-white/20" : ""}`}`}
         >
           {hasSavedSession ? (
             <svg
@@ -93,10 +93,10 @@ export default function BottomNav() {
               className="animate-spin"
               style={{ animationDuration: "3s" }}
             >
-              <circle cx="12" cy="12" r="10" fill="var(--color-base)" />
-              <circle cx="10" cy="8" r="1.5" fill="var(--color-text-primary)" />
-              <circle cx="14" cy="8" r="1.5" fill="var(--color-text-primary)" />
-              <circle cx="12" cy="11.5" r="1.5" fill="var(--color-text-primary)" />
+              <circle cx="12" cy="12" r="10" fill="var(--color-text-primary)" />
+              <circle cx="10" cy="8" r="1.5" fill="var(--color-base)" />
+              <circle cx="14" cy="8" r="1.5" fill="var(--color-base)" />
+              <circle cx="12" cy="11.5" r="1.5" fill="var(--color-base)" />
             </svg>
           ) : (
             <Plus size={26} className="text-white" strokeWidth={2.5} />

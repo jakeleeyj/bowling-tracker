@@ -83,7 +83,7 @@ export default function SideNav() {
         <button
           onClick={openLog}
           aria-label={hasSavedSession ? "Continue session" : "Log a session"}
-          className={`relative flex w-full items-center gap-3 rounded-xl bg-blue px-4 py-3 text-sm font-semibold text-white transition-all duration-150 active:scale-[0.98] ${isLogActive ? "ring-2 ring-white/20" : ""}`}
+          className={`relative flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-white transition-all duration-150 active:scale-[0.98] ${hasSavedSession ? "border border-white/20 bg-black/55 backdrop-blur-xl" : "bg-blue"} ${isLogActive ? "ring-2 ring-white/20" : ""}`}
         >
           {hasSavedSession ? (
             <svg
@@ -95,10 +95,10 @@ export default function SideNav() {
               className="shrink-0 animate-spin"
               style={{ animationDuration: "3s" }}
             >
-              <circle cx="12" cy="12" r="10" fill="var(--color-base)" />
-              <circle cx="10" cy="8" r="1.5" fill="var(--color-text-primary)" />
-              <circle cx="14" cy="8" r="1.5" fill="var(--color-text-primary)" />
-              <circle cx="12" cy="11.5" r="1.5" fill="var(--color-text-primary)" />
+              <circle cx="12" cy="12" r="10" fill="var(--color-text-primary)" />
+              <circle cx="10" cy="8" r="1.5" fill="var(--color-base)" />
+              <circle cx="14" cy="8" r="1.5" fill="var(--color-base)" />
+              <circle cx="12" cy="11.5" r="1.5" fill="var(--color-base)" />
             </svg>
           ) : (
             <Plus size={18} strokeWidth={2.5} className="shrink-0" />
