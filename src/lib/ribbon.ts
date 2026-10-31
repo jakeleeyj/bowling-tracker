@@ -313,3 +313,54 @@ export function bucketScores(scores: number[], count: number): number[] {
     return run.reduce((a, v) => a + v, 0) / run.length;
   });
 }
+
+// Still image of a session's ribbons for the share card. Glow comes from canvas shadows,
+// which every browser supports, so the captured image matches what is on screen.
+export function renderOrbImage(
+  games: FrameKind[][],
+  size: number,
+  palette: RibbonPalette,
+): string {
+  const canvas = document.createElement("canvas");
+  canvas.width = size * 2;
+  canvas.height = size * 2;
+  const ctx = canvas.getContext("2d");
+  if (!ctx || games.length === 0) return "";
+  ctx.scale(2, 2);
+  const n = games.length;
+  const c = size / 2;
+  const k = size / 280;
+  const spread = n > 1 ? Math.min(11, 34 / n) * k : 0;
+  const wScale = n <= 3 ? 1 : Math.max(0.5, Math.sqrt(3 / n));
+  for (const glow of [true, false]) {
+    ctx.globalCompositeOperation = "screen";
+    games.forEach((kinds, i) => {
+      const pts = ribbonPoints(
+        kinds,
+        {
+          closed: true,
+          per: 24,
+          base: 82 * k + (i - (n - 1) / 2) * spread,
+          amp: 28 * k,
+          w0: 2 * k,
+          w1: 7 * k,
+          wScale,
+          rot: 0,
+          morph: false,
+        },
+        0,
+        i,
+      );
+      const recency = n === 1 ? 1 : i / (n - 1);
+      ctx.shadowBlur = glow ? 26 * k : 0;
+      ctx.shadowColor = glow ? css(palette.X) : "transparent";
+      const alpha = glow
+        ? 0.5 / Math.sqrt(n)
+        : i === n - 1
+          ? 1
+          : 0.3 + 0.5 * recency;
+      drawBand(ctx, c, pts, true, ribbonFill(ctx, c, kinds, palette, 0, true), alpha);
+    });
+  }
+  return canvas.toDataURL("image/png");
+}

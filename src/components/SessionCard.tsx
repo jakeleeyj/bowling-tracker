@@ -1083,7 +1083,7 @@ export default function SessionCard({
               flexDirection: "column",
               borderRadius: "20px",
               overflow: "hidden",
-              background: "#0a0e1a",
+              background: "var(--color-base)",
             }}
           >
             {/* Card preview — scaled to fit, no scroll */}
