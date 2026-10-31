@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { frameKinds, parseColor } from "./ribbon";
+import { frameKind, frameKinds, parseColor } from "./ribbon";
 
 function f(
   frame_number: number,
@@ -50,6 +50,15 @@ describe("frameKinds", () => {
   it("returns null for games without full frame data", () => {
     expect(frameKinds([])).toBeNull();
     expect(frameKinds(game.slice(0, 9))).toBeNull();
+  });
+});
+
+describe("frameKind", () => {
+  it("reads one frame from its rolls, including one still in progress", () => {
+    expect(frameKind(10, null)).toBe("X");
+    expect(frameKind(3, 7)).toBe("/");
+    expect(frameKind(3, 4)).toBe("O");
+    expect(frameKind(3, null)).toBe("O");
   });
 });
 

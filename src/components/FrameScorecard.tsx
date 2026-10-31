@@ -2,6 +2,9 @@
 
 import type { FrameData } from "@/lib/bowling";
 import { calculateFrameScores, isSplit } from "@/lib/bowling";
+import { frameKind } from "@/lib/ribbon";
+
+const KIND_BAR = { X: "bg-strike", "/": "bg-spare", O: "bg-open" } as const;
 
 interface FrameScorecardProps {
   frames: FrameData[];
@@ -105,7 +108,7 @@ export default function FrameScorecard({
                       {i < 9 ? (
                         <>
                           {frame.isStrike ? (
-                            <span className="font-semibold text-green">X</span>
+                            <span className="font-semibold text-strike">X</span>
                           ) : (
                             <>
                               <span
@@ -125,7 +128,7 @@ export default function FrameScorecard({
                                   isSplit(frame.pinsRemaining)
                                     ? "font-semibold text-red"
                                     : frame.isSpare
-                                      ? "font-semibold text-gold"
+                                      ? "font-semibold text-spare"
                                       : "text-text-muted/50"
                                 }
                               >
@@ -139,7 +142,7 @@ export default function FrameScorecard({
                           <span
                             className={
                               frame.roll1 === 10
-                                ? "font-semibold text-green"
+                                ? "font-semibold text-strike"
                                 : "text-text-secondary"
                             }
                           >
@@ -148,14 +151,14 @@ export default function FrameScorecard({
                           <span
                             className={
                               frame.roll2 === 10
-                                ? "font-semibold text-green"
+                                ? "font-semibold text-strike"
                                 : frame.isSpare &&
                                     frame.roll1 !== 10 &&
                                     frame.pinsRemaining &&
                                     isSplit(frame.pinsRemaining)
                                   ? "font-semibold text-red"
                                   : frame.isSpare && frame.roll1 !== 10
-                                    ? "font-semibold text-gold"
+                                    ? "font-semibold text-spare"
                                     : "text-text-secondary"
                             }
                           >
@@ -164,7 +167,7 @@ export default function FrameScorecard({
                           <span
                             className={
                               frame.roll3 === 10
-                                ? "font-semibold text-green"
+                                ? "font-semibold text-strike"
                                 : frame.roll1 === 10 &&
                                     frame.roll2 !== null &&
                                     frame.roll2 !== 10 &&
@@ -178,7 +181,7 @@ export default function FrameScorecard({
                                       frame.roll2 !== 10 &&
                                       frame.roll3 !== null &&
                                       frame.roll2 + frame.roll3 === 10
-                                    ? "font-semibold text-gold"
+                                    ? "font-semibold text-spare"
                                     : "text-text-secondary"
                             }
                           >
@@ -203,12 +206,24 @@ export default function FrameScorecard({
                 score !== undefined &&
                 frameIdx >= 0 &&
                 isScoreResolved(frames, frameIdx);
+              const frame = frames[frameIdx];
+              const finished =
+                !!frame &&
+                (i < 9
+                  ? frame.isStrike || frame.roll2 !== null
+                  : isScoreResolved(frames, frameIdx));
 
               return (
                 <td
                   key={i}
-                  className="overflow-hidden border border-border text-xs font-semibold tabular-nums text-text-primary"
+                  className="relative overflow-hidden border border-border text-xs font-semibold tabular-nums text-text-primary"
                 >
+                  {finished && (
+                    <span
+                      aria-hidden
+                      className={`animate-fade-in absolute inset-x-0 bottom-0 h-[3px] ${KIND_BAR[frameKind(frame.roll1, frame.roll2)]}`}
+                    />
+                  )}
                   {canDisplay ? (
                     <span key={score} className="animate-fade-in">
                       {score}

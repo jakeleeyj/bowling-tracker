@@ -9,17 +9,21 @@ type RibbonFrame = Pick<
   "frame_number" | "roll_1" | "roll_2" | "is_strike" | "is_spare"
 >;
 
+export function frameKind(roll1: number, roll2: number | null): FrameKind {
+  if (roll1 === 10) return "X";
+  if (roll1 + (roll2 ?? 0) === 10) return "/";
+  return "O";
+}
+
 // One kind per frame, in frame order. Null when the game has no full frame data (quick entry).
 export function frameKinds(frames: RibbonFrame[]): FrameKind[] | null {
   if (frames.length < 10) return null;
   return [...frames]
     .sort((a, b) => a.frame_number - b.frame_number)
     .slice(0, 10)
-    .map((f) => {
-      if (f.is_strike || f.roll_1 === 10) return "X";
-      if (f.is_spare || f.roll_1 + (f.roll_2 ?? 0) === 10) return "/";
-      return "O";
-    });
+    .map((f) =>
+      f.is_strike ? "X" : f.is_spare ? "/" : frameKind(f.roll_1, f.roll_2),
+    );
 }
 
 // How far out a frame pushes the ribbon: strikes swell it, open frames pull it in
