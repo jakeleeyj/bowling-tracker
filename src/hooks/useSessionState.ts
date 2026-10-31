@@ -30,6 +30,7 @@ import {
   detectNewAchievements,
   type AchievementDef,
 } from "@/lib/achievements";
+import { uuid } from "@/lib/uuid";
 
 export type EntryMode = "quick" | "detailed";
 // "checking" until we know whether a saved session exists, so setup never flashes first
@@ -250,7 +251,7 @@ export function useSessionState() {
       setCurrentFrame(data.currentFrame ?? 1);
       setCurrentRoll(data.currentRoll ?? 1);
       setStandingPins(data.standingPins ?? []);
-      setIdempotencyKey(data.idempotencyKey ?? crypto.randomUUID());
+      setIdempotencyKey(data.idempotencyKey ?? uuid());
       if (data.editorStates) {
         const map = new Map<number, GameEditorState>(
           Object.entries(data.editorStates).map(([k, v]) => [
@@ -809,7 +810,7 @@ export function useSessionState() {
     setStep("game");
     setGames([]);
     setCurrentGameIndex(0);
-    setIdempotencyKey(crypto.randomUUID());
+    setIdempotencyKey(uuid());
     editorStatesRef.current.clear();
     resetGameState();
   }
@@ -1303,7 +1304,7 @@ export function useSessionState() {
           ...g,
           frames: g.frames.map((f) => ({ ...f })),
         })),
-        idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
+        idempotencyKey: idempotencyKey ?? uuid(),
         playedAt: new Date().toISOString(),
         gameScores,
         sessionAvg: Math.floor(
