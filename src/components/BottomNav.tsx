@@ -27,6 +27,16 @@ export default function BottomNav() {
     router.push(href);
   }
 
+  // With a game in progress, go straight back into it instead of the resume prompt
+  function openLog() {
+    if (!hasSavedSession) return handleNav("/log");
+    if (pathname.startsWith("/log")) {
+      window.dispatchEvent(new Event("session-resume"));
+      return;
+    }
+    router.push("/log?resume=1");
+  }
+
   const isLogActive = pathname.startsWith("/log");
 
   // /player/[id] is part of the Ranked section
@@ -54,16 +64,24 @@ export default function BottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 [view-transition-name:app-nav] mx-auto max-w-[480px] overflow-visible lg:hidden [transform:translateZ(0)] [will-change:transform]">
       {/* Floating circle — above the notch */}
       <button
-        onClick={() => handleNav("/log")}
+        onClick={openLog}
         aria-label="Log a session"
         className="absolute left-1/2 -top-3 z-20 -translate-x-1/2"
       >
+        {hasSavedSession && (
+          <>
+            <span
+              aria-hidden
+              className="absolute -inset-[3px] animate-[spin_4s_linear_infinite] rounded-full opacity-70 blur-md bg-[conic-gradient(var(--color-strike),var(--color-spare),var(--color-strike))]"
+            />
+            <span
+              aria-hidden
+              className="absolute -inset-[3px] animate-[spin_4s_linear_infinite] rounded-full bg-[conic-gradient(var(--color-strike),var(--color-spare),var(--color-strike))]"
+            />
+          </>
+        )}
         <div
-          className={`flex h-[52px] w-[52px] items-center justify-center rounded-full transition-transform duration-150 active:scale-95 ${
-            hasSavedSession
-              ? "bg-green shadow-lg shadow-black/40"
-              : "bg-blue shadow-lg shadow-black/40"
-          } ${isLogActive ? "ring-2 ring-white/20" : ""}`}
+          className={`relative flex h-[52px] w-[52px] items-center justify-center rounded-full shadow-lg shadow-black/40 transition-transform duration-150 active:scale-95 ${hasSavedSession ? "border border-white/20 bg-black/55 backdrop-blur-xl" : `bg-blue ${isLogActive ? "ring-2 ring-white/20" : ""}`}`}
         >
           {hasSavedSession ? (
             <svg
@@ -71,31 +89,14 @@ export default function BottomNav() {
               height={24}
               viewBox="0 0 24 24"
               fill="none"
+              aria-hidden
               className="animate-spin"
               style={{ animationDuration: "3s" }}
             >
-              <circle cx="12" cy="12" r="10" fill="white" />
-              <circle
-                cx="10"
-                cy="8"
-                r="1.5"
-                fill="currentColor"
-                className="text-green"
-              />
-              <circle
-                cx="14"
-                cy="8"
-                r="1.5"
-                fill="currentColor"
-                className="text-green"
-              />
-              <circle
-                cx="12"
-                cy="11.5"
-                r="1.5"
-                fill="currentColor"
-                className="text-green"
-              />
+              <circle cx="12" cy="12" r="10" fill="var(--color-text-primary)" />
+              <circle cx="10" cy="8" r="1.5" fill="var(--color-base)" />
+              <circle cx="14" cy="8" r="1.5" fill="var(--color-base)" />
+              <circle cx="12" cy="11.5" r="1.5" fill="var(--color-base)" />
             </svg>
           ) : (
             <Plus size={26} className="text-white" strokeWidth={2.5} />
@@ -130,7 +131,7 @@ export default function BottomNav() {
               className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
             >
               <div
-                className={`flex h-8 w-12 items-center justify-center rounded-full telemetry:rounded-md transition-all duration-200 ${
+                className={`flex h-8 w-12 items-center justify-center rounded-full transition-all duration-200 ${
                   isActive
                     ? "bg-blue/15"
                     : "scale-90 active:scale-95 active:bg-white/5"
@@ -143,7 +144,7 @@ export default function BottomNav() {
                 />
               </div>
               <span
-                className={`text-[11px] transition-colors duration-200 telemetry:font-mono ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
+                className={`text-[11px] transition-colors duration-200 ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
               >
                 {item.label}
               </span>
@@ -153,13 +154,13 @@ export default function BottomNav() {
 
         {/* Center — "Log" label aligned with others, circle floats above */}
         <button
-          onClick={() => handleNav("/log")}
+          onClick={openLog}
           className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
         >
           {/* Invisible spacer matching the icon area height */}
           <div className="h-8" />
           <span
-            className={`text-[11px] transition-colors duration-200 telemetry:font-mono ${hasSavedSession ? "font-semibold text-green" : isLogActive ? "font-semibold text-blue" : "text-text-muted"}`}
+            className={`text-[11px] transition-colors duration-200 ${hasSavedSession || isLogActive ? "font-semibold text-text-primary" : "text-text-muted"}`}
           >
             {hasSavedSession ? "Ongoing" : "Log"}
           </span>
@@ -174,7 +175,7 @@ export default function BottomNav() {
               className="flex flex-1 flex-col items-center gap-0.5 py-2.5"
             >
               <div
-                className={`flex h-8 w-12 items-center justify-center rounded-full telemetry:rounded-md transition-all duration-200 ${
+                className={`flex h-8 w-12 items-center justify-center rounded-full transition-all duration-200 ${
                   isActive
                     ? "bg-blue/15"
                     : "scale-90 active:scale-95 active:bg-white/5"
@@ -187,7 +188,7 @@ export default function BottomNav() {
                 />
               </div>
               <span
-                className={`text-[11px] transition-colors duration-200 telemetry:font-mono ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
+                className={`text-[11px] transition-colors duration-200 ${isActive ? "font-semibold text-blue" : "text-text-muted"}`}
               >
                 {item.label}
               </span>

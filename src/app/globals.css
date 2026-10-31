@@ -1,27 +1,28 @@
 @import "tailwindcss";
 
-@custom-variant telemetry (&:where([data-theme="telemetry"], [data-theme="telemetry"] *));
-
 @theme {
-  --color-base: #070a13;
-  --color-surface: #0f1729;
-  --color-surface-light: #1e293b;
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-border-light: rgba(255, 255, 255, 0.1);
-  --color-text-primary: #e2e8f0;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
-  --color-blue: #4c7dff;
-  --color-blue-dark: #2f5bff;
+  --color-base: #000000;
+  --color-surface: #1c1c1e;
+  --color-surface-light: #2c2c2e;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-light: rgba(255, 255, 255, 0.12);
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a1a1a6;
+  --color-text-muted: #7c7c82;
+  --color-blue: #ffffff;
+  --color-blue-dark: #e5e5ea;
   --color-purple: #8b5cf6;
   --color-pink: #ec4899;
   --color-gold: #f59e0b;
-  --color-green: #22c55e;
-  --color-red: #ef4444;
+  --color-green: #30d158;
+  --color-red: #ff453a;
   --color-iron: #9ca3af;
   --color-bronze: #d97706;
   --color-silver: #d1d5db;
   --color-emerald: #34d399;
+  --color-strike: #64d2ff;
+  --color-spare: #ffd60a;
+  --color-open: #6e6e76;
 }
 
 @theme inline {
@@ -77,86 +78,15 @@ body {
   }
 }
 
-/* Telemetry theme: graphite, hairline panels, orange signal, mono numbers */
-html[data-theme="telemetry"] {
-  --color-base: #08090a;
-  --color-surface: #111214;
-  --color-surface-light: #1c1d20;
-  --color-border: rgba(255, 255, 255, 0.07);
-  --color-border-light: rgba(255, 255, 255, 0.11);
-  --color-text-primary: #ededed;
-  --color-text-secondary: #a0a3a8;
-  --color-text-muted: #7c8088;
-  --color-blue: #ff7a3d;
-  --color-blue-dark: #f0652a;
-  --color-green: #3ddc84;
-  --color-red: #ff5b5b;
-}
-
-/* Layered so utilities (telemetry:*) can still override panel shape */
-@layer components {
-  html[data-theme="telemetry"] .glass {
-    background: transparent;
-    border-color: var(--color-border-light);
-    border-radius: 14px;
-  }
-
-  html[data-theme="telemetry"] .glass-strong {
-    background: var(--color-surface);
-  }
-}
-
-/* Tighter, squarer component shapes */
-@layer utilities {
-  html[data-theme="telemetry"] .rounded-xl {
-    border-radius: 10px;
-  }
-
-  html[data-theme="telemetry"] .rounded-2xl {
-    border-radius: 12px;
-  }
-
-  html[data-theme="telemetry"] .rounded-t-3xl {
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-  }
-
-  html[data-theme="telemetry"] .rounded-full:is(.h-1, .h-1\.5, .h-2) {
-    border-radius: 1px;
-  }
-}
-
-html[data-theme="telemetry"] .tabular-nums {
-  font-family: var(--font-jetbrains), ui-monospace, monospace;
-  font-weight: 500;
-}
-
-html[data-theme="telemetry"] .text-\[11px\].text-text-muted {
-  font-family: var(--font-jetbrains), ui-monospace, monospace;
-  letter-spacing: -0.01em;
-}
-
-html[data-theme="telemetry"] .bg-blue.text-white,
-html[data-theme="telemetry"] .bg-green.text-white,
-html[data-theme="telemetry"] .bg-gold.text-white {
+/* White accent: anything sitting on it reads in black */
+.bg-blue.text-white,
+.bg-blue > .text-white,
+:has(> .bg-blue.shadow-sm) .text-white {
   color: var(--color-base);
 }
 
-/* Segmented controls: active label sits on a separate sliding orange layer */
-html[data-theme="telemetry"] :has(> .bg-blue.shadow-sm) .text-white {
-  color: var(--color-base);
-}
-
-html[data-theme="telemetry"] main h2.text-sm {
-  font-family: var(--font-jetbrains), ui-monospace, monospace;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-}
-
-html[data-theme="telemetry"] .glow-blue::before,
-html[data-theme="telemetry"] .glow-purple::before,
-html[data-theme="telemetry"] .glow-purple::after {
+.glow-blue::before,
+.glow-purple::after {
   display: none;
 }
 
@@ -389,6 +319,73 @@ html[data-nav="back"]::view-transition-new(root) {
 
 .animate-mark-flash {
   animation: mark-flash 0.65s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes aura {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1.6s 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes glint {
+  0%,
+  72%,
+  100% {
+    opacity: 0.7;
+    transform: scale(0.8) rotate(0deg);
+  }
+  82% {
+    opacity: 1;
+    transform: scale(1.35) rotate(45deg);
+  }
+}
+
+.animate-glint {
+  animation: glint 4s ease-in-out infinite;
+}
+
+@keyframes orb-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) rotate(-20deg);
+  }
+}
+
+@keyframes orb-sway {
+  33% {
+    transform: rotate(6deg);
+  }
+  66% {
+    transform: rotate(-6deg);
+  }
+}
+
+.animate-orb-sway {
+  animation:
+    orb-in 1.4s cubic-bezier(0.23, 1, 0.32, 1) both,
+    orb-sway 18s 1.4s ease-in-out infinite;
+}
+
+.animate-aura {
+  animation: aura 8s ease-in-out infinite;
 }
 
 .animate-fade-in {

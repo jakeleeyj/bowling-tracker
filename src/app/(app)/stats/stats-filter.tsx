@@ -114,7 +114,7 @@ export default function StatsFilter({
             aria-pressed={currentEvent === opt.value}
             className={`h-10 rounded-full px-3.5 text-[11px] font-semibold transition-[color,background-color,transform] duration-150 active:scale-[0.94] ${
               currentEvent === opt.value
-                ? "bg-purple/20 text-purple telemetry:bg-white/12 telemetry:text-text-primary"
+                ? "bg-white/12 text-text-primary"
                 : "bg-surface-light/60 text-text-muted active:bg-surface-light/80"
             }`}
           >

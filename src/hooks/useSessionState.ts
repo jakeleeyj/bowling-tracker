@@ -30,9 +30,17 @@ import {
   detectNewAchievements,
   type AchievementDef,
 } from "@/lib/achievements";
+import { uuid } from "@/lib/uuid";
 
 export type EntryMode = "quick" | "detailed";
-export type Step = "setup" | "resume" | "game" | "results" | "pendingSync";
+// "checking" until we know whether a saved session exists, so setup never flashes first
+export type Step =
+  | "checking"
+  | "setup"
+  | "resume"
+  | "game"
+  | "results"
+  | "pendingSync";
 
 export interface GameData {
   entryType: EntryMode;
@@ -125,7 +133,7 @@ export function useSessionState() {
   const { toast } = useToast();
   const { setHasUnsaved } = useUnsavedGuard();
 
-  const [step, setStep] = useState<Step>("setup");
+  const [step, setStep] = useState<Step>("checking");
   const [venue, setVenue] = useState("");
   const [eventLabel, setEventLabel] = useState("");
   const [pastVenues, setPastVenues] = useState<string[]>([]);
@@ -197,9 +205,12 @@ export function useSessionState() {
 
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return;
-      const data = JSON.parse(saved);
-      if (data.step !== "game") return; // Only restore active sessions
+      const data = saved ? JSON.parse(saved) : null;
+      // Only restore active sessions
+      if (data?.step !== "game") {
+        setStep("setup");
+        return;
+      }
 
       // The session pill links here with ?resume=1 to skip the prompt
       if (searchParams.get("resume")) {
@@ -210,6 +221,7 @@ export function useSessionState() {
       setStep("resume");
     } catch {
       localStorage.removeItem(STORAGE_KEY);
+      setStep("setup");
     }
   }, [searchParams]);
 
@@ -239,7 +251,7 @@ export function useSessionState() {
       setCurrentFrame(data.currentFrame ?? 1);
       setCurrentRoll(data.currentRoll ?? 1);
       setStandingPins(data.standingPins ?? []);
-      setIdempotencyKey(data.idempotencyKey ?? crypto.randomUUID());
+      setIdempotencyKey(data.idempotencyKey ?? uuid());
       if (data.editorStates) {
         const map = new Map<number, GameEditorState>(
           Object.entries(data.editorStates).map(([k, v]) => [
@@ -255,6 +267,15 @@ export function useSessionState() {
       setStep("setup");
     }
   }
+
+  // The Ongoing button asks to resume while the prompt is showing
+  useEffect(() => {
+    if (step !== "resume") return;
+    const onResume = () => resumeSession();
+    window.addEventListener("session-resume", onResume);
+    return () => window.removeEventListener("session-resume", onResume);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   // Auto-save session state to localStorage
   useEffect(() => {
@@ -633,6 +654,7 @@ export function useSessionState() {
 
       if (!game) {
         setEditLoading(false);
+        setStep("setup");
         return;
       }
 
@@ -788,7 +810,7 @@ export function useSessionState() {
     setStep("game");
     setGames([]);
     setCurrentGameIndex(0);
-    setIdempotencyKey(crypto.randomUUID());
+    setIdempotencyKey(uuid());
     editorStatesRef.current.clear();
     resetGameState();
   }
@@ -1282,7 +1304,7 @@ export function useSessionState() {
           ...g,
           frames: g.frames.map((f) => ({ ...f })),
         })),
-        idempotencyKey: idempotencyKey ?? crypto.randomUUID(),
+        idempotencyKey: idempotencyKey ?? uuid(),
         playedAt: new Date().toISOString(),
         gameScores,
         sessionAvg: Math.floor(

@@ -14,6 +14,8 @@ import { useConfirm } from "@/components/ConfirmSheet";
 import PinDiagram from "@/components/PinDiagram";
 import FrameScorecard from "@/components/FrameScorecard";
 import FramePinDetail from "@/components/FramePinDetail";
+import LiveRibbon from "@/components/log/LiveRibbon";
+import { frameKind } from "@/lib/ribbon";
 import type { GameData, EntryMode } from "@/hooks/useSessionState";
 
 interface GameEntryProps {
@@ -434,32 +436,41 @@ export default function GameEntry(props: GameEntryProps) {
                 onFrameTap={handleFrameTap}
               />
 
-              {/* Frame + score */}
-              <div className="flex items-baseline justify-between px-0.5">
-                <p className="text-xs font-semibold text-text-secondary">
-                  Frame {currentFrame} &middot; Roll {currentRoll}
-                  {availablePins.length < 10 && (
-                    <span className="ml-1.5 font-normal text-text-muted">
-                      {availablePins.length} in play
-                    </span>
-                  )}
-                </p>
-                <p className="flex items-baseline gap-3 text-[11px] text-text-muted">
-                  <span>
-                    Score{" "}
-                    <RollingNumber
-                      value={currentScore}
-                      className="text-lg leading-none font-semibold text-text-primary"
-                    />
+              {/* Live ribbon + frame, max */}
+              <div className="flex items-center gap-4 px-0.5">
+                <LiveRibbon
+                  done={sortedFrames
+                    .filter(
+                      (f) =>
+                        currentGameComplete || f.frameNumber < currentFrame,
+                    )
+                    .map((f) => frameKind(f.roll1, f.roll2))}
+                >
+                  <span className="text-[10px] font-semibold text-text-secondary">
+                    Score
                   </span>
-                  <span>
+                  <RollingNumber
+                    value={currentScore}
+                    className="text-[28px] leading-none font-bold"
+                  />
+                </LiveRibbon>
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm font-semibold">
+                    Frame {currentFrame} &middot; Roll {currentRoll}
+                  </p>
+                  {availablePins.length < 10 && (
+                    <p className="text-xs text-text-muted">
+                      {availablePins.length} in play
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-text-secondary">
                     Max{" "}
                     <RollingNumber
                       value={maxPossible}
-                      className="text-lg leading-none font-semibold text-green"
+                      className="text-lg leading-none font-semibold text-text-primary"
                     />
-                  </span>
-                </p>
+                  </p>
+                </div>
               </div>
 
               {(() => {
@@ -513,12 +524,12 @@ export default function GameEntry(props: GameEntryProps) {
                             className="animate-mark-flash pointer-events-none absolute inset-0 flex flex-col items-center justify-center bg-base/60"
                           >
                             <span
-                              className={`text-8xl leading-none font-black telemetry:font-mono telemetry:font-medium ${lastMark.type === "strike" ? "text-green" : "text-gold"}`}
+                              className={`text-8xl leading-none font-black ${lastMark.type === "strike" ? "text-strike" : "text-spare"}`}
                             >
                               {lastMark.type === "strike" ? "X" : "/"}
                             </span>
                             <span
-                              className={`mt-1 text-xs font-semibold tracking-[0.2em] ${lastMark.type === "strike" ? "text-green" : "text-gold"}`}
+                              className={`mt-1 text-xs font-semibold tracking-[0.2em] ${lastMark.type === "strike" ? "text-strike" : "text-spare"}`}
                             >
                               {lastMark.type === "strike" ? "STRIKE" : "SPARE"}
                             </span>
@@ -618,7 +629,7 @@ export default function GameEntry(props: GameEntryProps) {
                       saveHistory();
                       handleStrike();
                     }}
-                    className="flex-1 rounded-xl bg-green py-3 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
+                    className="flex-1 rounded-xl bg-strike py-3 text-base font-semibold text-(color:--color-base) transition-transform duration-150 active:scale-[0.97]"
                   >
                     Strike
                   </button>
@@ -628,7 +639,7 @@ export default function GameEntry(props: GameEntryProps) {
                       saveHistory();
                       handleSpare();
                     }}
-                    className="flex-1 rounded-xl bg-gold py-3 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
+                    className="flex-1 rounded-xl bg-spare py-3 text-base font-semibold text-(color:--color-base) transition-transform duration-150 active:scale-[0.97]"
                   >
                     Spare
                   </button>

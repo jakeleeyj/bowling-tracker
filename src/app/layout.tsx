@@ -6,6 +6,7 @@ import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  axes: ["opsz"],
 });
 
 const jetbrains = JetBrains_Mono({
@@ -13,13 +14,11 @@ const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-const applySavedTheme = `try{var t=localStorage.getItem("spare-me-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}`;
-
 export const metadata: Metadata = {
   title: "Spare Me?",
   description: "Track bowling scores with friends",
   manifest: "/manifest.json",
-  themeColor: "#070a13",
+  themeColor: "#000000",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -35,7 +34,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: applySavedTheme }} />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta
           name="viewport"

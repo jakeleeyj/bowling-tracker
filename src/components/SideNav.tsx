@@ -32,6 +32,16 @@ export default function SideNav() {
     router.push(href);
   }
 
+  // With a game in progress, go straight back into it instead of the resume prompt
+  function openLog() {
+    if (!hasSavedSession) return handleNav("/log");
+    if (pathname.startsWith("/log")) {
+      window.dispatchEvent(new Event("session-resume"));
+      return;
+    }
+    router.push("/log?resume=1");
+  }
+
   function isNavActive(href: string) {
     if (href === "/leaderboard") {
       return (
@@ -63,34 +73,39 @@ export default function SideNav() {
       </div>
 
       {/* Log CTA button */}
-      <button
-        onClick={() => handleNav("/log")}
-        aria-label={hasSavedSession ? "Continue session" : "Log a session"}
-        className={`flex items-center gap-3 w-full rounded-xl px-4 py-3 mb-6 font-semibold text-sm text-white transition-all duration-150 active:scale-[0.98] ${
-          hasSavedSession
-            ? "bg-green"
-            : "bg-blue"
-        } ${isLogActive ? "ring-2 ring-white/20" : ""}`}
-      >
-        {hasSavedSession ? (
-          <svg
-            width={18}
-            height={18}
-            viewBox="0 0 24 24"
-            fill="none"
-            className="animate-spin shrink-0"
-            style={{ animationDuration: "3s" }}
-          >
-            <circle cx="12" cy="12" r="10" fill="white" />
-            <circle cx="10" cy="8" r="1.5" fill="currentColor" className="text-green" />
-            <circle cx="14" cy="8" r="1.5" fill="currentColor" className="text-green" />
-            <circle cx="12" cy="11.5" r="1.5" fill="currentColor" className="text-green" />
-          </svg>
-        ) : (
-          <Plus size={18} strokeWidth={2.5} className="shrink-0" />
+      <div className="relative mb-6">
+        {hasSavedSession && (
+          <span
+            aria-hidden
+            className="absolute -inset-[2px] animate-pulse rounded-[14px] opacity-80 blur-sm bg-[conic-gradient(var(--color-strike),var(--color-spare),var(--color-strike))]"
+          />
         )}
-        {hasSavedSession ? "Continue session" : "Log a session"}
-      </button>
+        <button
+          onClick={openLog}
+          aria-label={hasSavedSession ? "Continue session" : "Log a session"}
+          className={`relative flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-white transition-all duration-150 active:scale-[0.98] ${hasSavedSession ? "border border-white/20 bg-black/55 backdrop-blur-xl" : "bg-blue"} ${isLogActive ? "ring-2 ring-white/20" : ""}`}
+        >
+          {hasSavedSession ? (
+            <svg
+              width={18}
+              height={18}
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden
+              className="shrink-0 animate-spin"
+              style={{ animationDuration: "3s" }}
+            >
+              <circle cx="12" cy="12" r="10" fill="var(--color-text-primary)" />
+              <circle cx="10" cy="8" r="1.5" fill="var(--color-base)" />
+              <circle cx="14" cy="8" r="1.5" fill="var(--color-base)" />
+              <circle cx="12" cy="11.5" r="1.5" fill="var(--color-base)" />
+            </svg>
+          ) : (
+            <Plus size={18} strokeWidth={2.5} className="shrink-0" />
+          )}
+          {hasSavedSession ? "Continue session" : "Log a session"}
+        </button>
+      </div>
 
       {/* Nav items */}
       <div className="flex flex-col gap-1">
