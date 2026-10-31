@@ -34,6 +34,7 @@ export default async function DashboardPage() {
     sessionsResult,
     allRankingsResult,
     lastSessionResult,
+    lifetimeResult,
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", uid).single(),
     supabase.rpc("get_player_lp", { p_user_id: uid }),
@@ -45,13 +46,18 @@ export default async function DashboardPage() {
     supabase.rpc("get_all_rankings"),
     supabase
       .from("sessions")
-      .select(
-        "session_date, games(game_number, total_score, frames(frame_number, roll_1, roll_2, is_strike, is_spare))",
-      )
+      .select("games(total_score)")
       .eq("user_id", uid)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("games")
+      .select("frames(frame_number, roll_1, roll_2, is_strike, is_spare)")
+      .eq("user_id", uid)
+      .eq("entry_type", "detailed")
+      .order("created_at", { ascending: false })
+      .limit(300),
   ]);
 
   const profile = profileResult.data as ProfileRow | null;
@@ -100,32 +106,17 @@ export default async function DashboardPage() {
 
   const displayName = profile?.display_name ?? "Bowler";
 
-  // Latest session as ribbons, oldest game first so the newest draws brightest
-  const lastSession = lastSessionResult.data;
-  const lastGames = [...(lastSession?.games ?? [])].sort(
-    (a, b) => a.game_number - b.game_number,
-  );
-  const ribbons = lastGames
+  // Lifetime games as ribbons, oldest first so the newest draws brightest
+  const ribbons = (lifetimeResult.data ?? [])
     .map((g) => frameKinds(g.frames))
-    .filter((k): k is FrameKind[] => k !== null);
-  const lastAvg = lastGames.length
-    ? Math.round(
-        lastGames.reduce((sum, g) => sum + g.total_score, 0) /
-          lastGames.length,
-      )
+    .filter((k): k is FrameKind[] => k !== null)
+    .reverse();
+  const lastScores = (lastSessionResult.data?.games ?? []).map(
+    (g) => g.total_score,
+  );
+  const lastAvg = lastScores.length
+    ? Math.round(lastScores.reduce((a, b) => a + b, 0) / lastScores.length)
     : 0;
-  const todayKey = new Date().toLocaleDateString("en-CA", {
-    timeZone: "Asia/Singapore",
-  });
-  const lastLabel =
-    lastSession?.session_date === todayKey
-      ? "Today"
-      : lastSession
-        ? new Date(`${lastSession.session_date}T00:00:00`).toLocaleDateString(
-            "en-SG",
-            { weekday: "short", day: "numeric", month: "short" },
-          )
-        : "";
 
   return (
     <div>
@@ -163,11 +154,10 @@ export default async function DashboardPage() {
             Average
           </span>
           <span className="mt-0.5 mb-0.5 text-[50px] leading-none font-bold tabular-nums">
-            {lastAvg}
+            {avgScore}
           </span>
           <span className="text-xs font-semibold text-text-secondary">
-            {lastGames.length} {lastGames.length === 1 ? "game" : "games"} ·{" "}
-            {lastLabel}
+            {totalGames} {totalGames === 1 ? "game" : "games"}
           </span>
         </SessionOrb>
       )}
@@ -175,25 +165,22 @@ export default async function DashboardPage() {
       {ribbons.length > 0 && (
         <p className="mb-6 flex justify-center gap-2 text-sm text-text-secondary">
           <span>
-            Avg{" "}
-            <b className="font-semibold text-text-primary tabular-nums">
-              {avgScore}
-            </b>
-          </span>
-          <span aria-hidden>·</span>
-          <span>
             High{" "}
             <b className="font-semibold text-text-primary tabular-nums">
               {highScore}
             </b>
           </span>
-          <span aria-hidden>·</span>
-          <span>
-            <b className="font-semibold text-text-primary tabular-nums">
-              {totalGames}
-            </b>{" "}
-            games
-          </span>
+          {lastScores.length > 0 && (
+            <>
+              <span aria-hidden>·</span>
+              <span>
+                Last session avg{" "}
+                <b className="font-semibold text-text-primary tabular-nums">
+                  {lastAvg}
+                </b>
+              </span>
+            </>
+          )}
         </p>
       )}
 

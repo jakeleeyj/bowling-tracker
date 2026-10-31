@@ -61,17 +61,20 @@ export default function SessionOrb({
     const spread = n > 1 ? Math.min(11, 34 / n) : 0;
     const wScale = n <= 3 ? 1 : Math.max(0.5, Math.sqrt(3 / n));
     const start = performance.now();
+    // Past a dozen games, draw once and let CSS sway the whole orb: cheap enough for a lifetime of games
+    const still = reduce || n > 12;
+    const fade = Math.min(1, 12 / n);
 
     function draw(now: number) {
       layers.forEach((ctx, layer) => {
         if (!ctx) return;
         ctx.save();
         ctx.clearRect(0, 0, SIZE, SIZE);
-        if (!reduce) clipReveal(ctx, c, now - start);
+        if (!still) clipReveal(ctx, c, now - start);
         ctx.globalCompositeOperation = layer ? "lighter" : "screen";
         list.forEach((kinds, k) => {
           const recency = n === 1 ? 1 : k / (n - 1);
-          const rot = reduce
+          const rot = still
             ? 0
             : Math.sin(now * 0.00015 * (1 + k * 0.21) + k) * 7;
           const pts = ribbonPoints(
@@ -85,7 +88,7 @@ export default function SessionOrb({
               w1: 7,
               wScale,
               rot,
-              morph: !reduce,
+              morph: !still,
             },
             now,
             k,
@@ -94,7 +97,7 @@ export default function SessionOrb({
             ? 0.9 / Math.sqrt(n)
             : k === n - 1
               ? 1
-              : 0.22 + (0.7 - 0.22) * recency;
+              : (0.22 + (0.7 - 0.22) * recency) * fade;
           drawBand(
             ctx,
             c,
@@ -108,7 +111,7 @@ export default function SessionOrb({
       });
     }
 
-    if (reduce) {
+    if (still) {
       draw(start);
       return;
     }
@@ -155,6 +158,9 @@ export default function SessionOrb({
         className="relative"
         style={{ width: SIZE, height: SIZE }}
       >
+        <div
+          className={`absolute inset-0 ${games.length > 12 ? "animate-orb-sway" : ""}`}
+        >
         <canvas
           ref={haloRef}
           aria-hidden
@@ -165,6 +171,7 @@ export default function SessionOrb({
           aria-hidden
           className="absolute inset-0 size-full"
         />
+        </div>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           {children}
         </div>

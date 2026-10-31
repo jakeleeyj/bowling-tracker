@@ -362,6 +362,28 @@ html[data-nav="back"]::view-transition-new(root) {
   animation: glint 4s ease-in-out infinite;
 }
 
+@keyframes orb-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) rotate(-20deg);
+  }
+}
+
+@keyframes orb-sway {
+  33% {
+    transform: rotate(6deg);
+  }
+  66% {
+    transform: rotate(-6deg);
+  }
+}
+
+.animate-orb-sway {
+  animation:
+    orb-in 1.4s cubic-bezier(0.23, 1, 0.32, 1) both,
+    orb-sway 18s 1.4s ease-in-out infinite;
+}
+
 .animate-aura {
   animation: aura 8s ease-in-out infinite;
 }
