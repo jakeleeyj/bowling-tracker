@@ -58,12 +58,20 @@ export default function BottomNav() {
         aria-label="Log a session"
         className="absolute left-1/2 -top-3 z-20 -translate-x-1/2"
       >
+        {hasSavedSession && (
+          <>
+            <span
+              aria-hidden
+              className="absolute -inset-[3px] animate-[spin_4s_linear_infinite] rounded-full opacity-70 blur-md bg-[conic-gradient(var(--color-strike),var(--color-spare),var(--color-strike))]"
+            />
+            <span
+              aria-hidden
+              className="absolute -inset-[3px] animate-[spin_4s_linear_infinite] rounded-full bg-[conic-gradient(var(--color-strike),var(--color-spare),var(--color-strike))]"
+            />
+          </>
+        )}
         <div
-          className={`flex h-[52px] w-[52px] items-center justify-center rounded-full transition-transform duration-150 active:scale-95 ${
-            hasSavedSession
-              ? "bg-green shadow-lg shadow-black/40"
-              : "bg-blue shadow-lg shadow-black/40"
-          } ${isLogActive ? "ring-2 ring-white/20" : ""}`}
+          className={`relative flex h-[52px] w-[52px] items-center justify-center rounded-full bg-blue shadow-lg shadow-black/40 transition-transform duration-150 active:scale-95 ${isLogActive && !hasSavedSession ? "ring-2 ring-white/20" : ""}`}
         >
           {hasSavedSession ? (
             <svg
@@ -71,31 +79,14 @@ export default function BottomNav() {
               height={24}
               viewBox="0 0 24 24"
               fill="none"
+              aria-hidden
               className="animate-spin"
               style={{ animationDuration: "3s" }}
             >
-              <circle cx="12" cy="12" r="10" fill="white" />
-              <circle
-                cx="10"
-                cy="8"
-                r="1.5"
-                fill="currentColor"
-                className="text-green"
-              />
-              <circle
-                cx="14"
-                cy="8"
-                r="1.5"
-                fill="currentColor"
-                className="text-green"
-              />
-              <circle
-                cx="12"
-                cy="11.5"
-                r="1.5"
-                fill="currentColor"
-                className="text-green"
-              />
+              <circle cx="12" cy="12" r="10" fill="var(--color-base)" />
+              <circle cx="10" cy="8" r="1.5" fill="var(--color-text-primary)" />
+              <circle cx="14" cy="8" r="1.5" fill="var(--color-text-primary)" />
+              <circle cx="12" cy="11.5" r="1.5" fill="var(--color-text-primary)" />
             </svg>
           ) : (
             <Plus size={26} className="text-white" strokeWidth={2.5} />
@@ -159,7 +150,7 @@ export default function BottomNav() {
           {/* Invisible spacer matching the icon area height */}
           <div className="h-8" />
           <span
-            className={`text-[11px] transition-colors duration-200 ${hasSavedSession ? "font-semibold text-green" : isLogActive ? "font-semibold text-blue" : "text-text-muted"}`}
+            className={`text-[11px] transition-colors duration-200 ${hasSavedSession || isLogActive ? "font-semibold text-text-primary" : "text-text-muted"}`}
           >
             {hasSavedSession ? "Ongoing" : "Log"}
           </span>

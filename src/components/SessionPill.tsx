@@ -56,11 +56,11 @@ export default function SessionPill() {
     <Link
       href="/log?resume=1"
       data-session-pill
-      className="animate-pill-in fixed bottom-[calc(7.25rem+env(safe-area-inset-bottom))] left-1/2 z-40 flex h-10 -translate-x-1/2 items-center gap-2.5 rounded-full border border-border-light bg-surface/95 pl-3 pr-4 text-sm font-semibold tabular-nums shadow-[0_8px_24px_-8px_rgba(0,0,0,0.7)] backdrop-blur-md transition-transform duration-150 active:scale-[0.96] lg:bottom-6"
+      className="animate-pill-in fixed bottom-[calc(7.25rem+env(safe-area-inset-bottom))] left-1/2 z-40 flex h-10 whitespace-nowrap -translate-x-1/2 items-center gap-2.5 rounded-full border border-border-light bg-surface/95 pl-3 pr-4 text-sm font-semibold tabular-nums shadow-[0_8px_24px_-8px_rgba(0,0,0,0.7)] backdrop-blur-md transition-transform duration-150 active:scale-[0.96] lg:bottom-6"
     >
       <span className="relative flex size-2">
-        <span className="absolute inset-0 animate-ping rounded-full bg-green opacity-60 motion-reduce:hidden" />
-        <span className="relative size-2 rounded-full bg-green" />
+        <span className="absolute inset-0 animate-ping rounded-full bg-[conic-gradient(var(--color-strike),var(--color-spare),var(--color-strike))] opacity-60 motion-reduce:hidden" />
+        <span className="relative size-2 rounded-full bg-[conic-gradient(var(--color-strike),var(--color-spare),var(--color-strike))]" />
       </span>
       <span className="text-text-primary">
         Game {progress.game} of {progress.games}
