@@ -15,6 +15,8 @@ import {
 import { useToast } from "@/components/Toast";
 import { useConfirm } from "@/components/ConfirmSheet";
 import Avatar from "@/components/Avatar";
+import MiniOrb from "@/components/MiniOrb";
+import { type FrameKind, frameKinds } from "@/lib/ribbon";
 import RankEmblem from "@/components/RankEmblem";
 import { isSplit } from "@/lib/bowling";
 import { EVENT_LABELS, formatLP, formatLPDelta } from "@/lib/ranking";
@@ -791,6 +793,11 @@ export default function SessionCard({
   }
 
 
+  const ribbons = [...games]
+    .sort((a, b) => a.game_number - b.game_number)
+    .map((g) => frameKinds(g.frames ?? []))
+    .filter((k): k is FrameKind[] => k !== null);
+
   return (
     <div className="glass overflow-hidden">
       {/* Clickable header */}
@@ -870,7 +877,10 @@ export default function SessionCard({
       </button>
 
       {/* Game score boxes (always visible) */}
-      <div className="flex gap-1 px-3 pb-3 pl-[52px]">
+      <div className="flex items-center gap-1 px-3 pb-3">
+        <div className="flex w-9 shrink-0 justify-center">
+          {ribbons.length > 0 && <MiniOrb games={ribbons} />}
+        </div>
         {games.map((game) => {
           const isHigh = game.total_score === highGame;
           const isClean = game.is_clean;
