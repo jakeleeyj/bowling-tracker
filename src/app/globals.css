@@ -22,8 +22,8 @@
   --color-bronze: #d97706;
   --color-silver: #d1d5db;
   --color-emerald: #34d399;
-  --color-strike: #ffd60a;
-  --color-spare: #64d2ff;
+  --color-strike: #64d2ff;
+  --color-spare: #ffd60a;
   --color-open: #6e6e76;
 }
 
@@ -404,6 +404,22 @@ html[data-nav="back"]::view-transition-new(root) {
 
 .animate-mark-flash {
   animation: mark-flash 0.65s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes aura {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.animate-aura {
+  animation: aura 8s ease-in-out infinite;
 }
 
 .animate-fade-in {

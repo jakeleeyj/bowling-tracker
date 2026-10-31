@@ -17,6 +17,8 @@ import RankBanner from "@/components/RankBanner";
 import { getRank } from "@/lib/ranking";
 import { getCurrentSeason } from "@/lib/seasons";
 import ScoreSparkline from "@/components/ScoreSparkline";
+import SessionOrb from "@/components/SessionOrb";
+import { type FrameKind, frameKinds } from "@/lib/ribbon";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -34,6 +36,7 @@ export default async function DashboardPage() {
     sessionsResult,
     allRankingsResult,
     recentGamesResult,
+    lastSessionResult,
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", uid).single(),
     supabase.rpc("get_player_lp", { p_user_id: uid }),
@@ -49,6 +52,15 @@ export default async function DashboardPage() {
       .eq("user_id", uid)
       .order("created_at", { ascending: false })
       .limit(10),
+    supabase
+      .from("sessions")
+      .select(
+        "session_date, games(game_number, total_score, frames(frame_number, roll_1, roll_2, is_strike, is_spare))",
+      )
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const profile = profileResult.data as ProfileRow | null;
@@ -96,6 +108,33 @@ export default async function DashboardPage() {
   }
 
   const displayName = profile?.display_name ?? "Bowler";
+
+  // Latest session as ribbons, oldest game first so the newest draws brightest
+  const lastSession = lastSessionResult.data;
+  const lastGames = [...(lastSession?.games ?? [])].sort(
+    (a, b) => a.game_number - b.game_number,
+  );
+  const ribbons = lastGames
+    .map((g) => frameKinds(g.frames))
+    .filter((k): k is FrameKind[] => k !== null);
+  const lastAvg = lastGames.length
+    ? Math.round(
+        lastGames.reduce((sum, g) => sum + g.total_score, 0) /
+          lastGames.length,
+      )
+    : 0;
+  const todayKey = new Date().toLocaleDateString("en-CA", {
+    timeZone: "Asia/Singapore",
+  });
+  const lastLabel =
+    lastSession?.session_date === todayKey
+      ? "Today"
+      : lastSession
+        ? new Date(`${lastSession.session_date}T00:00:00`).toLocaleDateString(
+            "en-SG",
+            { weekday: "short", day: "numeric", month: "short" },
+          )
+        : "";
 
   const recentScores = (recentGamesResult.data ?? [])
     .map((g) => g.total_score)
@@ -146,8 +185,50 @@ export default async function DashboardPage() {
         />
       )}
 
+      {ribbons.length > 0 && (
+        <SessionOrb games={ribbons}>
+          <span className="text-xs font-semibold text-text-secondary">
+            Average
+          </span>
+          <span className="mt-0.5 mb-0.5 text-[50px] leading-none font-bold tabular-nums">
+            {lastAvg}
+          </span>
+          <span className="text-xs font-semibold text-text-secondary">
+            {lastGames.length} {lastGames.length === 1 ? "game" : "games"} ·{" "}
+            {lastLabel}
+          </span>
+        </SessionOrb>
+      )}
+
+      {ribbons.length > 0 && (
+        <p className="mb-6 flex justify-center gap-2 text-sm text-text-secondary telemetry:hidden">
+          <span>
+            Avg{" "}
+            <b className="font-semibold text-text-primary tabular-nums">
+              {avgScore}
+            </b>
+          </span>
+          <span aria-hidden>·</span>
+          <span>
+            High{" "}
+            <b className="font-semibold text-text-primary tabular-nums">
+              {highScore}
+            </b>
+          </span>
+          <span aria-hidden>·</span>
+          <span>
+            <b className="font-semibold text-text-primary tabular-nums">
+              {totalGames}
+            </b>{" "}
+            games
+          </span>
+        </p>
+      )}
+
       {/* Quick Stats */}
-      <div className="mb-5 grid grid-cols-3 gap-2 telemetry:hidden">
+      <div
+        className={`mb-5 grid grid-cols-3 gap-2 telemetry:hidden ${ribbons.length > 0 ? "hidden" : ""}`}
+      >
         {[
           { label: "Avg", value: avgScore },
           { label: "High", value: highScore },
