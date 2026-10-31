@@ -327,6 +327,25 @@ function TrendChart({
   );
 }
 
+function PercentRing({ rate, color }: { rate: number; color: string }) {
+  return (
+    <svg width={34} height={34} viewBox="0 0 34 34" aria-hidden className="shrink-0 -rotate-90">
+      <circle cx={17} cy={17} r={13} fill="none" stroke="var(--color-surface-light)" strokeWidth={3.5} />
+      <circle
+        cx={17}
+        cy={17}
+        r={13}
+        fill="none"
+        stroke={color}
+        strokeWidth={3.5}
+        strokeLinecap="round"
+        pathLength={100}
+        strokeDasharray={`${Math.max(0, Math.min(100, rate))} 100`}
+      />
+    </svg>
+  );
+}
+
 function LeaveItem({
   pins,
   attempts,
@@ -516,65 +535,58 @@ export default function StatsContent({ overview, leaves }: Props) {
             />
           </div>
 
-          {/* Strike & Spare rates */}
-          <div className="mb-5 grid grid-cols-2 gap-2">
-            <div className="glass px-3 py-3.5">
-              <div className="text-[11px] font-semibold text-text-muted">
-                Strike %
+          {/* Rates */}
+          <div className="glass grid grid-cols-2 overflow-hidden">
+            {[
+              {
+                label: "Strike",
+                rate: strike_rate,
+                detail: `${strikes}/${total_frames_played}`,
+                color: "var(--color-strike)",
+              },
+              {
+                label: "Spare",
+                rate: spare_rate,
+                detail: `${spares_converted}/${spare_opportunities}`,
+                color: "var(--color-spare)",
+              },
+              {
+                label: "Double",
+                rate: double_rate,
+                detail: `${doubles}/${double_opportunities} in a row`,
+                color: "var(--color-strike)",
+              },
+              {
+                label: "Pocket",
+                rate: pocket_rate,
+                detail: `${pocket_hits}/${first_ball_frames} first balls`,
+                color: "var(--color-text-primary)",
+              },
+              {
+                label: "Clean",
+                rate: clean_rate,
+                detail: `${clean_games}/${detailed_games} games`,
+                color: "var(--color-green)",
+              },
+            ].map((r, i) => (
+              <div
+                key={r.label}
+                className={`flex items-start justify-between gap-2 border-border px-3.5 py-3.5 ${i < 4 ? `border-b ${i % 2 === 0 ? "border-r" : ""}` : "col-span-2"}`}
+              >
+                <div className="min-w-0">
+                  <div className="text-[11px] font-semibold text-text-muted">
+                    {r.label}
+                  </div>
+                  <div className="mt-1.5 text-2xl leading-none font-bold tabular-nums">
+                    {r.rate}%
+                  </div>
+                  <div className="mt-1.5 truncate text-[11px] text-text-muted tabular-nums">
+                    {r.detail}
+                  </div>
+                </div>
+                <PercentRing rate={r.rate} color={r.color} />
               </div>
-              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-strike">
-                {strike_rate}%
-              </div>
-              <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
-                {strikes}/{total_frames_played}
-              </div>
-            </div>
-            <div className="glass px-3 py-3.5">
-              <div className="text-[11px] font-semibold text-text-muted">
-                Spare %
-              </div>
-              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-spare">
-                {spare_rate}%
-              </div>
-              <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
-                {spares_converted}/{spare_opportunities}
-              </div>
-            </div>
-            <div className="glass px-3 py-3.5">
-              <div className="text-[11px] font-semibold text-text-muted">
-                Double %
-              </div>
-              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-strike">
-                {double_rate}%
-              </div>
-              <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
-                {doubles}/{double_opportunities} back-to-back
-              </div>
-            </div>
-            <div className="glass px-3 py-3.5">
-              <div className="text-[11px] font-semibold text-text-muted">
-                Pocket %
-              </div>
-              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-blue">
-                {pocket_rate}%
-              </div>
-              <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
-                {pocket_hits}/{first_ball_frames} first balls
-              </div>
-            </div>
-          </div>
-
-          {/* Clean Rate */}
-          <div className="glass px-3 py-3.5">
-            <div className="text-[11px] font-semibold text-text-muted">
-              Clean rate
-            </div>
-            <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
-              {clean_rate}%
-            </div>
-            <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
-              {clean_games}/{detailed_games} games
-            </div>
+            ))}
           </div>
         </>
       ) : /* SPARES TAB */
