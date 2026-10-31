@@ -26,6 +26,11 @@ function LogPage() {
 
 function LogStep({ session }: { session: ReturnType<typeof useSessionState> }) {
   const confirm = useConfirm();
+  // Still checking for a saved session: hold the space instead of flashing setup
+  if (session.step === "checking") {
+    return <div className="min-h-[60vh]" />;
+  }
+
   // Results screen
   if (session.step === "results" && session.resultsData) {
     return <SessionResults data={session.resultsData} />;

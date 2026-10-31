@@ -32,7 +32,14 @@ import {
 } from "@/lib/achievements";
 
 export type EntryMode = "quick" | "detailed";
-export type Step = "setup" | "resume" | "game" | "results" | "pendingSync";
+// "checking" until we know whether a saved session exists, so setup never flashes first
+export type Step =
+  | "checking"
+  | "setup"
+  | "resume"
+  | "game"
+  | "results"
+  | "pendingSync";
 
 export interface GameData {
   entryType: EntryMode;
@@ -125,7 +132,7 @@ export function useSessionState() {
   const { toast } = useToast();
   const { setHasUnsaved } = useUnsavedGuard();
 
-  const [step, setStep] = useState<Step>("setup");
+  const [step, setStep] = useState<Step>("checking");
   const [venue, setVenue] = useState("");
   const [eventLabel, setEventLabel] = useState("");
   const [pastVenues, setPastVenues] = useState<string[]>([]);
@@ -197,9 +204,12 @@ export function useSessionState() {
 
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return;
-      const data = JSON.parse(saved);
-      if (data.step !== "game") return; // Only restore active sessions
+      const data = saved ? JSON.parse(saved) : null;
+      // Only restore active sessions
+      if (data?.step !== "game") {
+        setStep("setup");
+        return;
+      }
 
       // The session pill links here with ?resume=1 to skip the prompt
       if (searchParams.get("resume")) {
@@ -210,6 +220,7 @@ export function useSessionState() {
       setStep("resume");
     } catch {
       localStorage.removeItem(STORAGE_KEY);
+      setStep("setup");
     }
   }, [searchParams]);
 
@@ -642,6 +653,7 @@ export function useSessionState() {
 
       if (!game) {
         setEditLoading(false);
+        setStep("setup");
         return;
       }
 
