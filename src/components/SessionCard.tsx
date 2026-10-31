@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { flushSync } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import {
@@ -722,8 +722,17 @@ export default function SessionCard({
     games.length > 0 ? Math.max(...games.map((g) => g.total_score)) : 0;
 
   const [showShareOverlay, setShowShareOverlay] = useState(false);
+  // The 1080x1920 card scaled down to fit the screen above the buttons
+  const [previewScale, setPreviewScale] = useState(0.3);
 
   async function handleShare() {
+    setPreviewScale(
+      Math.min(
+        0.3,
+        (window.innerWidth - 48) / 1080,
+        (window.innerHeight - 190) / 1920,
+      ),
+    );
     setShowShareOverlay(true);
   }
 
@@ -1056,7 +1065,9 @@ export default function SessionCard({
       )}
 
       {/* Share overlay */}
-      {showShareOverlay && (
+      {/* Portalled to body so it sits above the nav and session pill, outside main's stacking context */}
+      {showShareOverlay &&
+        createPortal(
         <>
           {/* Backdrop */}
           <div
@@ -1076,8 +1087,7 @@ export default function SessionCard({
               left: "50%",
               transform: "translate(-50%, -50%)",
               zIndex: 9999,
-              width: "calc(100vw - 48px)",
-              maxWidth: "340px",
+              width: `${1080 * previewScale}px`,
               maxHeight: "calc(100dvh - 100px)",
               display: "flex",
               flexDirection: "column",
@@ -1089,20 +1099,22 @@ export default function SessionCard({
             {/* Card preview — scaled to fit, no scroll */}
             <div
               style={{
-                flex: 1,
+                width: `${1080 * previewScale}px`,
+                height: `${1920 * previewScale}px`,
+                margin: "0 auto",
                 overflow: "hidden",
                 position: "relative",
+                flexShrink: 0,
               }}
             >
               <div
                 style={{
-                  transform: "scale(0.3)",
+                  transform: `scale(${previewScale})`,
                   transformOrigin: "top left",
                   width: "1080px",
                   position: "absolute",
                   top: 0,
-                  left: "50%",
-                  marginLeft: "-162px",
+                  left: 0,
                 }}
               >
                 <ShareCard
@@ -1128,8 +1140,8 @@ export default function SessionCard({
                 display: "flex",
                 gap: "8px",
                 padding: "12px",
-                background: "#0a0e1a",
-                borderTop: "1px solid rgba(255,255,255,0.06)",
+                background: "var(--color-base)",
+                borderTop: "1px solid var(--color-border)",
               }}
             >
               <button
@@ -1148,8 +1160,9 @@ export default function SessionCard({
               </button>
             </div>
           </div>
-        </>
-      )}
+        </>,
+          document.body,
+        )}
     </div>
   );
 }
