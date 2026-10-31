@@ -83,7 +83,7 @@ export default async function GameDetailPage({
           <div className="text-[11px] font-semibold text-text-muted">
             Strikes
           </div>
-          <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
+          <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-strike">
             {game.strike_count}
           </div>
         </div>
@@ -91,7 +91,7 @@ export default async function GameDetailPage({
           <div className="text-[11px] font-semibold text-text-muted">
             Spares
           </div>
-          <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-gold">
+          <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-spare">
             {game.spare_count}
           </div>
         </div>
@@ -130,7 +130,7 @@ export default async function GameDetailPage({
                         <span
                           className={
                             f.is_strike
-                              ? "font-semibold text-green"
+                              ? "font-semibold text-strike"
                               : "text-text-secondary"
                           }
                         >
@@ -145,7 +145,7 @@ export default async function GameDetailPage({
                             <span
                               className={
                                 f.is_spare
-                                  ? "font-semibold text-gold"
+                                  ? "font-semibold text-spare"
                                   : "text-text-secondary"
                               }
                             >
@@ -161,9 +161,9 @@ export default async function GameDetailPage({
                             <span
                               className={
                                 f.roll_1 === 10 && f.roll_2 === 10
-                                  ? "font-semibold text-green"
+                                  ? "font-semibold text-strike"
                                   : f.is_spare && f.roll_1 !== 10
-                                    ? "font-semibold text-gold"
+                                    ? "font-semibold text-spare"
                                     : "text-text-secondary"
                               }
                             >
@@ -178,8 +178,13 @@ export default async function GameDetailPage({
                             {f.roll_3 !== null && (
                               <span
                                 className={
-                                  f.roll_3 === 10
-                                    ? "font-semibold text-green"
+                                  f.roll_3 === 10 &&
+                                  !(
+                                    f.roll_1 === 10 &&
+                                    f.roll_2 !== null &&
+                                    f.roll_2 !== 10
+                                  )
+                                    ? "font-semibold text-strike"
                                     : f.roll_1 === 10 &&
                                         f.roll_2 !== null &&
                                         f.roll_2 !== 10 &&
@@ -191,11 +196,16 @@ export default async function GameDetailPage({
                                           f.roll_2 !== null &&
                                           f.roll_2 !== 10 &&
                                           f.roll_2 + f.roll_3 === 10
-                                        ? "font-semibold text-gold"
+                                        ? "font-semibold text-spare"
                                         : "text-text-secondary"
                                 }
                               >
-                                {f.roll_3 === 10
+                                {f.roll_3 === 10 &&
+                                !(
+                                  f.roll_1 === 10 &&
+                                  f.roll_2 !== null &&
+                                  f.roll_2 !== 10
+                                )
                                   ? "X"
                                   : f.roll_1 === 10 &&
                                       f.roll_2 !== null &&

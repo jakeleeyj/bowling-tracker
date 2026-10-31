@@ -1,4 +1,25 @@
-import { forwardRef } from "react";
+"use client";
+
+import { forwardRef, useMemo } from "react";
+import {
+  type FrameKind,
+  frameKinds,
+  parseColor,
+  renderOrbImage,
+} from "@/lib/ribbon";
+
+const C = {
+  base: "var(--color-base)",
+  text: "var(--color-text-primary)",
+  sub: "var(--color-text-secondary)",
+  muted: "var(--color-text-muted)",
+  strike: "var(--color-strike)",
+  spare: "var(--color-spare)",
+  gold: "var(--color-gold)",
+  green: "var(--color-green)",
+  line: "var(--color-border-light)",
+  tile: "var(--color-surface)",
+};
 
 interface Frame {
   frame_number: number;
@@ -38,15 +59,15 @@ function formatRoll(
 ): { text: string; color: string } {
   // Strike
   if (isStrike && rollIndex === 0) {
-    return { text: "X", color: "#22c55e" };
+    return { text: "X", color: C.strike };
   }
   // In 10th frame, additional strikes
   if (frameNumber === 10 && pins === 10) {
-    return { text: "X", color: "#22c55e" };
+    return { text: "X", color: C.strike };
   }
   // Spare
   if (isSpare && rollIndex === 1) {
-    return { text: "/", color: "#f59e0b" };
+    return { text: "/", color: C.spare };
   }
   // 10th frame spare on roll 3
   if (frameNumber === 10 && rollIndex === 2) {
@@ -58,10 +79,10 @@ function formatRoll(
   }
   // Gutter
   if (pins === 0) {
-    return { text: "-", color: "#334155" };
+    return { text: "-", color: C.muted };
   }
   // Normal
-  return { text: String(pins), color: "#64748b" };
+  return { text: String(pins), color: C.sub };
 }
 
 function computeStats(games: Game[]) {
@@ -138,7 +159,7 @@ function renderFrameRolls(
 
   if (frame.frame_number < 10) {
     if (frame.is_strike) {
-      rolls.push({ text: "X", color: "#22c55e" });
+      rolls.push({ text: "X", color: C.strike });
       rolls.push({ text: "", color: "transparent" });
     } else {
       const r1 = formatRoll(
@@ -151,7 +172,7 @@ function renderFrameRolls(
       );
       rolls.push(r1);
       if (frame.is_spare) {
-        rolls.push({ text: "/", color: "#f59e0b" });
+        rolls.push({ text: "/", color: C.spare });
       } else {
         const r2val = frame.roll_2 ?? 0;
         rolls.push(
@@ -167,44 +188,44 @@ function renderFrameRolls(
 
     // Roll 1
     if (r1 === 10) {
-      rolls.push({ text: "X", color: "#22c55e" });
+      rolls.push({ text: "X", color: C.strike });
     } else if (r1 === 0) {
-      rolls.push({ text: "-", color: "#334155" });
+      rolls.push({ text: "-", color: C.muted });
     } else {
-      rolls.push({ text: String(r1), color: "#64748b" });
+      rolls.push({ text: String(r1), color: C.sub });
     }
 
     // Roll 2
     if (r2 !== null && r2 !== undefined) {
       if (r1 === 10 && r2 === 10) {
-        rolls.push({ text: "X", color: "#22c55e" });
+        rolls.push({ text: "X", color: C.strike });
       } else if (r1 !== 10 && r1 + r2 === 10) {
-        rolls.push({ text: "/", color: "#f59e0b" });
+        rolls.push({ text: "/", color: C.spare });
       } else if (r2 === 0) {
-        rolls.push({ text: "-", color: "#334155" });
+        rolls.push({ text: "-", color: C.muted });
       } else {
-        rolls.push({ text: String(r2), color: "#64748b" });
+        rolls.push({ text: String(r2), color: C.sub });
       }
     }
 
     // Roll 3
     if (r3 !== null && r3 !== undefined) {
       // After two strikes, third can be strike
-      if (r3 === 10) {
-        rolls.push({ text: "X", color: "#22c55e" });
-      } else if (r2 !== null && r1 === 10 && r2 !== 10 && r2 + r3 === 10) {
-        rolls.push({ text: "/", color: "#f59e0b" });
+      if (r2 !== null && r1 === 10 && r2 !== 10 && r2 + r3 === 10) {
+        rolls.push({ text: "/", color: C.spare });
+      } else if (r3 === 10) {
+        rolls.push({ text: "X", color: C.strike });
       } else if (
         r2 !== null &&
         r1 !== 10 &&
         r1 + (r2 ?? 0) === 10 &&
         r3 === 10
       ) {
-        rolls.push({ text: "X", color: "#22c55e" });
+        rolls.push({ text: "X", color: C.strike });
       } else if (r3 === 0) {
-        rolls.push({ text: "-", color: "#334155" });
+        rolls.push({ text: "-", color: C.muted });
       } else {
-        rolls.push({ text: String(r3), color: "#64748b" });
+        rolls.push({ text: String(r3), color: C.sub });
       }
     }
   }
@@ -215,7 +236,7 @@ function renderFrameRolls(
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        background: "rgba(255, 255, 255, 0.03)",
+        background: C.tile,
         borderRadius: sizeMode === "compact" ? "8px" : "10px",
         padding: rollPadding,
         minHeight:
@@ -366,14 +387,37 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
 
     const isHighGame = (score: number) => score === highScore;
 
+    // The session's games as one glowing orb, drawn once to an image so the capture keeps it
+    const ribbons = games
+      .map((g) => (g.frames ? frameKinds(g.frames) : null))
+      .filter((k) => k !== null);
+    const orbKey = ribbons.map((k) => k.join("")).join("|");
+    const orbSize =
+      sizeMode === "compact" ? 300 : sizeMode === "semi" ? 380 : 520;
+    // Only mounted after tapping Share, so the canvas is always available here
+    const orbSrc = useMemo(() => {
+      if (!orbKey || typeof document === "undefined") return "";
+      const root = getComputedStyle(document.documentElement);
+      const token = (name: string) => parseColor(root.getPropertyValue(name));
+      return renderOrbImage(
+        orbKey.split("|").map((g) => [...g] as FrameKind[]),
+        orbSize,
+        {
+          X: token("--color-strike"),
+          "/": token("--color-spare"),
+          O: token("--color-open"),
+        },
+      );
+    }, [orbKey, orbSize]);
+
     return (
       <div
         ref={ref}
         style={{
           width: "1080px",
           height: "1920px",
-          background:
-            "linear-gradient(165deg, #0a0e1a 0%, #0f1729 40%, #0a0e1a 100%)",
+          position: "relative",
+          background: C.base,
           borderRadius: "0px",
           padding: s.padding,
           display: "flex",
@@ -386,24 +430,24 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
         <div
           style={{
             position: "absolute",
-            top: "-100px",
-            right: "-80px",
-            width: "500px",
-            height: "500px",
+            top: "-40px",
+            left: "140px",
+            width: "800px",
+            height: "800px",
             background:
-              "radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)",
+              "radial-gradient(closest-side at 42% 46%, color-mix(in srgb, var(--color-strike) 16%, transparent), transparent)",
             pointerEvents: "none",
           }}
         />
         <div
           style={{
             position: "absolute",
-            bottom: "-60px",
-            left: "-40px",
-            width: "400px",
-            height: "400px",
+            top: "60px",
+            left: "180px",
+            width: "760px",
+            height: "760px",
             background:
-              "radial-gradient(circle, rgba(34, 197, 94, 0.06) 0%, transparent 70%)",
+              "radial-gradient(closest-side at 60% 56%, color-mix(in srgb, var(--color-spare) 12%, transparent), transparent)",
             pointerEvents: "none",
           }}
         />
@@ -424,13 +468,13 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               width: `${s.avatarSize}px`,
               height: `${s.avatarSize}px`,
               borderRadius: "50%",
-              background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+              background: C.text,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: `${s.avatarFont}px`,
               fontWeight: 800,
-              color: "#fff",
+              color: C.base,
               flexShrink: 0,
             }}
           >
@@ -441,7 +485,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               style={{
                 fontSize: `${s.nameFont}px`,
                 fontWeight: 800,
-                color: "#f1f5f9",
+                color: C.text,
                 lineHeight: 1.1,
               }}
             >
@@ -451,7 +495,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               <div
                 style={{
                   fontSize: `${s.venueFont}px`,
-                  color: "#64748b",
+                  color: C.muted,
                   fontWeight: 500,
                 }}
               >
@@ -461,7 +505,77 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           </div>
         </div>
 
-        {/* Big Scores */}
+        {/* Hero: orb with total, or the two big numbers when there is no frame data */}
+        {orbSrc ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              marginBottom: `${s.bigMb}px`,
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            <div
+              style={{
+                position: "relative",
+                width: `${orbSize}px`,
+                height: `${orbSize}px`,
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={orbSrc}
+                alt=""
+                width={orbSize}
+                height={orbSize}
+                style={{ position: "absolute", inset: 0 }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: `${s.bigLabelFont}px`,
+                    fontWeight: 600,
+                    color: C.sub,
+                  }}
+                >
+                  Total
+                </div>
+                <div
+                  style={{
+                    fontSize: `${s.bigValueFont}px`,
+                    fontWeight: 800,
+                    lineHeight: 1,
+                    color: C.text,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {totalPins.toLocaleString()}
+                </div>
+              </div>
+            </div>
+            <div
+              style={{
+                marginTop: `${s.bigLabelMb * 2}px`,
+                fontSize: `${s.statValueFont}px`,
+                color: C.sub,
+              }}
+            >
+              Average{" "}
+              <span style={{ color: C.text, fontWeight: 700 }}>{avg}</span>
+            </div>
+          </div>
+        ) : (
         <div
           style={{
             display: "grid",
@@ -476,7 +590,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               style={{
                 fontSize: `${s.bigLabelFont}px`,
                 fontWeight: 600,
-                color: "#64748b",
+                color: C.muted,
                 textTransform: "uppercase" as const,
                 letterSpacing: "2px",
                 marginBottom: `${s.bigLabelMb}px`,
@@ -489,7 +603,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
                 fontSize: `${s.bigValueFont}px`,
                 fontWeight: 900,
                 lineHeight: 1,
-                color: "#f1f5f9",
+                color: C.text,
                 fontVariantNumeric: "tabular-nums",
               }}
             >
@@ -501,7 +615,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               style={{
                 fontSize: `${s.bigLabelFont}px`,
                 fontWeight: 600,
-                color: "#64748b",
+                color: C.muted,
                 textTransform: "uppercase" as const,
                 letterSpacing: "2px",
                 marginBottom: `${s.bigLabelMb}px`,
@@ -514,7 +628,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
                 fontSize: `${s.bigValueFont}px`,
                 fontWeight: 900,
                 lineHeight: 1,
-                color: "#f1f5f9",
+                color: C.text,
                 fontVariantNumeric: "tabular-nums",
               }}
             >
@@ -522,6 +636,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
             </div>
           </div>
         </div>
+        )}
 
         {/* Game Chips */}
         <div
@@ -541,13 +656,13 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               <div
                 key={game.game_number}
                 style={{
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: `2px solid ${isHigh ? "#f59e0b" : "rgba(255, 255, 255, 0.08)"}`,
+                  background: C.tile,
+                  border: `2px solid ${isHigh ? C.gold : C.line}`,
                   borderRadius: `${s.chipRadius}px`,
                   padding: s.chipPad,
                   fontSize: `${s.chipFont}px`,
                   fontWeight: 700,
-                  color: isHigh ? "#f59e0b" : "#cbd5e1",
+                  color: isHigh ? C.gold : C.text,
                   textAlign: "center" as const,
                 }}
               >
@@ -555,7 +670,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
                   style={{
                     fontSize: `${sizeMode === "compact" ? 14 : 16}px`,
                     fontWeight: 600,
-                    color: isHigh ? "#f59e0b" : "#64748b",
+                    color: isHigh ? C.gold : C.muted,
                     letterSpacing: "1px",
                     marginBottom: "2px",
                   }}
@@ -581,8 +696,8 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           <div
             style={{
               flex: 1,
-              background: "rgba(255, 255, 255, 0.03)",
-              border: "1px solid rgba(255, 255, 255, 0.06)",
+              background: C.tile,
+              border: `1px solid ${C.line}`,
               borderRadius: `${s.statRadius}px`,
               padding: s.statPad,
               textAlign: "center" as const,
@@ -592,7 +707,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               style={{
                 fontSize: `${s.statLabelFont}px`,
                 fontWeight: 600,
-                color: "#64748b",
+                color: C.muted,
                 textTransform: "uppercase" as const,
                 letterSpacing: "1.5px",
                 marginBottom: `${s.statLabelMb}px`,
@@ -604,7 +719,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               style={{
                 fontSize: `${s.statValueFont}px`,
                 fontWeight: 800,
-                color: "#f1f5f9",
+                color: C.strike,
               }}
             >
               {strikeRate}%
@@ -613,8 +728,8 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           <div
             style={{
               flex: 1,
-              background: "rgba(255, 255, 255, 0.03)",
-              border: "1px solid rgba(255, 255, 255, 0.06)",
+              background: C.tile,
+              border: `1px solid ${C.line}`,
               borderRadius: `${s.statRadius}px`,
               padding: s.statPad,
               textAlign: "center" as const,
@@ -624,7 +739,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               style={{
                 fontSize: `${s.statLabelFont}px`,
                 fontWeight: 600,
-                color: "#64748b",
+                color: C.muted,
                 textTransform: "uppercase" as const,
                 letterSpacing: "1.5px",
                 marginBottom: `${s.statLabelMb}px`,
@@ -636,7 +751,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               style={{
                 fontSize: `${s.statValueFont}px`,
                 fontWeight: 800,
-                color: "#f1f5f9",
+                color: C.spare,
               }}
             >
               {spareRate}%
@@ -645,8 +760,8 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           <div
             style={{
               flex: 1,
-              background: "rgba(255, 255, 255, 0.03)",
-              border: "1px solid rgba(255, 255, 255, 0.06)",
+              background: C.tile,
+              border: `1px solid ${C.line}`,
               borderRadius: `${s.statRadius}px`,
               padding: s.statPad,
               textAlign: "center" as const,
@@ -656,7 +771,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               style={{
                 fontSize: `${s.statLabelFont}px`,
                 fontWeight: 600,
-                color: "#64748b",
+                color: C.muted,
                 textTransform: "uppercase" as const,
                 letterSpacing: "1.5px",
                 marginBottom: `${s.statLabelMb}px`,
@@ -668,7 +783,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               style={{
                 fontSize: `${s.statValueFont}px`,
                 fontWeight: 800,
-                color: cleanCount > 0 ? "#22c55e" : "#475569",
+                color: cleanCount > 0 ? C.green : C.muted,
               }}
             >
               {cleanCount}/{gameCount}
@@ -691,26 +806,26 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
             const isHigh = isHighGame(game.total_score);
             const isClean = game.is_clean;
             const borderColor = isClean
-              ? "rgba(34, 197, 94, 0.5)"
+              ? "color-mix(in srgb, var(--color-green) 50%, transparent)"
               : isHigh
-                ? "rgba(245, 158, 11, 0.5)"
-                : "rgba(255, 255, 255, 0.06)";
+                ? "color-mix(in srgb, var(--color-gold) 50%, transparent)"
+                : C.line;
             const titleColor = isClean
-              ? "#22c55e"
+              ? C.green
               : isHigh
-                ? "#f59e0b"
-                : "#94a3b8";
+                ? C.gold
+                : C.sub;
             const scoreColor = isClean
-              ? "#22c55e"
+              ? C.green
               : isHigh
-                ? "#f59e0b"
-                : "#f1f5f9";
+                ? C.gold
+                : C.text;
 
             return (
               <div
                 key={game.game_number}
                 style={{
-                  background: "rgba(255, 255, 255, 0.03)",
+                  background: C.tile,
                   border: `2px solid ${borderColor}`,
                   borderRadius: `${s.cardRadius}px`,
                   padding: `${s.cardPad}px`,
@@ -767,7 +882,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
                           style={{
                             fontSize: `${s.frameTotalFont}px`,
                             fontWeight: 700,
-                            color: "#94a3b8",
+                            color: C.sub,
                             textAlign: "center" as const,
                             padding: s.frameTotalPad,
                           }}
@@ -790,7 +905,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
             paddingTop: `${s.footerPt}px`,
             textAlign: "center" as const,
             fontSize: `${s.footerFont}px`,
-            color: "#475569",
+            color: C.muted,
             fontWeight: 500,
             position: "relative",
             zIndex: 1,
