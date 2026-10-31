@@ -279,30 +279,30 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
     // Size tokens based on mode
     const s = {
       normal: {
-        padding: "72px 56px",
+        padding: "60px 56px",
         headerMb: 40,
         avatarSize: 88,
         avatarFont: 40,
         nameFont: 42,
         venueFont: 28,
         bigGap: 40,
-        bigMb: 48,
+        bigMb: 32,
         bigLabelFont: 26,
         bigLabelMb: 8,
         bigValueFont: 120,
         chipsGap: 16,
-        chipsMb: 32,
+        chipsMb: 24,
         chipPad: "10px 28px 14px",
         chipFont: 32,
         chipRadius: 20,
         statsGap: 24,
-        statsMb: 40,
+        statsMb: 28,
         statPad: "20px 16px",
         statLabelFont: 22,
         statLabelMb: 8,
         statValueFont: 36,
         statRadius: 20,
-        cardsGap: 24,
+        cardsGap: 16,
         cardPad: 24,
         cardRadius: 24,
         cardHeaderMb: 16,
@@ -392,8 +392,9 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
       .map((g) => (g.frames ? frameKinds(g.frames) : null))
       .filter((k) => k !== null);
     const orbKey = ribbons.map((k) => k.join("")).join("|");
+    // Kept short like the old big-number row, so up to 8 scorecards still fit
     const orbSize =
-      sizeMode === "compact" ? 300 : sizeMode === "semi" ? 380 : 520;
+      sizeMode === "compact" ? 200 : sizeMode === "semi" ? 260 : 300;
     // Only mounted after tapping Share, so the canvas is always available here
     const orbSrc = useMemo(() => {
       if (!orbKey || typeof document === "undefined") return "";
@@ -510,69 +511,54 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
               alignItems: "center",
+              justifyContent: "center",
+              gap: `${s.bigGap}px`,
               marginBottom: `${s.bigMb}px`,
               position: "relative",
               zIndex: 1,
             }}
           >
-            <div
-              style={{
-                position: "relative",
-                width: `${orbSize}px`,
-                height: `${orbSize}px`,
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={orbSrc}
-                alt=""
-                width={orbSize}
-                height={orbSize}
-                style={{ position: "absolute", inset: 0 }}
-              />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={orbSrc}
+              alt=""
+              width={orbSize}
+              height={orbSize}
+              style={{ flexShrink: 0 }}
+            />
+            <div style={{ display: "flex", flexDirection: "column" }}>
               <div
                 style={{
-                  position: "absolute",
-                  inset: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  fontSize: `${s.bigLabelFont}px`,
+                  fontWeight: 600,
+                  color: C.sub,
+                  marginBottom: `${s.bigLabelMb}px`,
                 }}
               >
-                <div
-                  style={{
-                    fontSize: `${s.bigLabelFont}px`,
-                    fontWeight: 600,
-                    color: C.sub,
-                  }}
-                >
-                  Total
-                </div>
-                <div
-                  style={{
-                    fontSize: `${s.bigValueFont}px`,
-                    fontWeight: 800,
-                    lineHeight: 1,
-                    color: C.text,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {totalPins.toLocaleString()}
-                </div>
+                Total
               </div>
-            </div>
-            <div
-              style={{
-                marginTop: `${s.bigLabelMb * 2}px`,
-                fontSize: `${s.statValueFont}px`,
-                color: C.sub,
-              }}
-            >
-              Average{" "}
-              <span style={{ color: C.text, fontWeight: 700 }}>{avg}</span>
+              <div
+                style={{
+                  fontSize: `${s.bigValueFont}px`,
+                  fontWeight: 800,
+                  lineHeight: 1,
+                  color: C.text,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {totalPins.toLocaleString()}
+              </div>
+              <div
+                style={{
+                  marginTop: `${s.bigLabelMb * 3}px`,
+                  fontSize: `${s.statValueFont}px`,
+                  color: C.sub,
+                }}
+              >
+                Average{" "}
+                <span style={{ color: C.text, fontWeight: 700 }}>{avg}</span>
+              </div>
             </div>
           </div>
         ) : (
