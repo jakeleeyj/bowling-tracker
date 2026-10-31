@@ -3,25 +3,28 @@
 @custom-variant telemetry (&:where([data-theme="telemetry"], [data-theme="telemetry"] *));
 
 @theme {
-  --color-base: #070a13;
-  --color-surface: #0f1729;
-  --color-surface-light: #1e293b;
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-border-light: rgba(255, 255, 255, 0.1);
-  --color-text-primary: #e2e8f0;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
-  --color-blue: #4c7dff;
-  --color-blue-dark: #2f5bff;
+  --color-base: #000000;
+  --color-surface: #1c1c1e;
+  --color-surface-light: #2c2c2e;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-light: rgba(255, 255, 255, 0.12);
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a1a1a6;
+  --color-text-muted: #7c7c82;
+  --color-blue: #ffffff;
+  --color-blue-dark: #e5e5ea;
   --color-purple: #8b5cf6;
   --color-pink: #ec4899;
   --color-gold: #f59e0b;
-  --color-green: #22c55e;
-  --color-red: #ef4444;
+  --color-green: #30d158;
+  --color-red: #ff453a;
   --color-iron: #9ca3af;
   --color-bronze: #d97706;
   --color-silver: #d1d5db;
   --color-emerald: #34d399;
+  --color-strike: #ffd60a;
+  --color-spare: #64d2ff;
+  --color-open: #6e6e76;
 }
 
 @theme inline {
@@ -75,6 +78,18 @@ body {
     border-radius: 12px;
     box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.7);
   }
+}
+
+/* White accent: anything sitting on it reads in black */
+.bg-blue.text-white,
+.bg-blue > .text-white,
+:has(> .bg-blue.shadow-sm) .text-white {
+  color: var(--color-base);
+}
+
+.glow-blue::before,
+.glow-purple::after {
+  display: none;
 }
 
 /* Telemetry theme: graphite, hairline panels, orange signal, mono numbers */

@@ -6,6 +6,7 @@ import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  axes: ["opsz"],
 });
 
 const jetbrains = JetBrains_Mono({
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   title: "Spare Me?",
   description: "Track bowling scores with friends",
   manifest: "/manifest.json",
-  themeColor: "#070a13",
+  themeColor: "#000000",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
