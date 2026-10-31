@@ -39,56 +39,23 @@ function smoothPath(pts: Point[]): string {
   return d;
 }
 
-function Sparkline({ values }: { values: number[] }) {
-  const recent = values.slice(-10);
-  if (recent.length < 2) return null;
-  const width = 56;
-  const height = 16;
-  const pad = 2;
-  const min = Math.min(...recent);
-  const range = Math.max(...recent) - min;
-  const pts = recent.map((v, i) => ({
-    x: pad + (i / (recent.length - 1)) * (width - pad * 2),
-    y:
-      range === 0
-        ? height / 2
-        : height - pad - ((v - min) / range) * (height - pad * 2),
-  }));
-  return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      width={width}
-      height={height}
-      aria-hidden
-      className="mx-auto mt-2 block"
-    >
-      <path
-        d={smoothPath(pts)}
-        fill="none"
-        stroke="var(--color-blue)"
-        strokeOpacity={0.7}
-        strokeWidth={1.25}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function TrendChart({
   values,
   avg,
   color = "var(--color-blue)",
   suffix = "",
   highlights,
+  toned = false,
 }: {
   values: number[];
   avg: number;
   color?: string;
   suffix?: string;
   highlights?: boolean[];
+  toned?: boolean;
 }) {
-  const gradientId = `trend-fill-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const gradientId = `trend-fill-${uid}`;
   if (values.length === 0) return null;
 
   // Long ranges (Lifetime): bucket into averaged points so the line stays
@@ -126,7 +93,23 @@ function TrendChart({
   const toY = (v: number) =>
     padding.top + chartH - ((v - yMin) / yRange) * chartH;
 
-  const points: Point[] = values.map((s, i) => ({ x: toX(i), y: toY(s) }));
+  // Toned: colour each stretch of the line by how that game compares with the average,
+  // grey below, spare yellow around it, strike cyan above it
+  const line = values;
+  const tone = (v: number) => {
+    const d = v - avg;
+    if (d < 0) {
+      const t = Math.round(Math.max(0, Math.min(1, (d + 25) / 25)) * 100);
+      return `color-mix(in srgb, var(--color-spare) ${t}%, var(--color-open))`;
+    }
+    const t = Math.round(Math.min(1, d / 25) * 100);
+    return `color-mix(in srgb, var(--color-strike) ${t}%, var(--color-spare))`;
+  };
+  const strokeId = `trend-stroke-${uid}`;
+  const glowId = `trend-glow-${uid}`;
+  const stroke = toned && line.length > 1 ? `url(#${strokeId})` : color;
+
+  const points: Point[] = line.map((s, i) => ({ x: toX(i), y: toY(s) }));
   const linePath = smoothPath(points);
   const baseY = padding.top + chartH;
   const areaPath =
@@ -150,6 +133,29 @@ function TrendChart({
           <stop offset="0%" stopColor={color} stopOpacity={0.25} />
           <stop offset="100%" stopColor={color} stopOpacity={0} />
         </linearGradient>
+        {toned && line.length > 1 && (
+          <>
+            <linearGradient
+              id={strokeId}
+              gradientUnits="userSpaceOnUse"
+              x1={toX(0)}
+              x2={toX(lastIndex)}
+              y1={0}
+              y2={0}
+            >
+              {line.map((v, i) => (
+                <stop
+                  key={i}
+                  offset={i / lastIndex}
+                  style={{ stopColor: tone(v) }}
+                />
+              ))}
+            </linearGradient>
+            <filter id={glowId} x="-10%" y="-60%" width="120%" height="220%">
+              <feGaussianBlur stdDeviation={5} />
+            </filter>
+          </>
+        )}
       </defs>
 
       {[0.25, 0.5, 0.75].map((pct) => (
@@ -184,7 +190,7 @@ function TrendChart({
         {suffix}
       </text>
 
-      {areaPath && (
+      {areaPath && !toned && (
         <path
           d={areaPath}
           fill={`url(#${gradientId})`}
@@ -192,13 +198,27 @@ function TrendChart({
         />
       )}
 
+      {toned && line.length > 1 && (
+        <path
+          d={linePath}
+          fill="none"
+          stroke={stroke}
+          strokeWidth={6}
+          strokeLinecap="round"
+          filter={`url(#${glowId})`}
+          pathLength={1}
+          className="animate-draw opacity-70"
+        />
+      )}
       <path
         d={linePath}
         fill="none"
-        stroke={color}
-        strokeWidth={1.5}
+        stroke={stroke}
+        strokeWidth={toned ? 3 : 1.5}
         strokeLinejoin="round"
         strokeLinecap="round"
+        pathLength={toned ? 1 : undefined}
+        className={toned ? "animate-draw" : undefined}
       />
 
       {isBucketed && (
@@ -215,6 +235,44 @@ function TrendChart({
 
       {values.map((s, i) => {
         const isHighlighted = highlights?.[i] ?? false;
+        const isLatest = i === lastIndex;
+        if (toned && !isHighlighted && !isLatest) return null;
+        if (toned && isHighlighted) {
+          // Clean game: a four-point star that glints now and then
+          const x = toX(i);
+          const y = toY(s);
+          const r = 6.5;
+          return (
+            <g key={i}>
+              <circle
+                cx={x}
+                cy={y}
+                r={8}
+                fill="var(--color-text-primary)"
+                opacity={0.12}
+              />
+              <path
+                d={`M${x},${y - r}Q${x},${y} ${x + r},${y}Q${x},${y} ${x},${y + r}Q${x},${y} ${x - r},${y}Q${x},${y} ${x},${y - r}Z`}
+                fill="var(--color-text-primary)"
+                className="animate-glint origin-center [transform-box:fill-box]"
+                style={{ animationDelay: `${(i * 0.7) % 4}s` }}
+              />
+              {isLatest && (
+                <text
+                  x={x}
+                  y={y - 11}
+                  textAnchor="middle"
+                  fontSize={8}
+                  fontWeight="bold"
+                  fill="var(--color-text-primary)"
+                >
+                  {s}
+                  {suffix}
+                </text>
+              )}
+            </g>
+          );
+        }
         const dotColor = isHighlighted
           ? "var(--color-green)"
           : s >= avg
@@ -225,7 +283,6 @@ function TrendChart({
           : s >= avg
             ? color
             : "var(--color-text-muted)";
-        const isLatest = i === lastIndex;
         return (
           <g key={i}>
             {isLatest && (
@@ -419,49 +476,45 @@ export default function StatsContent({ overview, leaves }: Props) {
         </div>
       ) : tab === "overview" ? (
         <>
-          {/* Overview stats */}
-          <div className="mb-5 grid grid-cols-2 gap-2">
-            <div className="glass px-3 py-3.5 text-center">
-              <div className="text-[11px] font-semibold text-text-muted">
-                Average
-              </div>
-              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
-                {avg}
-              </div>
-              <Sparkline values={scores} />
-            </div>
-            <div className="glass px-3 py-3.5 text-center">
-              <div className="text-[11px] font-semibold text-text-muted">
-                High game
-              </div>
-              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-gold">
-                {high}
-              </div>
-            </div>
-            <div className="glass px-3 py-3.5 text-center">
-              <div className="text-[11px] font-semibold text-text-muted">
-                Low game
-              </div>
-              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums">
-                {low}
-              </div>
-            </div>
-            <div className="glass px-3 py-3.5 text-center">
-              <div className="text-[11px] font-semibold text-text-muted">
-                Clean games
-              </div>
-              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
-                {clean_games}
-              </div>
-            </div>
+          {/* Average hero */}
+          <div className="mb-2">
+            <p className="text-sm font-semibold text-text-secondary">Average</p>
+            <p className="text-[56px] leading-none font-bold tracking-tight tabular-nums">
+              {avg}
+            </p>
+            <p className="mt-2 flex gap-2 text-sm text-text-secondary">
+              <span>
+                High{" "}
+                <b className="font-semibold text-text-primary tabular-nums">
+                  {high}
+                </b>
+              </span>
+              <span aria-hidden>·</span>
+              <span>
+                Low{" "}
+                <b className="font-semibold text-text-primary tabular-nums">
+                  {low}
+                </b>
+              </span>
+              <span aria-hidden>·</span>
+              <span>
+                <b className="font-semibold text-text-primary tabular-nums">
+                  {clean_games}
+                </b>{" "}
+                clean
+              </span>
+            </p>
           </div>
 
           {/* Score trend */}
-          <div className="glass mb-5 p-4">
-            <h2 className="mb-2 text-sm font-semibold text-text-secondary">
-              Score trend
-            </h2>
-            <TrendChart values={scores} avg={avg} highlights={clean_flags} />
+          <div className="-mx-1 mb-6">
+            <TrendChart
+              key={scores.join(",")}
+              values={scores}
+              avg={avg}
+              highlights={clean_flags}
+              toned
+            />
           </div>
 
           {/* Strike & Spare rates */}
@@ -470,7 +523,7 @@ export default function StatsContent({ overview, leaves }: Props) {
               <div className="text-[11px] font-semibold text-text-muted">
                 Strike %
               </div>
-              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
+              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-strike">
                 {strike_rate}%
               </div>
               <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
@@ -481,7 +534,7 @@ export default function StatsContent({ overview, leaves }: Props) {
               <div className="text-[11px] font-semibold text-text-muted">
                 Spare %
               </div>
-              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-gold">
+              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-spare">
                 {spare_rate}%
               </div>
               <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
@@ -492,7 +545,7 @@ export default function StatsContent({ overview, leaves }: Props) {
               <div className="text-[11px] font-semibold text-text-muted">
                 Double %
               </div>
-              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-green">
+              <div className="mt-1.5 text-2xl leading-none font-extrabold tabular-nums text-strike">
                 {double_rate}%
               </div>
               <div className="mt-1.5 text-[11px] text-text-muted tabular-nums">
@@ -541,7 +594,7 @@ export default function StatsContent({ overview, leaves }: Props) {
               Spare conversion
             </div>
             <div
-              className={`mt-1.5 text-2xl leading-none font-extrabold tabular-nums ${spare_rate >= 50 ? "text-gold" : "text-text-primary"}`}
+              className={`mt-1.5 text-2xl leading-none font-extrabold tabular-nums ${spare_rate >= 50 ? "text-spare" : "text-text-primary"}`}
             >
               {spare_rate}%
             </div>
@@ -583,7 +636,7 @@ export default function StatsContent({ overview, leaves }: Props) {
               <TrendChart
                 values={spare_conv_trend}
                 avg={spare_rate}
-                color="var(--color-gold)"
+                color="var(--color-spare)"
                 suffix="%"
               />
             </div>
