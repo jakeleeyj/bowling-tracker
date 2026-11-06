@@ -69,19 +69,19 @@ export default function ArsenalPage() {
                   href: "/arsenal/analyze",
                   icon: <Sparkles size={20} className="text-text-primary" />,
                   title: "Analyze my style",
-                  sub: "Speed, revs and release for your bowler profile",
+                  sub: "Find your bowling style from your speed and revs",
                 },
                 {
                   href: "/arsenal/layout",
                   icon: <Ruler size={20} className="text-text-primary" />,
                   title: "Get a layout",
-                  sub: "Dual Angle, VLS & 2LS from your saved style",
+                  sub: "Drilling numbers for your style and lane",
                 },
                 {
                   href: "/arsenal/new",
                   icon: <Plus size={20} className="text-text-primary" />,
                   title: "Add a ball",
-                  sub: "Track specs & drilling for a ball you own",
+                  sub: "Save a ball's specs and drilling for your pro shop",
                 },
               ] as const
             ).map((action) => (

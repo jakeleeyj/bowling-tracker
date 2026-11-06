@@ -82,22 +82,22 @@ export function recommendLayout(
   let sum = clamp(90 + (ratio - 1) * 165, 55, 145);
   reasons.push(
     match === "matched"
-      ? "A balanced speed-to-rev ratio puts your angle total near 90°, the all-purpose sweet spot."
+      ? "Your speed and revs are balanced, so the two angles add up to about 90°, the all-purpose middle."
       : match === "speed-dominant"
-        ? "Because you are speed-dominant, the angle total is lowered so the ball starts its move sooner."
-        : "Because you are rev-dominant, the angle total is raised so the ball conserves energy longer.",
+        ? "Your speed is high for your revs, so the two angles add up lower and the ball starts to roll sooner."
+        : "Your revs are high for your speed, so the two angles add up higher and the ball saves its hook for later.",
   );
 
   // Tilt: high tilt already delays the roll → smaller sum; low tilt → larger.
   if (specs.axisTilt > 20) {
     sum -= 12;
     reasons.push(
-      "Your high axis tilt makes the ball naturally skid longer, so the layout compensates with an earlier-rolling angle total.",
+      "Your high axis tilt makes the ball skid longer, so lower angles help it start rolling sooner.",
     );
   } else if (specs.axisTilt < 10) {
     sum += 10;
     reasons.push(
-      "Your low axis tilt gets the ball into a roll early, so the layout adds length with a higher angle total.",
+      "Your low axis tilt gets the ball rolling early, so higher angles add length.",
     );
   }
 
@@ -106,8 +106,8 @@ export function recommendLayout(
   if (lane !== "medium") {
     reasons.push(
       lane === "oily"
-        ? "Oily lanes need the ball to slow down and grip sooner, lowering the angle total."
-        : "Dry lanes burn the ball up early, so a higher angle total saves energy for the backend.",
+        ? "Oily lanes need the ball to grip sooner, so the angles come down."
+        : "Dry lanes use up the ball's energy early, so higher angles save it for the back end.",
     );
   }
   sum = clamp(sum, LIMITS.angleSum.min + 25, LIMITS.angleSum.max - 10);
@@ -136,7 +136,7 @@ export function recommendLayout(
   );
   if (specs.axisRotation >= 60) {
     reasons.push(
-      "Your high axis rotation already creates angle at the breakpoint, so the layout leans toward control.",
+      "Your high axis rotation already gives the ball angle at the breakpoint, so the layout leans toward control.",
     );
   }
 
@@ -149,14 +149,14 @@ export function recommendLayout(
     pinToPap = clamp(pinToPap - 0.25, LIMITS.pinToPap.min, LIMITS.pinToPap.max);
   reasons.push(
     specs.revRate > 400
-      ? "A longer pin-to-PAP distance reduces track flare, keeping your high rev rate from over-hooking."
+      ? "A longer pin to PAP distance cuts flare, so your high revs don't over-hook."
       : specs.revRate < 250
-        ? "A pin-to-PAP distance near 3 3/8\" maximizes track flare, adding hook your rev rate doesn't create on its own."
-        : "A mid-range pin-to-PAP distance gives a versatile amount of track flare.",
+        ? "A pin to PAP distance near 3⅜\" gives the most flare, adding hook your revs don't make on their own."
+        : "A mid-range pin to PAP distance gives a medium amount of flare that works on most lanes.",
   );
   if (style === "two-handed") {
     reasons.push(
-      'Two-handed players typically use longer pin distances for control; PAP is measured 5" over and 1" down from the bridge.',
+      'Two-handed players usually use longer pin distances for control. Your PAP is set 5" over and 1" down from the centre of your bridge.',
     );
   }
 
