@@ -105,14 +105,14 @@ export default function StatsFilter({
       <div
         role="group"
         aria-label="Event type"
-        className="mb-3 flex flex-wrap gap-1.5"
+        className="-mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4 [mask-image:linear-gradient(90deg,black_85%,transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {EVENT_OPTIONS.map((opt) => (
           <button
             key={opt.value}
             onClick={() => handleEventChange(opt.value)}
             aria-pressed={currentEvent === opt.value}
-            className={`h-10 rounded-full px-3.5 text-[11px] font-semibold transition-[color,background-color,transform] duration-150 active:scale-[0.94] ${
+            className={`h-10 shrink-0 rounded-full px-3.5 text-[11px] font-semibold transition-[color,background-color,transform] duration-150 active:scale-[0.94] ${
               currentEvent === opt.value
                 ? "bg-white/12 text-text-primary"
                 : "bg-surface-light/60 text-text-muted active:bg-surface-light/80"

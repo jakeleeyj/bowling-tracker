@@ -71,10 +71,10 @@ interface SessionCardProps {
 }
 
 const EVENT_COLORS: Record<string, string> = {
-  League: "bg-blue/12 text-blue",
-  Tournament: "bg-gold/12 text-gold",
-  Casual: "bg-green/12 text-green",
-  Funbowl: "bg-pink/12 text-pink",
+  League: "bg-white/10 text-text-secondary",
+  Tournament: "bg-white/10 text-text-secondary",
+  Casual: "bg-white/10 text-text-secondary",
+  Funbowl: "bg-white/10 text-text-secondary",
 };
 
 function PinIcon({ className }: { className?: string }) {
@@ -185,7 +185,7 @@ function MicroPinDiagram({
                       : "bg-red/30"
                     : "bg-red";
               } else if (isSpare) {
-                color = "bg-gold";
+                color = "bg-spare";
               } else if (stillStanding !== null) {
                 // Have roll 2 data: still standing vs knocked on roll 2
                 color = stillStanding ? "bg-blue" : "bg-blue/30";
@@ -258,7 +258,7 @@ function Frame10MicroPin({ frame }: { frame: FrameInfo }) {
     preShotRack.length === 10 &&
     standing.length === 0;
   // A spare on this shot: cleared the pins that were left from a previous
-  // shot (not the full rack). Highlights those cleared pins in gold.
+  // shot (not the full rack). Highlights those cleared pins in spare yellow.
   const isSpareShot =
     data.precise &&
     standing.length === 0 &&
@@ -325,7 +325,7 @@ function Frame10MicroPin({ frame }: { frame: FrameInfo }) {
                     : isSpareShot && isKnockedThisShot
                       ? splitContext
                         ? "bg-red"
-                        : "bg-gold"
+                        : "bg-spare"
                       : isKnockedThisShot && hasEarlierKnocks
                         ? splitContext
                           ? "bg-red/30"
@@ -595,16 +595,16 @@ function SessionStats({
               {singlePinLeaves.length > 0 && (
                 <LeaveGroup
                   label="Single pin"
-                  color="text-green"
-                  dotColor="bg-green"
+                  color="text-text-primary"
+                  dotColor="bg-text-primary"
                   leaves={singlePinLeaves}
                 />
               )}
               {multiPinLeaves.length > 0 && (
                 <LeaveGroup
                   label="Multi pin"
-                  color="text-gold"
-                  dotColor="bg-gold"
+                  color="text-spare"
+                  dotColor="bg-spare"
                   leaves={multiPinLeaves}
                 />
               )}
@@ -898,10 +898,10 @@ export default function SessionCard({
           return (
             <div
               key={game.id}
-              className={`w-14 rounded-md bg-black/30 py-[5px] text-center tabular-nums ${isHigh ? "border border-gold/35" : isClean ? "border border-green/35" : "border border-transparent"}`}
+              className={`w-14 rounded-md bg-black/30 py-[5px] text-center tabular-nums ${isHigh ? "border border-white/40" : isClean ? "border border-spare/35" : "border border-transparent"}`}
             >
               <span
-                className={`text-sm font-semibold ${isHigh ? "text-gold" : isClean ? "text-green" : ""}`}
+                className={`text-sm font-semibold ${isHigh ? "text-text-primary" : isClean ? "text-spare" : "text-text-secondary"}`}
               >
                 {game.total_score}
               </span>
@@ -935,12 +935,12 @@ export default function SessionCard({
                         </span>
                         <div className="flex items-center gap-2">
                           {isClean && (
-                            <span className="text-[11px] font-semibold text-green">
+                            <span className="text-[11px] font-semibold text-spare">
                               Clean
                             </span>
                           )}
                           <span
-                            className={`text-sm font-semibold ${isHigh ? "text-gold" : isClean ? "text-green" : "text-text-primary"}`}
+                            className={`text-sm font-semibold ${isHigh ? "text-text-primary" : isClean ? "text-spare" : "text-text-secondary"}`}
                           >
                             {game.total_score}
                           </span>

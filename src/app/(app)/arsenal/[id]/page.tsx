@@ -143,14 +143,14 @@ export default function BallPage() {
 
   if (error || !ball || !draft) {
     return (
-      <div className="px-4 py-6">
+      <div>
         <ErrorCard message="Couldn't load this ball" onRetry={load} />
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in px-4 py-6">
+    <div className="animate-fade-in">
       <div className="mb-6 flex items-center gap-3">
         <BackButton />
         <h1 className="min-w-0 flex-1 truncate text-xl font-extrabold text-text-primary">

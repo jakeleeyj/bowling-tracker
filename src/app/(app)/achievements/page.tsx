@@ -79,13 +79,13 @@ export default async function AchievementsPage() {
             {locked.map((a) => (
               <li
                 key={a.id}
-                className="glass flex items-center gap-4 p-4 opacity-40"
+                className="glass flex items-center gap-4 p-4"
               >
-                <div className="shrink-0 text-text-muted">
+                <div className="shrink-0 text-text-muted opacity-60">
                   {ACHIEVEMENT_ICONS[a.iconName]}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">{a.name}</p>
+                  <p className="text-sm font-semibold text-text-secondary">{a.name}</p>
                   <p className="text-[11px] text-text-muted">{a.description}</p>
                 </div>
               </li>
