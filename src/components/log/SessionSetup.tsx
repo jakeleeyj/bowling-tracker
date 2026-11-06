@@ -27,7 +27,7 @@ export default function SessionSetup({
   return (
     <div>
       <h1 className="mb-6 text-xl font-extrabold text-text-primary">
-        Log a Session
+        Log a session
       </h1>
 
       <div className="flex flex-col gap-5">

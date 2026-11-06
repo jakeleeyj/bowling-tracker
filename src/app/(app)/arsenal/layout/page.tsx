@@ -250,7 +250,7 @@ export default function LayoutPage() {
   );
 
   return (
-    <div className="animate-fade-in px-4 py-6">
+    <div className="animate-fade-in">
       <div className="mb-6 flex items-center gap-3">
         <BackButton />
         <h1 className="text-xl font-extrabold text-text-primary">
@@ -392,23 +392,23 @@ export default function LayoutPage() {
           <div className="grid grid-cols-3 gap-3">
             {effectiveSystem === "dual" && (
               <>
-                {customField("Drill angle °", customDrill, setCustomDrill, "decimal")}
-                {customField('Pin-to-PAP "', customPin, setCustomPin)}
+                {customField("Drilling angle °", customDrill, setCustomDrill, "decimal")}
+                {customField('Pin to PAP "', customPin, setCustomPin)}
                 {customField("VAL angle °", customVal, setCustomVal, "decimal")}
               </>
             )}
             {effectiveSystem === "vls" && (
               <>
-                {customField('Pin-to-PAP "', customPin, setCustomPin)}
-                {customField('PSA-to-PAP "', customPsa, setCustomPsa)}
+                {customField('Pin to PAP "', customPin, setCustomPin)}
+                {customField('PSA to PAP "', customPsa, setCustomPsa)}
                 {customField('Pin buffer "', customBuffer, setCustomBuffer)}
               </>
             )}
             {effectiveSystem === "2ls" && (
               <>
-                {customField('Pin-to-PAP "', customPin, setCustomPin)}
-                {customField('PSA-to-PAP "', customPsa, setCustomPsa)}
-                {customField('Pin-to-COG "', customCog, setCustomCog)}
+                {customField('Pin to PAP "', customPin, setCustomPin)}
+                {customField('PSA to PAP "', customPsa, setCustomPsa)}
+                {customField('Pin to bridge "', customCog, setCustomCog)}
               </>
             )}
           </div>
@@ -441,8 +441,8 @@ export default function LayoutPage() {
               </p>
             )}
           <p className="mt-2 text-[11px] leading-relaxed text-text-muted">
-            Enter the numbers you know. The tabs below convert between all
-            three systems automatically.
+            Enter the numbers you know. The tabs below show the same layout
+            in each system.
           </p>
         </div>
       )}

@@ -180,15 +180,6 @@ function TrendChart({
         strokeDasharray="4 3"
         opacity={0.6}
       />
-      <text
-        x={padding.left + 2}
-        y={avgY - 5}
-        fontSize={7}
-        fill="var(--color-text-muted)"
-      >
-        avg {avg}
-        {suffix}
-      </text>
 
       {areaPath && !toned && (
         <path
@@ -219,6 +210,20 @@ function TrendChart({
         pathLength={toned ? 1 : undefined}
         className={toned ? "animate-draw" : undefined}
       />
+
+      <text
+        x={padding.left + 2}
+        y={avgY - 5}
+        fontSize={7}
+        fill="var(--color-text-muted)"
+        stroke="var(--color-base)"
+        strokeWidth={3}
+        strokeLinejoin="round"
+        paintOrder="stroke"
+      >
+        avg {avg}
+        {suffix}
+      </text>
 
       {isBucketed && (
         <text
@@ -273,12 +278,12 @@ function TrendChart({
           );
         }
         const dotColor = isHighlighted
-          ? "var(--color-green)"
+          ? "var(--color-spare)"
           : s >= avg
             ? color
             : "var(--color-surface-light)";
         const dotStroke = isHighlighted
-          ? "var(--color-green)"
+          ? "var(--color-spare)"
           : s >= avg
             ? color
             : "var(--color-text-muted)";
@@ -290,7 +295,7 @@ function TrendChart({
                 cy={toY(s)}
                 r={7}
                 fill="none"
-                stroke={isHighlighted ? "var(--color-green)" : color}
+                stroke={isHighlighted ? "var(--color-spare)" : color}
                 strokeOpacity={0.4}
                 strokeWidth={1}
               />
@@ -312,7 +317,7 @@ function TrendChart({
                 fontWeight="bold"
                 fill={
                   isHighlighted
-                    ? "var(--color-green)"
+                    ? "var(--color-spare)"
                     : "var(--color-text-primary)"
                 }
               >
@@ -341,6 +346,7 @@ function PercentRing({ rate, color }: { rate: number; color: string }) {
         strokeLinecap="round"
         pathLength={100}
         strokeDasharray={`${Math.max(0, Math.min(100, rate))} 100`}
+        opacity={rate > 0 ? 1 : 0}
       />
     </svg>
   );
@@ -372,7 +378,7 @@ function LeaveItem({
                   pins.includes(pin)
                     ? isSplitLeave
                       ? "bg-red"
-                      : "bg-gold"
+                      : "bg-spare"
                     : "bg-white/8"
                 }`}
               />
@@ -392,7 +398,7 @@ function LeaveItem({
         </p>
       </div>
       <span
-        className={`text-sm font-semibold tabular-nums ${rate === 100 ? "text-green" : rate >= 50 ? "text-gold" : "text-text-secondary"}`}
+        className={`text-sm font-semibold tabular-nums ${rate === 100 ? "text-text-primary" : rate >= 50 ? "text-spare" : "text-text-secondary"}`}
       >
         {rate}%
       </span>
@@ -566,7 +572,7 @@ export default function StatsContent({ overview, leaves }: Props) {
                 label: "Clean",
                 rate: clean_rate,
                 detail: `${clean_games}/${detailed_games} games`,
-                color: "var(--color-green)",
+                color: "var(--color-spare)",
               },
             ].map((r, i) => (
               <div
@@ -617,8 +623,8 @@ export default function StatsContent({ overview, leaves }: Props) {
 
           {/* Practice these */}
           {most_missed.length > 0 && (
-            <div className="glass mb-4 border border-gold/20 p-4">
-              <h2 className="mb-2 text-sm font-semibold text-gold">
+            <div className="glass mb-4 border border-spare/20 p-4">
+              <h2 className="mb-2 text-sm font-semibold text-spare">
                 Practice these
               </h2>
               <p className="mb-3 text-[11px] text-text-muted">
@@ -666,16 +672,16 @@ export default function StatsContent({ overview, leaves }: Props) {
                     attempts: single_pin.attempts,
                     converted: single_pin.converted,
                     rate: single_pin.rate,
-                    textColor: "text-green",
-                    barColor: "bg-green",
+                    textColor: "text-text-primary",
+                    barColor: "bg-text-primary",
                   },
                   {
                     label: "Multi pin",
                     attempts: multi_pin.attempts,
                     converted: multi_pin.converted,
                     rate: multi_pin.rate,
-                    textColor: "text-gold",
-                    barColor: "bg-gold",
+                    textColor: "text-spare",
+                    barColor: "bg-spare",
                   },
                   {
                     label: "Splits",
@@ -724,7 +730,7 @@ export default function StatsContent({ overview, leaves }: Props) {
           {/* Leave Log — grouped by category */}
           {single_pin_leaves.length > 0 && (
             <div className="glass mb-4 p-4">
-              <h2 className="mb-2 text-sm font-semibold text-green">
+              <h2 className="mb-2 text-sm font-semibold text-text-primary">
                 Single pin leaves
               </h2>
               <p className="mb-3 text-[11px] text-text-muted tabular-nums">
@@ -747,7 +753,7 @@ export default function StatsContent({ overview, leaves }: Props) {
 
           {multi_pin_leaves.length > 0 && (
             <div className="glass mb-4 p-4">
-              <h2 className="mb-2 text-sm font-semibold text-gold">
+              <h2 className="mb-2 text-sm font-semibold text-spare">
                 Multi pin leaves
               </h2>
               <p className="mb-3 text-[11px] text-text-muted tabular-nums">

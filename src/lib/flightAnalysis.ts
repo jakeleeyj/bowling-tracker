@@ -159,24 +159,24 @@ export const STYLE_PRESETS: Record<
 
 const MATCH_REASONS: Record<SpeedRevMatch, string> = {
   "speed-dominant":
-    "Your ball speed outpaces your rev rate, so the ball skids longer and hooks less on its own — layouts that help it read the lane earlier work in your favor.",
+    "Your speed is high for your rev rate, so the ball skids further before it hooks. Layouts that start the ball rolling earlier suit you.",
   matched:
-    "Your speed and rev rate are well balanced, so the ball has a predictable, versatile motion — an all-purpose layout suits you.",
+    "Your speed and rev rate are in balance, so the ball moves predictably. An all-purpose layout suits you.",
   "rev-dominant":
-    "Your rev rate outpaces your ball speed, so the ball wants to hook early and hard — layouts that delay the reaction keep your backend under control.",
+    "Your rev rate is high for your speed, so the ball hooks early and hard. Layouts that delay the hook keep it under control.",
 };
 
 const STYLE_REASONS: Record<BowlerStyle, string> = {
   stroker:
-    "With a smoother, lower-rev release you benefit from layouts that use more of the ball's flare to create shape.",
+    "A smooth, lower-rev release needs the ball's flare to hook, so your layouts use more of it.",
   tweener:
-    "Your medium rev rate gives you flexibility — moderate layouts keep the ball readable on most house conditions.",
+    "Medium revs give you range. Moderate layouts stay predictable on most house shots.",
   cranker:
-    "Your high rev rate creates plenty of hook on its own, so longer pin distances tame the flare and keep the motion controllable.",
+    "High revs make plenty of hook on their own, so longer pin distances cut the flare and keep the ball controllable.",
   "two-handed":
-    "A two-handed release generates high revs with lots of axis rotation — control-oriented layouts prevent over-hooking.",
+    "A two-handed release makes high revs and lots of side roll. Layouts built for control stop the ball over-hooking.",
   spinner:
-    "Your high axis tilt makes the ball spin like a top and clear the front of the lane — you need layouts and surfaces that help it slow down and grip.",
+    "High axis tilt makes the ball spin like a top and skid through the front. You need layouts and surfaces that help it slow down and grip.",
 };
 
 export function analyzeFlight(
@@ -189,10 +189,6 @@ export function analyzeFlight(
   const style: BowlerStyle = options?.twoHanded
     ? "two-handed"
     : getStyle(specs);
-  const reasons = [
-    `At ${formatSpeed(specs.ballSpeedMph, speedUnit)} with ${Math.round(specs.revRate)} rpm, you are ${match.replace("-", " ")}.`,
-    MATCH_REASONS[match],
-    STYLE_REASONS[style],
-  ];
+  const reasons = [MATCH_REASONS[match], STYLE_REASONS[style]];
   return { specs, ratio, match, style, reasons };
 }

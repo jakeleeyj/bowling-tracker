@@ -14,7 +14,7 @@ import {
 import type { PapPosition, Handedness } from "@/lib/layoutGeometry";
 
 const PRESET_LABELS: Record<keyof typeof STYLE_PRESETS, string> = {
-  stroker: "Smooth & accurate",
+  stroker: "Smooth and accurate",
   tweener: "A bit of both",
   cranker: "Big hook",
   "two-handed": "High revs, no thumb",

@@ -72,7 +72,7 @@ export default function AnalyzePage() {
   }
 
   return (
-    <div className="animate-fade-in px-4 py-6">
+    <div className="animate-fade-in">
       <div className="mb-6 flex items-center gap-3">
         <BackButton />
         <h1 className="text-xl font-extrabold text-text-primary">

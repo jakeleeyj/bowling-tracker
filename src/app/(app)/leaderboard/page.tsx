@@ -317,21 +317,22 @@ export default async function LeaderboardPage() {
                       </span>
                     ) : (
                       <>
-                        <span className={entry.rank.color}>
+                        <span className={`block ${entry.rank.color}`}>
                           {entry.rank.name}
                           {entry.rank.division && ` ${entry.rank.division}`}
                         </span>
-                        {" \u2022 "}
-                        {entry.seasonGames > 0 ? (
-                          <>
-                            avg {entry.avg}
-                            {" \u2022 "}
-                            {entry.seasonGames} game
-                            {entry.seasonGames !== 1 ? "s" : ""}
-                          </>
-                        ) : (
-                          "no games this season"
-                        )}
+                        <span className="block truncate">
+                          {entry.seasonGames > 0 ? (
+                            <>
+                              avg {entry.avg}
+                              {" \u2022 "}
+                              {entry.seasonGames} game
+                              {entry.seasonGames !== 1 ? "s" : ""}
+                            </>
+                          ) : (
+                            "No games this season"
+                          )}
+                        </span>
                       </>
                     )}
                   </p>

@@ -52,7 +52,7 @@ export default function ArsenalPage() {
   }
 
   return (
-    <div className="animate-fade-in px-4 py-6">
+    <div className="animate-fade-in">
       <div className="mb-6 flex items-center gap-3">
         <BackButton />
         <h1 className="text-xl font-extrabold text-text-primary">My arsenal</h1>
@@ -67,21 +67,21 @@ export default function ArsenalPage() {
               [
                 {
                   href: "/arsenal/analyze",
-                  icon: <Sparkles size={20} className="text-blue" />,
+                  icon: <Sparkles size={20} className="text-text-primary" />,
                   title: "Analyze my style",
-                  sub: "Speed, revs and release for your bowler profile",
+                  sub: "Find your bowling style from your speed and revs",
                 },
                 {
                   href: "/arsenal/layout",
-                  icon: <Ruler size={20} className="text-gold" />,
+                  icon: <Ruler size={20} className="text-text-primary" />,
                   title: "Get a layout",
-                  sub: "Dual Angle, VLS & 2LS from your saved style",
+                  sub: "Drilling numbers for your style and lane",
                 },
                 {
                   href: "/arsenal/new",
-                  icon: <Plus size={20} className="text-purple" />,
+                  icon: <Plus size={20} className="text-text-primary" />,
                   title: "Add a ball",
-                  sub: "Track specs & drilling for a ball you own",
+                  sub: "Save a ball's specs and drilling for your pro shop",
                 },
               ] as const
             ).map((action) => (
@@ -97,7 +97,7 @@ export default function ArsenalPage() {
                   <p className="text-sm font-semibold text-text-primary">
                     {action.title}
                   </p>
-                  <p className="truncate text-xs text-text-muted">
+                  <p className="text-xs text-text-muted">
                     {action.sub}
                   </p>
                 </div>

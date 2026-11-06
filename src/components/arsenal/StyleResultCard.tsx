@@ -2,6 +2,7 @@
 
 import {
   formatSpeed,
+  type BowlerStyle,
   type FlightAnalysis,
   type SpeedUnit,
 } from "@/lib/flightAnalysis";
@@ -11,6 +12,14 @@ const MATCH_LABELS = {
   matched: "Matched",
   "rev-dominant": "Rev-dominant",
 } as const;
+
+const STYLE_SUMMARIES: Record<BowlerStyle, string> = {
+  stroker: "Smooth release with lower revs. Plays straighter lines.",
+  tweener: "Between a stroker and a cranker: medium speed and revs.",
+  cranker: "High revs and a big hook.",
+  "two-handed": "Two hands, no thumb in the ball. High revs.",
+  spinner: "High axis tilt. The ball spins like a top and skids far.",
+};
 
 export default function StyleResultCard({
   analysis,
@@ -28,6 +37,9 @@ export default function StyleResultCard({
       <p className="mb-1 text-2xl font-extrabold capitalize text-text-primary">
         {analysis.style}
       </p>
+      <p className="mb-2 text-xs text-text-secondary">
+        {STYLE_SUMMARIES[analysis.style]}
+      </p>
       <p className="mb-4 text-sm font-semibold tabular-nums text-blue">
         {MATCH_LABELS[analysis.match]} ·{" "}
         {formatSpeed(analysis.specs.ballSpeedMph, speedUnit)} /{" "}
@@ -40,7 +52,7 @@ export default function StyleResultCard({
         <span>Revs</span>
       </div>
       <div className="relative mb-4 h-2 rounded-full bg-surface-light">
-        <div className="absolute inset-y-0 left-[35%] right-[35%] rounded-full bg-green/20" />
+        <div className="absolute inset-y-0 left-[35%] right-[35%] rounded-full bg-white/12" />
         <div
           className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-blue"
           style={{ left: `${meterPos * 100}%` }}

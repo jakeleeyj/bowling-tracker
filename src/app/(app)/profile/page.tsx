@@ -586,7 +586,7 @@ export default function ProfilePage() {
         onClick={() => router.push("/arsenal")}
         className="glass mb-5 flex w-full items-center gap-3 p-4 text-left transition-transform duration-150 ease-out active:scale-[0.98]"
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple/15 text-purple">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-light text-text-primary">
           <CircleDot size={20} />
         </div>
         <div className="min-w-0 flex-1">
@@ -717,7 +717,7 @@ export default function ProfilePage() {
         <h2 className="mb-3 text-sm font-semibold">Game history</h2>
 
         {/* Filter */}
-        <div className="relative mb-3 flex h-11 w-[240px] rounded-lg bg-surface-light p-[3px]">
+        <div className="relative mb-3 flex h-11 rounded-lg bg-surface-light p-[3px]">
           <span
             aria-hidden
             className="absolute inset-y-[3px] left-[3px] rounded-md bg-blue shadow-sm transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
