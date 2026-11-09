@@ -38,3 +38,11 @@ export const pillGlass: GlassConfig = {
   material: "regular",
   borderRadius: 20,
 };
+
+export const panelGlass: GlassConfig = {
+  ...base,
+  material: "thick",
+  borderRadius: 12,
+  bezelWidth: 12,
+  refractionStrength: 8,
+};

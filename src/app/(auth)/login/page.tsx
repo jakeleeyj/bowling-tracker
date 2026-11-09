@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { LiquidGlass } from "quick-liquid/react";
+import { panelGlass } from "@/lib/glass";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
@@ -71,7 +73,10 @@ export default function LoginPage() {
       </div>
 
       {/* Form card */}
-      <div className="glass-strong relative z-10 w-full max-w-sm lg:max-w-md p-6">
+      <LiquidGlass
+        config={panelGlass}
+        className="relative z-10 w-full max-w-sm rounded-xl bg-surface/80 p-6 lg:max-w-md"
+      >
         <form onSubmit={handleLogin} className="flex flex-col gap-3">
           <input
             type="email"
@@ -127,7 +132,7 @@ export default function LoginPage() {
             Sign up
           </Link>
         </p>
-      </div>
+      </LiquidGlass>
     </div>
   );
 }
