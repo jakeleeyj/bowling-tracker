@@ -608,7 +608,7 @@ export default function GameEntry(props: GameEntryProps) {
               })()}
 
               {/* Action buttons: bottom of the screen, pinned above the nav when the page scrolls */}
-              <div className="sticky bottom-[calc(7rem+max(0.75rem,env(safe-area-inset-bottom)))] z-20 -mx-4 flex gap-2 bg-base px-4 py-1.5 lg:static lg:mx-0 lg:bg-transparent lg:p-0">
+              <div className="sticky bottom-[calc(4.75rem+max(0.75rem,env(safe-area-inset-bottom)))] z-20 -mx-4 flex gap-2 bg-base px-4 py-1.5 lg:static lg:mx-0 lg:bg-transparent lg:p-0">
                 <button
                   onClick={handleUndo}
                   disabled={history.length === 0}

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { LiquidGlass } from "quick-liquid/react";
+import { sheetGlass } from "@/lib/glass";
 
 const DISMISS_DISTANCE = 90;
 
@@ -85,27 +87,34 @@ export default function Sheet({
           transform: drag !== null ? `translateY(${drag}px)` : undefined,
           transition: drag !== null ? "none" : undefined,
         }}
-        className={`glass-strong relative max-h-[85dvh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-surface/95 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] outline-none transition-transform duration-500 ease-spring lg:max-w-[420px] lg:rounded-3xl lg:pt-5 ${leaving ? "animate-sheet-out" : "animate-sheet-in"}`}
+        className={`relative w-full max-w-[480px] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] outline-none transition-transform duration-500 ease-spring lg:max-w-[420px] lg:p-0 ${leaving ? "animate-sheet-out" : "animate-sheet-in"}`}
       >
-        <div
-          className="flex cursor-grab touch-none justify-center pb-3 pt-2.5 lg:hidden"
-          onPointerDown={(e) => {
-            startY.current = e.clientY;
-            setDrag(0);
-            e.currentTarget.setPointerCapture(e.pointerId);
-          }}
-          onPointerMove={(e) => {
-            if (drag === null || leaving) return;
-            const dy = e.clientY - startY.current;
-            // Rubber-band when pulled up past the resting point
-            setDrag(dy > 0 ? dy : dy / 4);
-          }}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
+        <LiquidGlass
+          config={sheetGlass}
+          className="rounded-[28px] bg-surface/80 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.7)]"
         >
-          <span className="h-1.5 w-10 rounded-full bg-white/20" />
-        </div>
-        {children}
+          <div className="max-h-[85dvh] overflow-y-auto px-5 pb-5 lg:pt-5">
+            <div
+              className="flex cursor-grab touch-none justify-center pb-3 pt-2.5 lg:hidden"
+              onPointerDown={(e) => {
+                startY.current = e.clientY;
+                setDrag(0);
+                e.currentTarget.setPointerCapture(e.pointerId);
+              }}
+              onPointerMove={(e) => {
+                if (drag === null || leaving) return;
+                const dy = e.clientY - startY.current;
+                // Rubber-band when pulled up past the resting point
+                setDrag(dy > 0 ? dy : dy / 4);
+              }}
+              onPointerUp={endDrag}
+              onPointerCancel={endDrag}
+            >
+              <span className="h-1.5 w-10 rounded-full bg-white/20" />
+            </div>
+            {children}
+          </div>
+        </LiquidGlass>
       </div>
     </div>,
     document.body,
