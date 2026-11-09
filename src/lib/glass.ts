@@ -24,3 +24,17 @@ export const logGlassActive: GlassConfig = {
   material: "regular",
   borderRadius: 32,
 };
+
+export const sheetGlass: GlassConfig = {
+  ...base,
+  material: "thick",
+  borderRadius: 28,
+  bezelWidth: 14,
+  refractionStrength: 8,
+};
+
+export const pillGlass: GlassConfig = {
+  ...base,
+  material: "regular",
+  borderRadius: 20,
+};

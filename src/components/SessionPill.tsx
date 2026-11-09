@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LiquidGlass } from "quick-liquid/react";
+import { pillGlass } from "@/lib/glass";
 import { calculateFrameScores, type FrameData } from "@/lib/bowling";
 
 interface Progress {
@@ -56,21 +58,28 @@ export default function SessionPill() {
     <Link
       href="/log?resume=1"
       data-session-pill
-      className="animate-pill-in fixed bottom-[calc(4.75rem+max(0.75rem,env(safe-area-inset-bottom)))] left-1/2 z-40 flex h-10 whitespace-nowrap -translate-x-1/2 items-center gap-2.5 rounded-full border border-border-light bg-surface/95 pl-3 pr-4 text-sm font-semibold tabular-nums shadow-[0_8px_24px_-8px_rgba(0,0,0,0.7)] backdrop-blur-md transition-transform duration-150 active:scale-[0.96] lg:bottom-6"
+      className="animate-pill-in fixed bottom-[calc(4.75rem+max(0.75rem,env(safe-area-inset-bottom)))] left-1/2 z-40 -translate-x-1/2 rounded-full transition-transform duration-150 active:scale-[0.96] lg:bottom-6"
     >
-      <span className="relative flex size-2">
-        <span className="absolute inset-0 animate-ping rounded-full bg-[conic-gradient(var(--color-strike),var(--color-spare),var(--color-strike))] opacity-60 motion-reduce:hidden" />
-        <span className="relative size-2 rounded-full bg-[conic-gradient(var(--color-strike),var(--color-spare),var(--color-strike))]" />
-      </span>
-      <span className="text-text-primary">
-        Game {progress.game} of {progress.games}
-      </span>
-      {progress.frame !== null && (
-        <span className="text-text-muted">Frame {progress.frame}</span>
-      )}
-      {progress.score !== null && (
-        <span className="tabular-nums text-text-primary">{progress.score}</span>
-      )}
+      <LiquidGlass
+        config={pillGlass}
+        className="rounded-full bg-surface/60 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.7)]"
+      >
+        <span className="flex h-10 items-center gap-2.5 whitespace-nowrap pl-3 pr-4 text-sm font-semibold tabular-nums">
+            <span className="relative flex size-2">
+              <span className="absolute inset-0 animate-ping rounded-full bg-[conic-gradient(var(--color-strike),var(--color-spare),var(--color-strike))] opacity-60 motion-reduce:hidden" />
+              <span className="relative size-2 rounded-full bg-[conic-gradient(var(--color-strike),var(--color-spare),var(--color-strike))]" />
+            </span>
+            <span className="text-text-primary">
+              Game {progress.game} of {progress.games}
+            </span>
+            {progress.frame !== null && (
+              <span className="text-text-muted">Frame {progress.frame}</span>
+            )}
+            {progress.score !== null && (
+              <span className="tabular-nums text-text-primary">{progress.score}</span>
+            )}
+        </span>
+      </LiquidGlass>
     </Link>
   );
 }
