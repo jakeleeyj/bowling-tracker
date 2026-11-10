@@ -1,5 +1,6 @@
 export type Pt = { x: number; y: number };
 export type LanePoint = { board: number; feet: number };
+export type Rect = { x: number; y: number; w: number; h: number };
 export type Calibration = {
   foulLeft: Pt;
   foulRight: Pt;

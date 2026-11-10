@@ -1,20 +1,23 @@
 "use client";
 
-import type { Pt } from "@/lib/lane/geometry";
+import type { Pt, Rect } from "@/lib/lane/geometry";
 
 export default function PathOverlay({
   points,
   width,
   height,
+  view = { x: 0, y: 0, w: width, h: height },
 }: {
   points: Pt[];
   width: number;
   height: number;
+  /** Part of the frame on screen (the crop), in frame px */
+  view?: Rect;
 }) {
   if (points.length < 2) return null;
   return (
     <svg
-      viewBox={`0 0 ${width} ${height}`}
+      viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
       preserveAspectRatio="none"
       className="pointer-events-none absolute inset-0 h-full w-full"
     >

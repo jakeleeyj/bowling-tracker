@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, RefreshCw, Upload } from "lucide-react";
+import { Camera, Crop, RefreshCw, Upload } from "lucide-react";
 import { useLaneCamera } from "@/hooks/useLaneCamera";
 import CalibrationOverlay from "@/components/lane/CalibrationOverlay";
+import CropOverlay from "@/components/lane/CropOverlay";
 import PathOverlay from "@/components/lane/PathOverlay";
 import ReplayPlayer from "@/components/lane/ReplayPlayer";
 import ShotResult from "@/components/lane/ShotResult";
@@ -14,6 +15,7 @@ import {
   pixelToLane,
   type Calibration,
   type Pt,
+  type Rect,
 } from "@/lib/lane/geometry";
 import { BallDetector, toGrayscale } from "@/lib/lane/ballDetector";
 import { medianPlate, suggestLaneEdges } from "@/lib/lane/edgeDetect";
@@ -33,7 +35,7 @@ function curveOnVideo(h: number[], stats: ShotStats): Pt[] {
   return pts;
 }
 
-type Phase = "start" | "calibrate" | "live" | "result";
+type Phase = "start" | "crop" | "calibrate" | "live" | "result";
 
 export default function LaneTracker() {
   const [phase, setPhase] = useState<Phase>("start");
@@ -44,6 +46,9 @@ export default function LaneTracker() {
   const [calibrationError, setCalibrationError] = useState(false);
   const [calibrationAttempt, setCalibrationAttempt] = useState(0);
   const [frameReady, setFrameReady] = useState(false);
+  // Zoomed-in part of the frame, for display only: tracking still reads the
+  // whole frame, so its tuning holds
+  const [crop, setCrop] = useState<Rect | null>(null);
   const [replayBlob, setReplayBlob] = useState<Blob | null>(null);
   // File mode: temporarily hide the result to watch the rest of the video
   const [watching, setWatching] = useState(false);
@@ -167,7 +172,7 @@ export default function LaneTracker() {
 
   async function begin() {
     const ok = await start();
-    if (ok) changePhase("calibrate");
+    if (ok) changePhase("crop");
   }
 
   async function beginFile(file: File) {
@@ -176,8 +181,9 @@ export default function LaneTracker() {
     setReplayBlob(null);
     setWatching(false);
     resetTracking();
+    setCrop(null);
     const ok = await startFile(file);
-    if (ok) changePhase("calibrate");
+    if (ok) changePhase("crop");
   }
 
   // BETA: sample frames across the video, median them into a clean plate
@@ -283,6 +289,11 @@ export default function LaneTracker() {
     }
   }
 
+  const fullFrame = { x: 0, y: 0, w: frameSize.w, h: frameSize.h };
+  const view = crop ?? fullFrame;
+  // The crop step itself shows the whole frame
+  const shown = phase === "crop" ? fullFrame : view;
+
   return (
     <div className="relative overflow-hidden rounded-2xl">
       <input
@@ -329,16 +340,59 @@ export default function LaneTracker() {
       )}
       <div
         className={
-          phase === "start" ? "hidden" : "relative mx-auto w-fit max-w-full"
+          phase === "start"
+            ? "hidden"
+            : "relative mx-auto max-w-full overflow-hidden"
         }
+        style={{
+          aspectRatio: `${shown.w} / ${shown.h}`,
+          width: `min(100%, calc(62dvh * ${shown.w / shown.h}))`,
+        }}
       >
-        <video
-          ref={videoRef}
-          playsInline
-          muted
-          className="max-h-[62dvh] w-auto max-w-full"
-          aria-label="Live lane camera"
-        />
+        {/* The whole frame, scaled and shifted so the crop fills the box */}
+        <div
+          className="absolute"
+          style={{
+            width: `${(100 * frameSize.w) / shown.w}%`,
+            left: `${(-100 * shown.x) / shown.w}%`,
+            top: `${(-100 * shown.y) / shown.h}%`,
+          }}
+        >
+          <video
+            ref={videoRef}
+            playsInline
+            muted
+            className="block h-auto w-full"
+            aria-label="Live lane camera"
+          />
+          {phase === "result" && replayBlob && !watching && (
+            <ReplayPlayer blob={replayBlob} />
+          )}
+        </div>
+        {phase === "crop" &&
+          (frameReady ? (
+            <CropOverlay
+              width={frameSize.w}
+              height={frameSize.h}
+              initial={
+                crop ?? {
+                  x: frameSize.w * 0.05,
+                  y: frameSize.h * 0.05,
+                  w: frameSize.w * 0.9,
+                  h: frameSize.h * 0.9,
+                }
+              }
+              onDone={(box) => {
+                setCrop(box);
+                setCalibrationAttempt((n) => n + 1);
+                changePhase("calibrate");
+              }}
+            />
+          ) : (
+            <div className="absolute inset-x-3 top-3 rounded-xl bg-black/50 px-3 py-2 text-center text-xs font-semibold text-white">
+              Starting camera…
+            </div>
+          ))}
         {phase === "calibrate" && (
           <>
             {frameReady ? (
@@ -347,7 +401,36 @@ export default function LaneTracker() {
                 width={frameSize.w}
                 height={frameSize.h}
                 onDone={handleCalibrated}
-                initial={lastCalPoints}
+                initial={
+                  lastCalPoints?.every(
+                    (p) =>
+                      p.x >= view.x &&
+                      p.x <= view.x + view.w &&
+                      p.y >= view.y &&
+                      p.y <= view.y + view.h,
+                  )
+                    ? lastCalPoints
+                    : [
+                        {
+                          x: view.x + view.w * 0.15,
+                          y: view.y + view.h * 0.88,
+                        },
+                        {
+                          x: view.x + view.w * 0.85,
+                          y: view.y + view.h * 0.88,
+                        },
+                        {
+                          x: view.x + view.w * 0.38,
+                          y: view.y + view.h * 0.18,
+                        },
+                        {
+                          x: view.x + view.w * 0.62,
+                          y: view.y + view.h * 0.18,
+                        },
+                      ]
+                }
+                view={view}
+                video={videoRef.current}
               />
             ) : (
               <div className="absolute inset-x-3 top-3 rounded-xl bg-black/50 px-3 py-2 text-center text-xs font-semibold text-white">
@@ -364,20 +447,30 @@ export default function LaneTracker() {
                 Those points don&apos;t form a valid lane. Try again.
               </div>
             )}
-            {isFileMode() && frameReady && (
+            {frameReady && (
               <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-1.5">
                 {detectMsg && (
                   <div className="rounded-lg bg-black/70 px-2.5 py-1 text-center text-[10px] font-semibold text-white">
                     {detectMsg}
                   </div>
                 )}
-                <button
-                  onClick={autoDetectCorners}
-                  disabled={detecting}
-                  className="whitespace-nowrap rounded-full bg-black/70 px-4 py-2 text-xs font-bold text-white active:scale-95 disabled:opacity-60"
-                >
-                  {detecting ? "Detecting…" : "✨ Auto-detect (beta)"}
-                </button>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => changePhase("crop")}
+                    className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-black/70 px-4 py-2 text-xs font-bold text-white active:scale-95"
+                  >
+                    <Crop size={13} /> Crop
+                  </button>
+                  {isFileMode() && (
+                    <button
+                      onClick={autoDetectCorners}
+                      disabled={detecting}
+                      className="whitespace-nowrap rounded-full bg-black/70 px-4 py-2 text-xs font-bold text-white active:scale-95 disabled:opacity-60"
+                    >
+                      {detecting ? "Detecting…" : "✨ Auto-detect (beta)"}
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </>
@@ -388,6 +481,7 @@ export default function LaneTracker() {
               points={livePath}
               width={frameSize.w}
               height={frameSize.h}
+              view={view}
             />
             <div className="absolute left-3 top-3 rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white">
               {isFileMode() ? "Tracking video…" : "Tracking — bowl when ready"}
@@ -439,11 +533,11 @@ export default function LaneTracker() {
         )}
         {phase === "result" && result && (
           <>
-            {replayBlob && !watching && <ReplayPlayer blob={replayBlob} />}
             <PathOverlay
               points={resultPath}
               width={frameSize.w}
               height={frameSize.h}
+              view={view}
             />
             {watching ? (
               <button
