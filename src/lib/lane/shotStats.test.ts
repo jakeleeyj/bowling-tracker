@@ -10,13 +10,13 @@ function straightShot(): TrackedPoint[] {
   return pts;
 }
 
-// Hook shot: starts board 18, drifts out to board 6 at 40ft, hooks back to 17.5 at 60ft
+// Hook shot: skids from board 18 out toward the gutter, starts hooking at
+// 30 ft, turns back at 45 ft on board 3, ends on board 6 at 60 ft
 function hookShot(): TrackedPoint[] {
   const pts: TrackedPoint[] = [];
   for (let i = 0; i <= 30; i++) {
     const feet = (60 * i) / 30;
-    const board =
-      feet <= 40 ? 18 - (12 * feet) / 40 : 6 + (11.5 * (feet - 40)) / 20;
+    const board = 18 - 0.4 * feet + (0.4 / 30) * Math.max(0, feet - 30) ** 2;
     pts.push({ board, feet, tMs: 90 * i });
   }
   return pts;
@@ -37,13 +37,35 @@ describe("computeShotStats", () => {
     expect(s.entryBoard).toBeCloseTo(10, 1);
   });
 
-  it("finds breakpoint as the minimum board of a hook", () => {
+  it("finds the breakpoint where the hook turns back", () => {
     const s = computeShotStats(hookShot())!;
-    expect(s.releaseBoard).toBeCloseTo(18, 0.5);
-    expect(s.breakpointBoard).toBeCloseTo(6, 0.5);
-    expect(s.entryBoard).toBeCloseTo(17.5, 0.5);
-    // arrows at 15 feet: 18 - 12*15/40 = 13.5
-    expect(s.arrowsBoard).toBeCloseTo(13.5, 0.5);
+    expect(s.releaseBoard).toBeCloseTo(18, 1);
+    expect(s.arrowsBoard).toBeCloseTo(12, 1);
+    expect(s.breakpointFeet).toBeCloseTo(45, 0);
+    expect(s.breakpointBoard).toBeCloseTo(3, 0);
+    expect(s.entryBoard).toBeCloseTo(6, 0);
+  });
+
+  it("draws a smooth line through tracker glitches", () => {
+    const pts = hookShot();
+    // a reflection pulls a few points 5 boards off the line
+    for (const i of [8, 15, 22]) pts[i] = { ...pts[i], board: pts[i].board + 5 };
+    const s = computeShotStats(pts)!;
+    expect(s.boardAt(pts[15].feet)).toBeCloseTo(hookShot()[15].board, 0);
+    expect(s.breakpointBoard).toBeCloseTo(3, 0);
+  });
+
+  it("times speed from the foul line to the pin hit", () => {
+    // 60 ft at 24 ft/s: crosses the foul line at 0 ms, hits the pins at 2500 ms
+    const pts = straightShot().filter((p) => p.feet >= 10 && p.feet <= 50);
+    const s = computeShotStats(pts, 2500)!;
+    expect(s.speedFrom).toBe("pins");
+    expect(s.speedMph).toBeCloseTo(16.36, 1);
+  });
+
+  it("ignores a pin hit that implies an impossible speed", () => {
+    const s = computeShotStats(straightShot(), 500)!;
+    expect(s.speedFrom).toBe("track");
   });
 
   it("rejects tracks with too few points", () => {

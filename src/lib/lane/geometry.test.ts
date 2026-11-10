@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { computeHomography, pixelToLane, type Calibration } from "./geometry";
+import {
+  computeHomography,
+  laneToPixel,
+  pixelToLane,
+  type Calibration,
+} from "./geometry";
 
 // Trivial camera: lane fills a 100x600 image exactly, no perspective.
 const flatCal: Calibration = {
@@ -57,6 +62,17 @@ describe("pixelToLane", () => {
     const h = computeHomography(flatCal);
     expect(pixelToLane(h, { x: -500, y: 300 }).board).toBe(40);
     expect(pixelToLane(h, { x: 800, y: 300 }).board).toBe(0);
+  });
+});
+
+describe("laneToPixel", () => {
+  it("undoes pixelToLane under perspective", () => {
+    const h = computeHomography(perspCal);
+    for (const p of [{ x: 120, y: 400 }, { x: 200, y: 150 }, { x: 300, y: 480 }]) {
+      const back = laneToPixel(h, pixelToLane(h, p));
+      expect(back.x).toBeCloseTo(p.x, 3);
+      expect(back.y).toBeCloseTo(p.y, 3);
+    }
   });
 });
 

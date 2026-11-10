@@ -78,3 +78,21 @@ export function pixelToLane(h: number[], p: Pt): LanePoint {
   const feet = v * LANE_FEET;
   return { board, feet };
 }
+
+// Inverse of pixelToLane: where a lane spot appears in the camera frame.
+export function laneToPixel(h: number[], p: LanePoint): Pt {
+  const [a, b, c, d, e, f, g, k, i] = h;
+  // Inverse of the 3x3 matrix via the adjugate (scale doesn't matter)
+  const inv = [
+    e * i - f * k, c * k - b * i, b * f - c * e,
+    f * g - d * i, a * i - c * g, c * d - a * f,
+    d * k - e * g, b * g - a * k, a * e - b * d,
+  ];
+  const u = (LANE_BOARDS - p.board) / (LANE_BOARDS - 1);
+  const v = p.feet / LANE_FEET;
+  const w = inv[6] * u + inv[7] * v + inv[8];
+  return {
+    x: (inv[0] * u + inv[1] * v + inv[2]) / w,
+    y: (inv[3] * u + inv[4] * v + inv[5]) / w,
+  };
+}

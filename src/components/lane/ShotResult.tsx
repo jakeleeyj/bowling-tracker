@@ -4,12 +4,34 @@ import { useState } from "react";
 import { Check, X } from "lucide-react";
 import type { ShotStats } from "@/lib/lane/shotStats";
 import { saveTrackedShot } from "@/lib/lane/saveShot";
+import LaneView from "@/components/lane/LaneView";
 
-function Stat({ label, value }: { label: string; value: string }) {
+const MPH_TO_KMH = 1.609344;
+
+function Stat({
+  label,
+  value,
+  color,
+  estimated,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  estimated?: boolean;
+}) {
   return (
-    <div className="flex flex-col items-center">
-      <span className="text-base font-extrabold leading-tight">{value}</span>
-      <span className="text-[10px] text-text-muted">{label}</span>
+    <div>
+      <p
+        className={`text-2xl font-extrabold leading-tight tabular-nums ${estimated ? "text-text-muted" : ""}`}
+      >
+        {value.toFixed(1)}
+      </p>
+      <p className={`text-xs font-semibold ${color}`}>
+        {label}
+        {estimated && (
+          <span className="font-normal text-text-muted"> · est.</span>
+        )}
+      </p>
     </div>
   );
 }
@@ -23,6 +45,8 @@ export default function ShotResult({
 }) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const seenFrom = stats.path[0].feet;
+  const seenTo = Math.max(...stats.path.map((p) => p.feet));
 
   async function handleSave() {
     setSaving(true);
@@ -37,18 +61,44 @@ export default function ShotResult({
   }
 
   return (
-    <div className="absolute inset-x-3 bottom-3 glass p-4">
-      <div className="mb-3 text-center">
-        <span className="text-2xl font-extrabold">
-          {stats.speedMph.toFixed(1)}
+    <div className="glass mt-3 p-4">
+      <p className="text-xs text-text-muted">
+        {stats.speedFrom === "pins"
+          ? "Speed, foul line to pins"
+          : "Speed while tracked"}
+      </p>
+      <p className="mb-4">
+        <span className="text-4xl font-extrabold tabular-nums">
+          {(stats.speedMph * MPH_TO_KMH).toFixed(1)}
         </span>
-        <span className="ml-1 text-sm text-text-muted">mph</span>
-      </div>
-      <div className="mb-4 grid grid-cols-4 gap-2">
-        <Stat label="Release" value={stats.releaseBoard.toFixed(0)} />
-        <Stat label="Arrows" value={stats.arrowsBoard.toFixed(0)} />
-        <Stat label="Breakpoint" value={stats.breakpointBoard.toFixed(0)} />
-        <Stat label="Entry" value={stats.entryBoard.toFixed(0)} />
+        <span className="ml-1.5 text-sm text-text-muted">
+          km/h · {stats.speedMph.toFixed(1)} mph
+        </span>
+      </p>
+      <div className="mb-4 flex gap-4">
+        <div className="w-[46%] max-w-[240px] shrink-0">
+          <LaneView stats={stats} />
+        </div>
+        <div className="flex flex-col-reverse justify-between py-1">
+          <Stat
+            label="Foul line"
+            value={stats.releaseBoard}
+            color="text-green"
+            estimated={seenFrom > 3}
+          />
+          <Stat label="Arrows" value={stats.arrowsBoard} color="text-gold" />
+          <Stat
+            label={`Breakpoint · ${stats.breakpointFeet.toFixed(0)} ft`}
+            value={stats.breakpointBoard}
+            color="text-purple"
+          />
+          <Stat
+            label="Entry"
+            value={stats.entryBoard}
+            color="text-pink"
+            estimated={seenTo < 57}
+          />
+        </div>
       </div>
       {saveError && (
         <p className="mb-2 text-center text-xs text-red-400">{saveError}</p>

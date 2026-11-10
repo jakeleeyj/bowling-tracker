@@ -9,6 +9,7 @@ import ReplayPlayer from "@/components/lane/ReplayPlayer";
 import ShotResult from "@/components/lane/ShotResult";
 import {
   computeHomography,
+  laneToPixel,
   pixelToLane,
   type Calibration,
   type Pt,
@@ -16,7 +17,20 @@ import {
 import { BallDetector, toGrayscale } from "@/lib/lane/ballDetector";
 import { medianPlate, suggestLaneEdges } from "@/lib/lane/edgeDetect";
 import { ShotSession } from "@/lib/lane/shotSession";
-import type { ShotStats } from "@/lib/lane/shotStats";
+import { computeShotStats, type ShotStats } from "@/lib/lane/shotStats";
+import { PinHitWatcher } from "@/lib/lane/pinHit";
+
+const PIN_ARM_FEET = 40; // start watching the pins once the ball is this far
+const PIN_WAIT_MS = 1500; // after the track ends, how long to wait for a pin hit
+
+// The smooth fitted line, mapped back onto the camera picture
+function curveOnVideo(h: number[], stats: ShotStats): Pt[] {
+  const pts: Pt[] = [];
+  for (let f = stats.path[0].feet; f <= 60; f += 0.5) {
+    pts.push(laneToPixel(h, { board: stats.boardAt(f), feet: f }));
+  }
+  return pts;
+}
 
 type Phase = "start" | "calibrate" | "live" | "result";
 
@@ -43,6 +57,9 @@ export default function LaneTracker() {
   const phaseRef = useRef(phase);
   const getReplayBlobRef = useRef<() => Blob | null>(() => null);
   const laneQuadRef = useRef<Pt[] | null>(null);
+  const calRef = useRef<Calibration | null>(null);
+  const pinsRef = useRef<PinHitWatcher | null>(null);
+  const pendingRef = useRef<{ stats: ShotStats; until: number } | null>(null);
   const [lastCalPoints, setLastCalPoints] = useState<Pt[] | undefined>(
     undefined,
   );
@@ -58,6 +75,8 @@ export default function LaneTracker() {
     // frame, so re-running a video (or re-calibrating) starts clean.
     detectorRef.current = null;
     pixelPathRef.current = [];
+    pendingRef.current = null;
+    pinsRef.current = null;
     setLivePath([]);
   }, []);
 
@@ -78,6 +97,32 @@ export default function LaneTracker() {
       }
       const hit = detectorRef.current.detect(gray);
       if (phaseRef.current !== "live" || !homographyRef.current) return;
+      if (!pinsRef.current && calRef.current) {
+        pinsRef.current = new PinHitWatcher(w, h, calRef.current);
+      }
+      const pins = pinsRef.current;
+      pins?.feed(gray, w, tMs);
+
+      // Shot tracked: wait briefly for the pins to move, then show it
+      const pending = pendingRef.current;
+      if (pending) {
+        const hitMs = pins?.hitMs ?? null;
+        if (hitMs === null && tMs < pending.until) return;
+        const stats =
+          computeShotStats(pending.stats.path, hitMs ?? undefined) ??
+          pending.stats;
+        pendingRef.current = null;
+        pinsRef.current = null;
+        pixelPathRef.current = [];
+        setLivePath([]);
+        // File mode: keep the video playing so the pin hit stays visible;
+        // the result renders below.
+        setResult(stats);
+        setResultPath(curveOnVideo(homographyRef.current, stats));
+        setReplayBlob(getReplayBlobRef.current());
+        changePhase("result");
+        return;
+      }
 
       const lane = hit ? pixelToLane(homographyRef.current, hit) : null;
       const event = sessionRef.current.onFrame(lane, tMs, hit?.trackId);
@@ -85,15 +130,11 @@ export default function LaneTracker() {
       if (event.type === "tracking") {
         if (hit) pixelPathRef.current.push({ x: hit.x, y: hit.y });
         setLivePath([...pixelPathRef.current]);
+        const last = event.path[event.path.length - 1];
+        if (last && last.feet >= PIN_ARM_FEET) pins?.arm();
       } else if (event.type === "complete") {
-        // File mode: keep the video playing so the pin hit stays visible;
-        // the result renders on top.
-        setResult(event.stats);
-        setResultPath([...pixelPathRef.current]);
-        setReplayBlob(getReplayBlobRef.current());
-        pixelPathRef.current = [];
-        setLivePath([]);
-        changePhase("result");
+        pins?.arm();
+        pendingRef.current = { stats: event.stats, until: tMs + PIN_WAIT_MS };
       } else if (event.type === "discarded") {
         pixelPathRef.current = [];
         setLivePath([]);
@@ -212,6 +253,7 @@ export default function LaneTracker() {
   function handleCalibrated(cal: Calibration) {
     try {
       homographyRef.current = computeHomography(cal);
+      calRef.current = cal;
       setLastCalPoints([
         cal.foulLeft,
         cal.foulRight,
@@ -451,21 +493,23 @@ export default function LaneTracker() {
                     </button>
                   </div>
                 )}
-                <ShotResult
-                  stats={result}
-                  onNext={() => {
-                    setResult(null);
-                    setReplayBlob(null);
-                    resetTracking();
-                    changePhase("live");
-                    playFile(); // file mode: resume for the next shot in the video
-                  }}
-                />
               </>
             )}
           </>
         )}
       </div>
+      {phase === "result" && result && !watching && (
+        <ShotResult
+          stats={result}
+          onNext={() => {
+            setResult(null);
+            setReplayBlob(null);
+            resetTracking();
+            changePhase("live");
+            playFile(); // file mode: resume for the next shot in the video
+          }}
+        />
+      )}
     </div>
   );
 }
