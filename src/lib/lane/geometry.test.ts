@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   computeHomography,
+  contactPoint,
   laneToPixel,
   pixelToLane,
   type Calibration,
@@ -73,6 +74,22 @@ describe("laneToPixel", () => {
       expect(back.x).toBeCloseTo(p.x, 3);
       expect(back.y).toBeCloseTo(p.y, 3);
     }
+  });
+});
+
+describe("contactPoint", () => {
+  it("moves from the ball's centre down to where it touches the lane", () => {
+    // a ball of radius 4 px
+    const p = contactPoint({ x: 50, y: 100 }, Math.PI * 16);
+    expect(p.x).toBe(50);
+    expect(p.y).toBeCloseTo(104, 5);
+  });
+
+  it("maps a ball near the pins to a shorter distance than its centre", () => {
+    const h = computeHomography(perspCal);
+    const centre = { x: 190, y: 100 };
+    const feet = pixelToLane(h, contactPoint(centre, Math.PI * 9)).feet;
+    expect(feet).toBeLessThan(pixelToLane(h, centre).feet - 1);
   });
 });
 

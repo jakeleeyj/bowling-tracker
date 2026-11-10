@@ -9,6 +9,7 @@ import ReplayPlayer from "@/components/lane/ReplayPlayer";
 import ShotResult from "@/components/lane/ShotResult";
 import {
   computeHomography,
+  contactPoint,
   laneToPixel,
   pixelToLane,
   type Calibration,
@@ -124,7 +125,9 @@ export default function LaneTracker() {
         return;
       }
 
-      const lane = hit ? pixelToLane(homographyRef.current, hit) : null;
+      const lane = hit
+        ? pixelToLane(homographyRef.current, contactPoint(hit, hit.strength))
+        : null;
       const event = sessionRef.current.onFrame(lane, tMs, hit?.trackId);
 
       if (event.type === "tracking") {

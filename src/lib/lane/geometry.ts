@@ -96,3 +96,10 @@ export function laneToPixel(h: number[], p: LanePoint): Pt {
     y: (inv[3] * u + inv[4] * v + inv[5]) / w,
   };
 }
+
+// Where a ball blob touches the lane: the bottom of the ball, not its centre.
+// The centre sits ~4 in above the lane, which near the pins reads as many
+// feet too far down-lane.
+export function contactPoint(centre: Pt, area: number): Pt {
+  return { x: centre.x, y: centre.y + Math.sqrt(area / Math.PI) };
+}
