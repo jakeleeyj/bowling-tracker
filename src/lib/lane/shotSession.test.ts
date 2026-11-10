@@ -62,4 +62,18 @@ describe("ShotSession", () => {
     }
     expect(completed).toBe(true);
   });
+  it("drops the ball's reflection, which shows up closer to the bowler", () => {
+    const s = new ShotSession();
+    let stats = null;
+    for (let i = 0; i <= 120 && !stats; i++) {
+      const feet = 5 + 0.5 * i;
+      const board = 20 - feet / 6;
+      // every third frame only the mirror image is seen: 2.5 ft closer, 4 boards lower
+      const hit = i % 3 === 2 ? { feet: feet - 2.5, board: board - 4 } : { feet, board };
+      const e = s.onFrame(hit, i * 25);
+      if (e.type === "complete") stats = e.stats;
+    }
+    expect(stats).not.toBeNull();
+    for (const p of stats!.path) expect(p.board).toBeCloseTo(20 - p.feet / 6, 5);
+  });
 });

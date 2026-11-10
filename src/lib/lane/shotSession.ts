@@ -17,6 +17,10 @@ const END_FEET = 55; // ball considered at the pins
 const LOST_MS = 1000; // no detection for this long while tracking => finish
 const STALL_MS = 900; // no down-lane progress for this long => finish
 const PROGRESS_FEET = 0.5; // minimum feet gain that counts as progress
+// A ball never rolls back toward the bowler. On a glossy lane its mirror
+// image sits just below it on screen, which reads as a few feet closer:
+// anything this far behind the furthest point is that reflection.
+const MAX_BACKWARD_FEET = 1;
 // Physically impossible moves are contamination (pin scatter, sweep, another
 // lane). Budgets scale with time since the last accepted point, so a few
 // missed detector frames don't turn real ball movement into a "teleport".
@@ -53,7 +57,7 @@ export class ShotSession {
     }
 
     if (hit) {
-      // Reject teleports: treat them as a missed frame instead.
+      // Reject teleports and reflections: treat them as a missed frame.
       const last = this.path[this.path.length - 1];
       const dt = tMs - last.tMs;
       const feetBudget = Math.max(MIN_JUMP_FEET, MAX_JUMP_FEET_PER_MS * dt);
@@ -62,6 +66,7 @@ export class ShotSession {
         MAX_JUMP_BOARDS_PER_MS * dt,
       );
       if (
+        hit.feet < this.maxFeet - MAX_BACKWARD_FEET ||
         Math.abs(hit.feet - last.feet) > feetBudget ||
         Math.abs(hit.board - last.board) > boardBudget
       ) {
