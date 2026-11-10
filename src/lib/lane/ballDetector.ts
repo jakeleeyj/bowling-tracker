@@ -22,6 +22,8 @@ const VAR_ALPHA_MASKED = 0.02; // variance keeps learning (slowly) on moving
 const MIN_BLOB_PIXELS = 5; // below this, noise
 const MAX_BLOB_PIXELS = 600; // above this, a person / sweep, not a ball
 const MIN_FILL = 0.25; // blob pixels / bounding-box area (compactness)
+const REFLECTION_MAX_DY = 3; // radii below the ball its mirror image can sit
+const REFLECTION_MAX_AREA = 1.5; // mirror image is never much bigger than the ball
 const MAX_ASPECT = 3; // bounding-box w/h or h/w beyond this = limb, not ball
 const LANE_MASK_SCALE_X = 1.12; // lateral margin: enough that a ball riding
 // the gutter keeps most of its blob inside the mask without inviting the
@@ -66,6 +68,25 @@ export function toGrayscale(
     out[i] = (rgba[j] + rgba[j + 1] + rgba[j + 2]) / 3;
   }
   return out;
+}
+
+// On a glossy lane the ball's mirror image rolls just below it (camera
+// behind the approach): same column, within a few radii. Keep the upper blob.
+function dropReflections(blobs: Blob[]): Blob[] {
+  return blobs.filter((low) => {
+    const rLow = Math.sqrt(low.area / Math.PI);
+    return !blobs.some((high) => {
+      if (high === low) return false;
+      const r = Math.sqrt(high.area / Math.PI);
+      const dy = low.y - high.y;
+      return (
+        dy > 0 &&
+        dy <= REFLECTION_MAX_DY * r &&
+        Math.abs(low.x - high.x) <= Math.max(r, rLow) &&
+        low.area <= high.area * REFLECTION_MAX_AREA
+      );
+    });
+  });
 }
 
 export interface Blob {
@@ -292,7 +313,7 @@ export class BallDetector {
       if (aspect > MAX_ASPECT || fill < MIN_FILL) continue;
       blobs.push({ x: sumX / count, y: sumY / count, area: count });
     }
-    return blobs;
+    return dropReflections(blobs);
   }
 
   private step(

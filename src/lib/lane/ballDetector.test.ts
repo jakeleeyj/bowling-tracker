@@ -136,6 +136,20 @@ describe("BallDetector", () => {
     expect(hits.every((h) => h === null)).toBe(true);
   });
 
+  it("follows the ball, not its reflection on a glossy lane", () => {
+    const d = new BallDetector(W, H);
+    settle(d);
+    // Mirror image rolls just below the ball, same column, same size
+    const hits: Array<{ ballY: number; y: number | undefined }> = [];
+    for (let ballY = 36; ballY >= 12; ballY -= 3) {
+      const f = withBlob(frameWithBall(30, ballY), 30, ballY + 7);
+      hits.push({ ballY, y: d.detect(f)?.y });
+    }
+    const seen = hits.filter((h) => h.y !== undefined);
+    expect(seen.length).toBeGreaterThan(3);
+    for (const { ballY, y } of seen) expect(Math.abs(y! - ballY)).toBeLessThan(1);
+  });
+
   it("resetTrack drops all tracks", () => {
     const d = new BallDetector(W, H);
     settle(d);
