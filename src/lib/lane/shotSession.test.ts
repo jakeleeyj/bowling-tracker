@@ -8,11 +8,11 @@ describe("ShotSession", () => {
     expect(s.onFrame(null, 33).type).toBe("idle");
   });
 
-  it("tracks a full shot and completes with stats past 55 feet", () => {
+  it("tracks a full shot and completes with stats at the pins", () => {
     const s = new ShotSession();
     let lastType = "";
     for (let i = 0; i <= 30; i++) {
-      const e = s.onFrame({ board: 12, feet: 2 + (56 * i) / 30 }, i * 80);
+      const e = s.onFrame({ board: 12, feet: 2 + (58 * i) / 30 }, i * 80);
       lastType = e.type;
       if (e.type === "complete") {
         expect(e.stats.releaseBoard).toBeCloseTo(12, 1);
@@ -45,7 +45,7 @@ describe("ShotSession", () => {
   it("returns to idle and can track a second shot", () => {
     const s = new ShotSession();
     for (let i = 0; i <= 30; i++) {
-      const e = s.onFrame({ board: 12, feet: 2 + (56 * i) / 30 }, i * 80);
+      const e = s.onFrame({ board: 12, feet: 2 + (58 * i) / 30 }, i * 80);
       if (e.type === "complete") break;
     }
     expect(s.onFrame(null, 5000).type).toBe("idle");
@@ -57,7 +57,7 @@ describe("ShotSession", () => {
     const s = new ShotSession();
     let completed = false;
     for (let i = 0; i <= 20; i++) {
-      const e = s.onFrame({ board: 10, feet: 20 + (37 * i) / 20 }, i * 80);
+      const e = s.onFrame({ board: 10, feet: 20 + (40 * i) / 20 }, i * 80);
       if (e.type === "complete") completed = true;
     }
     expect(completed).toBe(true);
@@ -75,5 +75,14 @@ describe("ShotSession", () => {
     }
     expect(stats).not.toBeNull();
     for (const p of stats!.path) expect(p.board).toBeCloseTo(20 - p.feet / 6, 5);
+  });
+  it("keeps tracking through the hook in the last few feet", () => {
+    const s = new ShotSession();
+    const types: string[] = [];
+    for (let i = 0; i <= 28; i++) {
+      types.push(s.onFrame({ board: 12, feet: 2 + 2 * i }, i * 80).type);
+    }
+    // 58 ft: still short of the pins
+    expect(types.at(-1)).toBe("tracking");
   });
 });
