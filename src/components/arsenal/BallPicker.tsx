@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { LiquidGlass } from "quick-liquid/react";
+import { panelGlass } from "@/lib/glass";
 import { Search, X } from "lucide-react";
 import { Skeleton } from "@/components/Skeleton";
 import { searchCatalog, type CatalogBall } from "@/lib/catalog";
@@ -121,47 +123,52 @@ export default function BallPicker({
         <Skeleton className="mt-2 h-4 w-32" />
       )}
       {catalog.status === "ready" && query.trim() !== "" && (
-        <ul className="glass-strong mt-2 max-h-72 overflow-y-auto">
-          {results.length === 0 && (
-            <li className="px-3 py-3 text-xs text-text-muted">
-              No ball named &ldquo;{query.trim()}&rdquo;. Enter the specs
-              manually below.
-            </li>
-          )}
-          {results.map((ball) => (
-            <li key={ball.id}>
-              <button
-                onClick={() => {
-                  onPick(ball);
-                  setQuery("");
-                }}
-                className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors duration-150 active:bg-surface-light"
-              >
-                {ball.thumbUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={ball.thumbUrl}
-                    alt=""
-                    loading="lazy"
-                    className="h-9 w-9 shrink-0 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="h-9 w-9 shrink-0 rounded-full bg-surface-light" />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-text-primary">
-                    {ball.name}
-                  </p>
-                  <p className="truncate text-xs text-text-muted">
-                    {ball.brand}
-                    {ball.year ? ` · ${ball.year}` : ""}
-                    {ball.discontinued ? " · Discontinued" : ""}
-                  </p>
-                </div>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <LiquidGlass
+          config={panelGlass}
+          className="mt-2 rounded-xl bg-surface/80"
+        >
+          <ul className="max-h-72 overflow-y-auto">
+            {results.length === 0 && (
+              <li className="px-3 py-3 text-xs text-text-muted">
+                No ball named &ldquo;{query.trim()}&rdquo;. Enter the specs
+                manually below.
+              </li>
+            )}
+            {results.map((ball) => (
+              <li key={ball.id}>
+                <button
+                  onClick={() => {
+                    onPick(ball);
+                    setQuery("");
+                  }}
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors duration-150 active:bg-surface-light"
+                >
+                  {ball.thumbUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={ball.thumbUrl}
+                      alt=""
+                      loading="lazy"
+                      className="h-9 w-9 shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-9 w-9 shrink-0 rounded-full bg-surface-light" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-text-primary">
+                      {ball.name}
+                    </p>
+                    <p className="truncate text-xs text-text-muted">
+                      {ball.brand}
+                      {ball.year ? ` · ${ball.year}` : ""}
+                      {ball.discontinued ? " · Discontinued" : ""}
+                    </p>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </LiquidGlass>
       )}
       <p className="mt-1.5 text-[11px] text-text-muted">
         Specs from bowwwl.com

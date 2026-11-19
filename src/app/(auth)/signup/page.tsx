@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { LiquidGlass } from "quick-liquid/react";
+import { panelGlass } from "@/lib/glass";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
@@ -71,7 +73,10 @@ export default function SignupPage() {
   if (confirmEmail) {
     return (
       <div className="glow-blue glow-purple flex min-h-dvh items-center justify-center overflow-hidden px-4">
-        <div className="glass-strong relative z-10 w-full max-w-sm p-8 text-center">
+        <LiquidGlass
+          config={panelGlass}
+          className="relative z-10 w-full max-w-sm rounded-xl bg-surface/80 p-8 text-center"
+        >
           <div className="mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -104,7 +109,7 @@ export default function SignupPage() {
           >
             Go to sign in
           </Link>
-        </div>
+        </LiquidGlass>
       </div>
     );
   }
@@ -123,7 +128,10 @@ export default function SignupPage() {
       </div>
 
       {/* Form card */}
-      <div className="glass-strong relative z-10 w-full max-w-sm p-6 lg:max-w-md">
+      <LiquidGlass
+        config={panelGlass}
+        className="relative z-10 w-full max-w-sm rounded-xl bg-surface/80 p-6 lg:max-w-md"
+      >
         <form onSubmit={handleSignup} className="flex flex-col gap-3">
           <input
             type="text"
@@ -191,7 +199,7 @@ export default function SignupPage() {
             Sign in
           </Link>
         </p>
-      </div>
+      </LiquidGlass>
     </div>
   );
 }

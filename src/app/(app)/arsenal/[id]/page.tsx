@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { LiquidGlass } from "quick-liquid/react";
+import { panelGlass } from "@/lib/glass";
 import { parseMeasure } from "@/lib/flightAnalysis";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
@@ -242,28 +244,33 @@ export default function BallPage() {
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6">
-          <div className="glass-strong animate-scale-in w-full max-w-sm p-5">
-            <p className="mb-1 text-sm font-semibold text-text-primary">
-              Delete {ball.name}?
-            </p>
-            <p className="mb-4 text-xs text-text-muted">
-              This removes the ball and its drilling specs. This can&apos;t be
-              undone.
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="h-11 flex-1 rounded-lg bg-surface-light text-sm font-semibold text-text-primary transition-transform duration-150 active:scale-[0.97]"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={remove}
-                className="h-11 flex-1 rounded-lg bg-red text-sm font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
-              >
-                Delete
-              </button>
-            </div>
+          <div className="animate-scale-in w-full max-w-sm">
+            <LiquidGlass
+              config={panelGlass}
+              className="rounded-xl bg-surface/80 p-5"
+            >
+              <p className="mb-1 text-sm font-semibold text-text-primary">
+                Delete {ball.name}?
+              </p>
+              <p className="mb-4 text-xs text-text-muted">
+                This removes the ball and its drilling specs. This can&apos;t be
+                undone.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="h-11 flex-1 rounded-lg bg-surface-light text-sm font-semibold text-text-primary transition-transform duration-150 active:scale-[0.97]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={remove}
+                  className="h-11 flex-1 rounded-lg bg-red text-sm font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
+                >
+                  Delete
+                </button>
+              </div>
+            </LiquidGlass>
           </div>
         </div>
       )}
