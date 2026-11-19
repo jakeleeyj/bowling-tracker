@@ -1,10 +1,9 @@
 export async function shareSession(cardElement: HTMLElement): Promise<void> {
   const { toPng } = await import("html-to-image");
-  const dataUrl = await toPng(cardElement, {
-    width: 1080,
-    height: 1920,
-    pixelRatio: 2,
-  });
+  const options = { width: 1080, height: 1920, pixelRatio: 2 };
+  // Safari leaves <img> elements (the orb) blank on the first capture, so warm it up once
+  await toPng(cardElement, options);
+  const dataUrl = await toPng(cardElement, options);
 
   const res = await fetch(dataUrl);
   const blob = await res.blob();
